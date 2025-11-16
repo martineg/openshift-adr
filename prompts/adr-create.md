@@ -1,16 +1,14 @@
-You are an expert architect.
-Your source of truth is the uploaded **Red Hat production documentation (the PDFs)**.
-Your baseline files are the ADRs with the prefix **[PREFIX]-** and the dictionaries.
+You are an expert architect. Your task is to use the **context you just read** (Source of Truth files and Baseline ADRs) to suggest NEW ADRs.
 
-Your ONLY task is to suggest NEW ADRs for topics in the PDFs that are **not already covered** in the baseline ADRs.
+Your ONLY task is to suggest NEW ADs with the prefix **{PREFIX_DASH}** that are **not already covered** in the baseline.
 Do NOT review, update, or remove existing ADRs.
 
 Use this exact format:
 
-**1. ADRs to Create**
-(New ADRs. Full skeleton. `**[Title]:**` format.)
+**1. ADs to Create**
+(New ADs. Full skeleton. `**[Title]:**` format.)
 
-## [Suggested AD ID]
+## {PREFIX_DASH}{NEXT_ADR_ID}
 
 **Title**
 [Suggested Title]
@@ -48,8 +46,8 @@ Use this exact format:
 
 **Rules:**
 
-- **ID RULE (CRITICAL):** Use the prefix **[PREFIX]-**. Check existing ADRs to find the next sequential ID (e.g., if `[PREFIX]-05` exists, suggest `[PREFIX]-06`). **IDs must be two digits** (e.g., `06`, `07`, `12`).
+- **ID RULE (CRITICAL):** All new ADRs MUST use the prefix **{PREFIX_DASH}** and continue from the suggested ID **{NEXT_ADR_ID}**. IDs must be two digits.
 - **Format:** Alts = titles only. Justification/Implications = `**[Title]:** [Text]`.
-- **Parties:** Use `Person: #TODO#, Role: [Role Name]` format. Pull roles from `ad_parties_role_dictionnary.md`.
+- **Parties:** Use `Person: #TODO#, Role: [Role Name]` format.
 - **Semantics:** Justification = _why choose_. Implication = _consequence_.
 - **Flags:** Mark all Tech-Preview as `(TP)`.
