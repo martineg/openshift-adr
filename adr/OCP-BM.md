@@ -23,7 +23,7 @@ N/A
 - Image-based Installer (IBI)
 
 **Decision**
-#TODO: Document the decision for the Bare Metal cluster.#
+#TODO: Document the decision for each cluster.#
 
 **Justification**
 
@@ -52,72 +52,114 @@ N/A
 ## OCP-BM-02
 
 **Title**
-Bare Metal Node Remediation
+RHCOS Provisioning Method for Bare Metal Nodes
 
 **Architectural Question**
-What is the strategy for automatically remediating unhealthy Bare Metal nodes?
+How will Red Hat Enterprise Linux CoreOS (RHCOS) be provisioned onto the bare metal nodes?
 
 **Issue or Problem**
-A strategy is needed to automatically detect and recover failed physical nodes. This is critical for maintaining cluster health and HA for workloads, especially for stateful services that run directly on the nodes.
+The method chosen to boot and install RHCOS on physical hardware dictates the required network infrastructure (e.g., PXE services) and the level of manual effort (e.g., ISO mounting). This decision is a prerequisite for User-Provisioned method.
 
 **Assumption**
-N/A.
+Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 **Alternatives**
 
-- No Automated Remediation
-- Node Health Check (NHC) with Self Node Remediation
-- Node Health Check (NHC) with BareMetal Operator (BMO) Remediation
+- Install RHCOS using ISO (via Virtual Media or USB)
+- Install RHCOS using PXE (Network Boot)
 
 **Decision**
-#TODO: Document the decision for the Bare Metal cluster.#
+#TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **No Automated Remediation:** To rely on manual detection (via monitoring) and manual intervention by an operator to troubleshoot and reboot physical nodes.
-- **Node Health Check (NHC) with Self Node Remediation:** To deploy the Node Health Check operator, which monitors node health. When a node fails, the `SelfNodeRemediation` agent on other nodes will fence the unhealthy node and restart its workloads elsewhere.
-- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** To use the NHC in combination with the BareMetal Operator (enabled by an IPI install). When NHC detects a failure, it triggers the BMO to power-cycle the node via its BMC, attempting a full hardware reboot.
+- **Install RHCOS using ISO:** This is straightforward for a small number of nodes. The administrator must manually provide the Ignition configuration file during installation.
+- **Installer-Provisioned Infrastructure (IPI):** Enables fully automated, "zero-touch" provisioning for a large number of nodes.
 
 **Implications**
 
-- **No Automated Remediation:** High operational burden and slow recovery times. Not recommended for a production cluster.
-- **Node Health Check (NHC) with Self Node Remediation:** Provides software-level remediation. It ensures workloads are moved but does not fix the underlying node, which will remain unavailable until manually repaired.
-- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** This is the most robust, fully automated solution. It attempts to recover the node by "turning it off and on again" via its BMC. This requires a reliable IPI installation and stable Redfish/IPMI connectivity. Furthermore, the BMO facilitates the **Cluster API management of compute nodes (TP)** for dynamic lifecycle management. Advanced operational features, such as performing **live updates to HostFirmwareSettings (TP)** or **HostFirmwareComponents (TP)**, are available through BMO, but utilizing live updates requires setting the **HostUpdatePolicy (TP)** resource to `onReboot`. **We do not recommend that you perform live updates to the BMC on OpenShift Container Platform 4.20 for test purposes, especially on earlier generation hardware**
+- **Install RHCOS using ISO:** Requires minimal-to-no additional network infrastructure. High operational overhead. Requires manual intervention (or complex scripting) on every node's BMC for large-scale UPI deployments.
+- **Installer-Provisioned Infrastructure (IPI):** Enables full, scalable, "zero-touch" provisioning, which is ideal for large-scale UPI deployments. Requires significant prerequisite infrastructure (DHCP, TFTP, Web servers) and network configuration (IP helpers, etc.), adding complexity.
 
-**Agreeing Parties**
+  **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
 - Person: #TODO#, Role: Infra Leader
+
+---
 
 ## OCP-BM-03
 
 **Title**
-Kernel Module and Device Plugin Management on Bare Metal using KMM
+RHCOS Day-1 Customization Method
 
 **Architectural Question**
-What standard mechanism will be used to build, deploy, and manage out-of-tree kernel modules (like specialized GPU or NIC drivers) and their corresponding device plugins across bare metal cluster nodes?
+Which technique will be used to apply non-standard, Day-1 settings (like static networking, disk partitions, or console settings) during the UPI installation of RHCOS?
 
 **Issue or Problem**
-Specialized hardware acceleration or networking components often require kernel modules and device plugins not included in the default Red Hat Enterprise Linux CoreOS (RHCOS) images. Deploying these manually leads to version misalignment and complex lifecycle management whenever kernel updates occur.
+The default RHCOS installation setting is often insufficient for enterprise bare metal. We must apply custom configurations (e.g., static IP addresses, network bonds, custom disk partitions, or serial console settings) at installation time. The chosen method impacts automation, complexity, and maintainability.
 
 **Assumption**
-The bare metal cluster will utilize specialized hardware requiring out-of-tree kernel drivers (e.g., GPUs or high-performance network adapters).
+Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 **Alternatives**
 
-- Kernel Module Management (KMM) Operator
-- Manual build and DaemonSet deployment (Driver Toolkit approach)
+- Kernel Arguments
+- `MachineConfig` via Ignition
+- `coreos-installer` Live Shell
+
+**Decision**
+#TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Kernel Module Management (KMM) Operator:** KMM is designed to simplify the lifecycle management of kernel modules by automating the build process, tracking kernel versions, and optionally signing the resulting kernel objects.
-- **Manual build and DaemonSet deployment (Driver Toolkit approach):** This method requires manually fetching the Driver Toolkit image, building the module outside the cluster, and creating DaemonSets for deployment and pre/post-start hooks. This is highly complex and error-prone during RHCOS updates.
+- **Kernel Arguments:** This is a simple, direct method for passing basic boot settings. It is required for core parameters like static IP (`ip=...`) and the Ignition URL (`coreos.inst.ignition_url=`).
+- **`MachineConfig` via Ignition:** This is the standard, declarative method for all complex OS configurations. `MachineConfig` manifests are placed in the `manifests/` directory and automatically bundled into the final Ignition files, making it ideal for managing partitions , files, or services (like custom NTP) as code.
+- **`coreos-installer` Live Shell:** This is a manual, interactive method used for debugging or special cases. By booting the ISO or PXE image to a shell (by omitting `coreos.inst.install_dev`), an administrator can run coreos-installer with unique flags like `--copy-network` or `--save-part` label.
 
 **Implications**
 
-- **Kernel Module Management (KMM) Operator:** Requires installing and maintaining the KMM Operator and associated secrets/config maps. Provides high operational stability by ensuring modules match the current running kernel version automatically.
-- **Manual build and DaemonSet deployment (Driver Toolkit approach):** High maintenance burden, as module compatibility must be manually verified and re-deployed on every kernel update or cluster upgrade.
+- **Kernel Arguments:** Works identically for both ISO and PXE. Becomes unmanageable, unreadable, and error-prone for anything beyond basic settings (e.g., complex bonding). Cannot be used for settings that lack a kernel argument (e.g., custom disk partitions).
+- **`MachineConfig` via Ignition:** This is the most robust, scalable, and maintainable solution for UPI. It is idempotent and supports all configuration types. The configuration is version-controlled with the other install manifests. Adds one layer of abstraction (Manifest -> Ignition file) which requires understanding the installer workflow.
+- **`coreos-installer` Live Shell:** Provides the only path for special flags like `--copy-network`. This is a **fully manual** process that breaks "zero-touch" automation. Scales very poorly and is only suitable for troubleshooting or provisioning single, non-standard nodes.
+
+  **Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-04
+
+**Title**
+Hardware RAID Configuration for Bare Metal Installation Drive
+
+**Architectural Question**
+How should hardware RAID be configured for the OpenShift Container Platform installation drive on bare metal nodes, ensuring compatibility with supported BMCs and adhering to Red Hat requirements?
+
+**Issue or Problem**
+OpenShift Container Platform documentation explicitly supports using hardware RAID on the installation drive for nodes managed by specific BMCs, such as Dell iDRAC (firmware version 6.10.30.20 or later, RAID levels 0, 1, and 5) and Fujitsu iRMC (RAID levels 0, 1, 5, 6, and 10). However, **software RAID is not supported** on the installation drive. A decision is required on whether to utilize supported hardware RAID features or configure nodes without hardware RAID for the installation drive.
+
+**Assumption**
+BMCs (Baseboard Management Controllers) support hardware RAID volumes for the root installation drive.
+
+**Alternatives**
+
+- Configure and use supported Hardware RAID volumes for the installation drive.
+- Configure the installation drive without using Hardware RAID.
+
+**Justification**
+
+- **Configure and use supported Hardware RAID volumes for the installation drive:** Leveraging hardware RAID provides disk redundancy and potential performance improvements managed entirely by the hardware controller/BMC interface, which is supported for specific configurations.
+- **Configure the installation drive without using Hardware RAID:** This simplifies the underlying storage configuration and avoids potential compatibility issues, focusing solely on software volumes, although internal cluster components like etcd manage their own redundancy.
+
+**Implications**
+
+- **Configure and use supported Hardware RAID volumes for the installation drive:** Requires specifying the logical drives within the `hardwareRAIDVolumes` parameter of the installation configuration. Incorrect configuration or use with unsupported BMC versions or RAID levels may lead to unsupported clusters or installation failure.
+- **Configure the installation drive without using Hardware RAID:** Node resiliency relies solely on the underlying physical disk health, which might not be desirable for critical bare metal components if a disk fails.
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -125,10 +167,12 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Storage Expert
 
-## OCP-BM-04
+---
+
+## OCP-BM-05
 
 **Title**
 Root File System Encryption and Automated Unlock Mechanism
@@ -166,34 +210,79 @@ LUKS encryption is configured for the RHCOS root file system on bare metal nodes
 - Person: #TODO#, Role: Security Expert
 - Person: #TODO#, Role: Storage Expert
 
-## OCP-BM-05
+---
+
+## OCP-BM-06
 
 **Title**
-Small Footprint HA Bare Metal Cluster Topology (TP)
+Bare Metal Node Remediation
 
 **Architectural Question**
-For bare metal deployments requiring high availability with minimal physical infrastructure, what specialized two-node topology will be selected?
+What is the strategy for automatically remediating unhealthy Bare Metal nodes?
 
 **Issue or Problem**
-Traditional Highly Available (HA) clusters require a minimum of three control plane nodes, increasing hardware costs for smaller deployments. OpenShift offers Technology Preview methods to achieve HA with only two main nodes on bare metal.
+A strategy is needed to automatically detect and recover failed physical nodes. This is critical for maintaining cluster health and HA for workloads, especially for stateful services that run directly on the nodes.
 
 **Assumption**
-The deployment targets a minimal physical footprint HA cluster, utilizing at most two fully functional control plane nodes.
+N/A.
 
 **Alternatives**
 
-- Two-Node Cluster with Fencing (TP)
-- Two-Node Cluster with Arbiter (TP)
+- No Automated Remediation
+- Node Health Check (NHC) with Self Node Remediation
+- Node Health Check (NHC) with BareMetal Operator (BMO) Remediation
+
+**Decision**
+#TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Two-Node Cluster with Fencing (TP):** This setup uses two control plane nodes and relies on fencing mechanisms (e.g., BMC access defined in `install-config.yaml`) to ensure data integrity by isolating a failed node. This minimizes node count to two actual worker/master nodes.
-- **Two-Node Cluster with Arbiter (TP):** This setup uses two control plane nodes and an additional lightweight arbiter node (running only the arbiter component) to maintain quorum, effectively requiring three nodes in total (2 control + 1 arbiter).
+- **No Automated Remediation:** To rely on manual detection (via monitoring) and manual intervention by an operator to troubleshoot and reboot physical nodes.
+- **Node Health Check (NHC) with Self Node Remediation:** To deploy the Node Health Check operator, which monitors node health. When a node fails, the `SelfNodeRemediation` agent on other nodes will fence the unhealthy node and restart its workloads elsewhere.
+- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** To use the NHC in combination with the BareMetal Operator (enabled by an IPI install). When NHC detects a failure, it triggers the BMO to power-cycle the node via its BMC, attempting a full hardware reboot.
 
 **Implications**
 
-- **Two-Node Cluster with Fencing (TP):** Requires robust configuration of BMC credentials and Redfish/IPMI access for fencing in the `install-config.yaml`. This is a Technology Preview feature.
-- **Two-Node Cluster with Arbiter (TP):** Requires provisioning and maintaining a third, albeit small, arbiter node instance. This topology requires enabling the TechPreviewNoUpgrade feature set during installation.
+- **No Automated Remediation:** High operational burden and slow recovery times. Not recommended for a production cluster.
+- **Node Health Check (NHC) with Self Node Remediation:** Provides software-level remediation. It ensures workloads are moved but does not fix the underlying node, which will remain unavailable until manually repaired.
+- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** This is the most robust, fully automated solution. It attempts to recover the node by "turning it off and on again" via its BMC. This requires a reliable IPI installation and stable Redfish/IPMI connectivity. Furthermore, the BMO facilitates the **Cluster API management of compute nodes (TP)** for dynamic lifecycle management. Advanced operational features, such as performing **live updates to HostFirmwareSettings (TP)** or **HostFirmwareComponents (TP)**, are available through BMO, but utilizing live updates requires setting the **HostUpdatePolicy (TP)** resource to `onReboot`. **We do not recommend that you perform live updates to the BMC on OpenShift Container Platform 4.20 for test purposes, especially on earlier generation hardware**
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-07
+
+**Title**
+Kernel Module and Device Plugin Management on Bare Metal using KMM
+
+**Architectural Question**
+What standard mechanism will be used to build, deploy, and manage out-of-tree kernel modules (like specialized GPU or NIC drivers) and their corresponding device plugins across bare metal cluster nodes?
+
+**Issue or Problem**
+Specialized hardware acceleration or networking components often require kernel modules and device plugins not included in the default Red Hat Enterprise Linux CoreOS (RHCOS) images. Deploying these manually leads to version misalignment and complex lifecycle management whenever kernel updates occur.
+
+**Assumption**
+The bare metal cluster will utilize specialized hardware requiring out-of-tree kernel drivers (e.g., GPUs or high-performance network adapters).
+
+**Alternatives**
+
+- Kernel Module Management (KMM) Operator
+- Manual build and DaemonSet deployment (Driver Toolkit approach)
+
+**Justification**
+
+- **Kernel Module Management (KMM) Operator:** KMM is designed to simplify the lifecycle management of kernel modules by automating the build process, tracking kernel versions, and optionally signing the resulting kernel objects.
+- **Manual build and DaemonSet deployment (Driver Toolkit approach):** This method requires manually fetching the Driver Toolkit image, building the module outside the cluster, and creating DaemonSets for deployment and pre/post-start hooks. This is highly complex and error-prone during RHCOS updates.
+
+**Implications**
+
+- **Kernel Module Management (KMM) Operator:** Requires installing and maintaining the KMM Operator and associated secrets/config maps. Provides high operational stability by ensuring modules match the current running kernel version automatically.
+- **Manual build and DaemonSet deployment (Driver Toolkit approach):** High maintenance burden, as module compatibility must be manually verified and re-deployed on every kernel update or cluster upgrade.
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -201,5 +290,5 @@ The deployment targets a minimal physical footprint HA cluster, utilizing at mos
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Network Expert
 - Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: AI/ML Platform Owner
