@@ -27,7 +27,7 @@ N/A
 
 **Justification**
 
-- **User-Provisioned Infrastructure (UPI):** Requires the user to manually provision and configure all cluster infrastructure (including networking, DNS, load balancers, and storage) and install Red Hat Enterprise Linux CoreOS (RHCOS) on hosts using generated Ignition configuration files. This approach offers **maximum customizability**.
+- **User-Provisioned Infrastructure (UPI):** Requires the user to manually provision and configure all cluster infrastructure (including networking, DNS, load balancers, and storage) and install Red Hat Enterprise Linux CoreOS (RHCOS) on hosts using generated Ignition configuration files. This approach offers **maximum customizability**. Required if both TPM and Tang for disk encryption is required.
 - **Installer-Provisioned Infrastructure (IPI):** Delegates the infrastructure bootstrapping and provisioning to the installation program. For bare metal, this process automates provisioning using the host’s Baseboard Management Controller (BMC) by leveraging the Bare Metal Operator (BMO) features.
 - **Agent-based Installer (ABI):** Provides the convenience of the Assisted Installer but enables installation **locally for disconnected environments or restricted networks**. It uses a lightweight agent booted from a discovery ISO to facilitate provisioning.
 - **Assisted Installer:** A web-based SaaS service designed for **connected networks** that simplifies deployment by providing a user-friendly interface, smart defaults, and pre-flight validations, generating a discovery image for the bare metal installation.
@@ -35,11 +35,11 @@ N/A
 
 **Implications**
 
-- **User-Provisioned Infrastructure (UPI):** Implies the **highest operational overhead** because the user must manage and maintain all infrastructure resources (Load Balancers, Networking, Storage) throughout the cluster lifecycle. It requires additional validation and configuration to use the Machine API capabilities.
-- **Installer-Provisioned Infrastructure (IPI):** Requires integration with the BMO and related provisioning infrastructure. For bare metal IPI, the user must provide all cluster infrastructure resources, including the bootstrap machine, networking, load balancing, storage, and individual cluster machines. Once installed, it allows OpenShift Container Platform to manage the operating system and supports using the Machine API for node lifecycle management.
-- **Agent-based Installer (ABI):** Ideal for **disconnected environments** and provides features like integrated tools for configuring nodes (e.g., disk encryption or LVM storage configuration). Requires the user to provide all cluster infrastructure and resources (networking, load balancing, storage).
-- **Assisted Installer:** Requires a working internet connection during the preparation phase (unless steps are followed for a disconnected approach). It simplifies deployment by handling Ignition configuration generation and supports **full integration for bare metal platforms**.
-- **Image-based Installer (IBI):** Primarily intended for **Single-Node OpenShift (SNO) cluster deployments**, often managed using a hub-and-spoke architecture via Red Hat Advanced Cluster Management (RHACM) and the multicluster engine for Kubernetes Operator (MCE).
+- **User-Provisioned Infrastructure (UPI):** Implies the **highest operational overhead** because the user must manage and maintain all infrastructure resources (Load Balancers, Networking, Storage) throughout the cluster lifecycle. It requires additional validation and configuration to use the Machine API capabilities. Support both TPM and Tang for disk encryption.
+- **Installer-Provisioned Infrastructure (IPI):** Requires integration with the BMO and related provisioning infrastructure. For bare metal IPI, the user must provide all cluster infrastructure resources, including the bootstrap machine, networking, load balancing, storage, and individual cluster machines. Once installed, it allows OpenShift Container Platform to manage the operating system and supports using the Machine API for node lifecycle management. Only support TPM for disk encryption.
+- **Agent-based Installer (ABI):** Ideal for **disconnected environments** and provides features like integrated tools for configuring nodes (e.g., disk encryption or LVM storage configuration). Requires the user to provide all cluster infrastructure and resources (networking, load balancing, storage). Only support TPM for disk encryption.
+- **Assisted Installer:** Requires a working internet connection during the preparation phase (unless steps are followed for a disconnected approach). It simplifies deployment by handling Ignition configuration generation and supports **full integration for bare metal platforms**. Only support TPM for disk encryption.
+- **Image-based Installer (IBI):** Primarily intended for **Single-Node OpenShift (SNO) cluster deployments**, often managed using a hub-and-spoke architecture via Red Hat Advanced Cluster Management (RHACM) and the multicluster engine for Kubernetes Operator (MCE). Does not support disk encryption.
 
   **Agreeing Parties**
 
@@ -135,6 +135,90 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 ## OCP-BM-04
 
 **Title**
+Network Controller Sideband Interface (NC-SI) Support Enforcement
+
+**Architectural Question**
+For OpenShift Container Platform bare metal deployments utilizing hardware where the Baseboard Management Controller (BMC) shares a system Network Interface Card (NIC) via NC-SI, how must the cluster ensure continuous BMC connectivity during power events?
+
+**Issue or Problem**
+OpenShift Container Platform require NC-SI compliant hardware when the BMC shares a system NIC. Without the correct configuration, powering down the host can cause the loss of BMC connectivity (NC-SI connection loss), interrupting bare metal provisioning or management operations.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- BMC uses Network Controller Sideband Interface (NC-SI) for management traffic
+- BMC uses a dedicated network interface for management traffic
+
+**Justification**
+
+- **BMC uses Network Controller Sideband Interface (NC-SI) for management traffic:** This approach reduces the overall physical network port requirement per server by allowing the BMC to share a system NIC with the host for management traffic. This method is supported on OpenShift Container Platform if the hardware is NC-SI compliant. However, this configuration mandates the use of the `DisablePowerOff` feature to ensure soft reboots do not result in the loss of BMC connectivity.
+- **BMC uses a dedicated network interface for management traffic:** This method enhances performance and improves security by isolating the BMC traffic onto a separate physical NIC and network, avoiding the complications and dependencies inherent in NC-SI deployments. This avoids the specific requirement to utilize the `DisablePowerOff` feature.
+
+**Implications**
+
+- **BMC uses Network Controller Sideband Interface (NC-SI) for management traffic:** Requires verification that BMCs and NICs support NC-SI. The `BareMetalHost` resource must be explicitly configured with `disablePowerOff: true` to prevent loss of BMC connectivity during host power-off states.
+- **BMC uses a dedicated network interface for management traffic:** This requires additional physical NIC hardware dedicated solely to out-of-band management. If a separate management network is implemented, the provisioner node must have routing access to this network for a successful installer-provisioned installation.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-BM-05
+
+**Title**
+BMC protocol
+
+**Architectural Question**
+Which Baseboard Management Controller (BMC) protocol (Redfish, IPMI, or proprietary) should be standardized for automated provisioning, hardware inspection, and ongoing bare metal host lifecycle management using the Bare Metal Operator (BMO)?
+
+**Issue or Problem**
+The Bare Metal Operator (BMO) requires reliable, consistent, and secure connectivity to the BMC for key operations such as power management, image deployment, and hardware inspection. Different protocols offer varying levels of security, support for modern features (like firmware management), and compatibility across diverse hardware vendors, necessitating a standardized choice for cluster management.
+
+**Assumption**
+The cluster installation method is Installer-Provisioned Infrastructure (IPI) or the Bare Metal Operator (BMO) is installed and operational for post-installation management, scaling, or remediation tasks.
+
+**Alternatives**
+
+- Redfish
+- IPMI
+- Other proprietary protocol
+
+**Justification**
+
+- **Redfish:** This is the industry-standard, modern API recommended for hardware management. It enables advanced Bare Metal Operator features such as inspecting and configuring BIOS/Firmware settings (`HostFirmwareSettings`) and updating network interface controller (NIC) firmware (`HostFirmwareComponents`), which rely on Redfish support. Furthermore, Redfish BMC addressing is required for managed Secure Boot deployments, and for using Bare Metal as a Service (BMaaS) (TP).
+- **IPMI:** IPMI is an older, widely supported protocol. It is required in specific environments, such as IBM Cloud Bare Metal (Classic) deployments, where Redfish may not be tested or supported. It is supported if hardware does not support Redfish network boot.
+- **Other proprietary protocol:** This covers vendor-specific protocols (e.g., Fujitsu iRMC, Cisco CIMC) that are explicitly supported by Ironic/BMO. It is necessary when the fleet uses hardware that primarily relies on these interfaces for BMC connectivity.
+
+**Implications**
+
+- **Redfish:** Requires ensuring hardware and BMC firmware meet the necessary compatibility versions validated for Redfish virtual media installation. If self-signed certificates are used, `disableCertificateVerification: True` must be configured in the `install-config.yaml` or `BareMetalHost` object. Enables the most robust lifecycle management features via BMO/Ironic.
+- **IPMI:** **IPMI does not encrypt communications** and requires use over a secured or dedicated management network. It cannot be used for managed Secure Boot deployments. If PXE booting is used with IPMI, a provisioning network is mandatory.
+- **Other proprietary protocol:** Management capabilities (especially advanced features like firmware configuration) may be limited to specific BMO drivers (like Fujitsu iRMC or HP iLO) and might not support the full range of vendor-independent Redfish capabilities.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-06
+
+**Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
 
 **Architectural Question**
@@ -172,34 +256,34 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 
 ---
 
-## OCP-BM-05
+## OCP-BM-07
 
 **Title**
-Root File System Encryption and Automated Unlock Mechanism
+Bare Metal Node OS Disk Partitioning for Container Storage
 
 **Architectural Question**
-If disk encryption (LUKS) is required for the bare metal nodes, which key management mechanism will be used to enable automated unlocking of the RHCOS root volume upon node boot?
+How should the root disk be partitioned on bare metal nodes to accommodate container runtime storage (`/var/lib/containers`), specifically concerning separation from the operating system partition, and what filesystem options should be used?
 
 **Issue or Problem**
-Bare metal servers often require full disk encryption for security compliance. Without an automated mechanism, nodes cannot reboot unattended, which inhibits automated maintenance and recovery features.
+If the container storage (`/var/lib/containers`) directory resides on the same partition as the root filesystem, aggressive application logging or large image pull caches can lead to the control plane nodes or worker nodes running out of disk space, potentially causing instability or failure. Defining a dedicated partition ensures predictable capacity management and allows for specific filesystem tuning.
 
 **Assumption**
-LUKS encryption is configured for the RHCOS root file system on bare metal nodes.
+Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 **Alternatives**
 
-- TPM v2 Only Unlock (Policy-Based Decryption) (TP)
-- TPM v2 and Tang Server Combination (Policy-Based Decryption) (TP)
+- Dedicated partition for `/var/lib/containers`
+- Co-locate `/var/lib/containers` on the root partition
 
 **Justification**
 
-- **TPM v2 Only Unlock (Policy-Based Decryption) (TP):** This uses the Trusted Platform Module (TPM) chip on the host to seal the decryption key, ensuring the key is released only if the boot measurement is correct. This requires no external infrastructure dependency for unlocking.
-- **TPM v2 and Tang Server Combination (Policy-Based Decryption) (TP):** This method uses a network-bound key release (Tang) in addition to TPM measurements, allowing recovery of the system even if the TPM measurements change (e.g., BIOS upgrade). The security threshold can be customized, requiring a subset of available Tang servers plus the local TPM to decrypt the root volume.
+- **Dedicated partition for /var/lib/containers:** This is the recommended approach for workload partitioning and robustness, explicitly setting up a separate partition, formatted with `xfs` and mounted using `prjquota` for appropriate resource handling. This practice isolates volatile container data storage from the core OS filesystems.
+- **Co-locate /var/lib/containers on the root partition:** Simplifies the initial installation process by relying on the default RHCOS partitioning scheme. However, this risks system instability if container images or ephemeral volumes consume excessive disk space, impacting the root filesystem.
 
 **Implications**
 
-- **TPM v2 Only Unlock (Policy-Based Decryption):** Simplest configuration, but node recovery after expected changes (like firmware updates that break TPM measurements) may require manual intervention.
-- **TPM v2 and Tang Server Combination (Policy-Based Decryption) (TP):** Requires deployment and maintenance of external Tang server infrastructure (highly available). Offers greater flexibility in node recovery and resilience against unintended TPM measurement changes.
+- **Dedicated partition for /var/lib/containers:** Requires custom Ignition configuration overrides within the installation manifest (e.g., `SiteConfig` or `BareMetalHost` definition). This adds complexity to the installation process.
+- **Co-locate /var/lib/containers on the root partition:** Higher risk of disk exhaustion affecting system stability if container usage is heavy or unpredictable. Management of disk quotas becomes less granular.
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -207,12 +291,12 @@ LUKS encryption is configured for the RHCOS root file system on bare metal nodes
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Security Expert
 - Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: Operations Expert
 
 ---
 
-## OCP-BM-06
+## OCP-BM-08
 
 **Title**
 Bare Metal Node Remediation
@@ -255,7 +339,7 @@ N/A.
 
 ---
 
-## OCP-BM-07
+## OCP-BM-09
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
