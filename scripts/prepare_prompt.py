@@ -6,6 +6,7 @@ from pathlib import Path
 
 # --- Configuration (Relative to project root) ---
 ADR_DIRECTORY = "adr"
+PROMPT_DIRECTORY = "prompts"
 CHAR_LIMIT = 1950  # A safe buffer below 2000
 
 # --- Prompt "Wrapper" Text (Internalized) ---
@@ -69,74 +70,65 @@ def split_text_into_chunks(text, max_length):
         
     return chunks
 
-def main():
-    # --- Path Setup ---
+def get_project_root():
+    """Finds the project root directory."""
     try:
         script_path = Path(__file__).resolve()
-        project_root = script_path.parent.parent
+        return script_path.parent.parent
     except NameError:
-        project_root = Path.cwd()
+        return Path.cwd()
 
-    adr_dir = project_root / ADR_DIRECTORY
+def read_file(file_path: Path) -> str:
+    """Reads a file and exits on error."""
+    if not file_path.exists():
+        print(f"Error: File not found at '{file_path}'", file=sys.stderr)
+        sys.exit(1)
+    try:
+        return file_path.read_text()
+    except Exception as e:
+        print(f"Error: Could not read file {file_path}: {e}", file=sys.stderr)
+        sys.exit(1)
 
-    # --- Argument Parsing ---
-    parser = argparse.ArgumentParser(
-        description="Generate 'LOAD' prompts for one or all ADRs from a file.",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Example usage (run from project root '~/workspace/adr'):
-  
-  To get all ADRs for a prefix:
-  ./scripts/prepare_prompt.py GITOPS
-
-  To get only one specific ADR:
-  ./scripts/prepare_prompt.py GITOPS-01
-"""
-    )
-    parser.add_argument(
-        "target",
-        type=str,
-        help="The base prefix (e.g., OCP-BM) OR a specific ADR ID (e.g., OCP-BM-01)"
-    )
-    args = parser.parse_args()
-
-    # --- ** NEW LOGIC: Distinguish Prefix from ID ** ---
-    target = args.target
+def handle_create_prompt(project_root: Path, prefix_base: str):
+    """Generates the 'CREATE' prompt."""
+    prompt_template_path = project_root / PROMPT_DIRECTORY / "adr-create.md"
+    prompt_template_content = read_file(prompt_template_path)
     
-    # Regex to check if the target is a specific ID (e.g., "OCP-BM-01")
-    # It looks for a pattern like (ANYTHING-ANYTHING)-(DIGITS)
+    prefix_with_dash = f"{prefix_base}-"
+    
+    # Replace the [PREFIX] placeholder
+    final_prompt = prompt_template_content.replace("[PREFIX]", prefix_base)
+    
+    # Also replace the specific [PREFIX]- in the ID rule for clarity
+    final_prompt = final_prompt.replace(f"{prefix_base}-", prefix_with_dash)
+    
+    print(f"# --- START OF 'CREATE' PROMPT FOR {prefix_base} ---")
+    print(final_prompt.strip())
+    print(f"# --- END OF 'CREATE' PROMPT ---")
+
+def handle_review_update_prompts(project_root: Path, target: str):
+    """Generates one or more 'LOAD' prompts for the 'REVIEW/UPDATE' workflow."""
+    
+    # --- Logic to Distinguish Prefix from ID ---
     id_pattern = re.compile(r'^(.+)-(\d+)$')
     id_match = id_pattern.match(target)
     
     if id_match:
-        # --- CASE 1: User gave a specific ID (e.g., OCP-BM-01) ---
-        prefix_base = id_match.group(1)  # e.g., "OCP-BM"
+        prefix_base = id_match.group(1)
         filename_str = f"{prefix_base}.md"
-        # We will search for the *exact* ID
-        # \b ensures we get OCP-BM-01 and not OCP-BM-011
         search_pattern_str = r"^\#\#\s*({target_id})\b".format(target_id=re.escape(target))
     else:
-        # --- CASE 2: User gave a base prefix (e.g., OCP-BM) ---
-        prefix_base = target  # e.g., "OCP-BM"
+        prefix_base = target
         filename_str = f"{prefix_base}.md"
-        # We will search for *all* ADRs with this prefix
         prefix_for_regex = f"{prefix_base}-"
         search_pattern_str = r"^\#\#\s*({prefix_dash}\S+)".format(prefix_dash=re.escape(prefix_for_regex))
     
-    filename_path = adr_dir / filename_str
-    # --- End of New Logic ---
+    filename_path = project_root / ADR_DIRECTORY / filename_str
 
     # --- Read ADR File ---
-    if not filename_path.exists():
-        print(f"Error: ADR file not found at '{filename_path}'", file=sys.stderr)
-        sys.exit(1)
-    try:
-        adr_content = filename_path.read_text()
-    except Exception as e:
-        print(f"Error: Could not read file {filename_path}: {e}", file=sys.stderr)
-        sys.exit(1)
+    adr_content = read_file(filename_path)
 
-    # --- Regex Logic to find all ADRs ---
+    # --- Regex Logic to find ADRs ---
     pattern = re.compile(search_pattern_str, re.MULTILINE | re.IGNORECASE)
     matches = list(pattern.finditer(adr_content))
     
@@ -151,13 +143,10 @@ Example usage (run from project root '~/workspace/adr'):
         start_index = current_match.start()
         
         end_index = len(adr_content)
-        # Find the start of the *next* ADR in the file
         next_match_start = -1
         if i + 1 < len(matches):
              next_match_start = matches[i+1].start()
         
-        # If we are processing a specific ID, we must find the *actual* next ADR
-        # in the file, not just the next one in our filtered list.
         if id_match:
             all_adr_pattern = re.compile(r"^\#\#\s*([A-Z]+(?:-[A-Z]+)?-\d+)", re.MULTILINE | re.IGNORECASE)
             all_matches_in_file = list(all_adr_pattern.finditer(adr_content))
@@ -165,7 +154,7 @@ Example usage (run from project root '~/workspace/adr'):
                 if match_in_file.start() == start_index and j + 1 < len(all_matches_in_file):
                     end_index = all_matches_in_file[j+1].start()
                     break
-            else: # We are at the last ADR in the file
+            else: 
                 end_index = len(adr_content)
         elif next_match_start != -1:
              end_index = next_match_start
@@ -184,7 +173,6 @@ Example usage (run from project root '~/workspace/adr'):
             print(f"# --- END OF PROMPT FOR {ad_id} ---\n# (Copy/paste, get confirmation, then use 'prompts/adr-update-review.md')\n")
         
         else:
-            # It's too long, split it
             print(f"# --- NOTE: ADR '{ad_id}' IS TOO LONG. SPLITTING INTO MULTIPLE PROMPTS... ---")
             chunks = split_text_into_chunks(adr_text_cleaned, SAFE_CHUNK_LIMIT)
             total_chunks = len(chunks)
@@ -207,5 +195,45 @@ Example usage (run from project root '~/workspace/adr'):
 
             print(f"# --- ALL PARTS FOR {ad_id} GENERATED. ---\n# (Copy/paste ALL parts in order, THEN use 'prompts/adr-update-review.md')\n")
 
+def main_parser():
+    parser = argparse.ArgumentParser(
+        description="Generate NotebookLM prompts for ADR maintenance.",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    
+    # Create a mutually exclusive group for --create and --review-update
+    action_group = parser.add_mutually_exclusive_group(required=True)
+    action_group.add_argument(
+        "--create",
+        action="store_true",
+        help="Generate the 'CREATE' prompt for a given prefix."
+    )
+    action_group.add_argument(
+        "--review-update",
+        action="store_true",
+        help="Generate the 'LOAD' prompt(s) for the 'REVIEW/UPDATE' workflow."
+    )
+    
+    parser.add_argument(
+        "target",
+        type=str,
+        help="The base prefix (e.g., OCP-BM) or a specific ADR ID (e.g., OCP-BM-01)"
+    )
+    
+    args = parser.parse_args()
+    project_root = get_project_root()
+    
+    if args.create:
+        # --- Handle CREATE ---
+        # Check if target looks like a full ID, which is not allowed for --create
+        if re.match(r'^(.+)-(\d+)$', args.target):
+            print(f"Error: --create requires a base prefix (e.g., GITOPS), not a specific ID (e.g., GITOPS-01).", file=sys.stderr)
+            sys.exit(1)
+        handle_create_prompt(project_root, args.target)
+        
+    elif args.review_update:
+        # --- Handle REVIEW/UPDATE ---
+        handle_review_update_prompts(project_root, args.target)
+
 if __name__ == "__main__":
-    main()
+    main_parser()

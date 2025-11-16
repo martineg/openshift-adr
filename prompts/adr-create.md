@@ -48,7 +48,7 @@ Use this exact format:
 
 **Rules:**
 
-- **ID RULE (CRITICAL):** Use the prefix **[PREFIX]-**. Check existing ADRs to find the next sequential ID.
+- **ID RULE (CRITICAL):** Use the prefix **[PREFIX]-**. Check existing ADRs to find the next sequential ID (e.g., if `[PREFIX]-05` exists, suggest `[PREFIX]-06`). **IDs must be two digits** (e.g., `06`, `07`, `12`).
 - **Format:** Alts = titles only. Justification/Implications = `**[Title]:** [Text]`.
 - **Parties:** Use `Person: #TODO#, Role: [Role Name]` format. Pull roles from `ad_parties_role_dictionnary.md`.
 - **Semantics:** Justification = _why choose_. Implication = _consequence_.
