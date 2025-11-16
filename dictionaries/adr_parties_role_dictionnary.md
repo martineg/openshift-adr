@@ -1,6 +1,6 @@
 # Architecture Decision Records Parties Role Dictionary
 
-This file lists the standardized roles used in the "Agreeing Parties" sections of the Architecture Decision (AD) repository.
+This file lists the standardized roles used in the "Agreeing Parties" sections of the Architecture Decision Records (ADR) repository.
 
 ## Roles
 
