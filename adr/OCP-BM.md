@@ -343,6 +343,47 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 ## OCP-BM-09
 
 **Title**
+BMO Provisioning Boot Mechanism
+
+**Architectural Question**
+Which boot mechanism (iPXE or Redfish Virtual Media) should be standardized for provisioning bare metal hosts managed by the Bare Metal Operator (BMO)?
+
+**Issue or Problem**
+Automated bare metal provisioning (as used by IPI, ABI, and AI) requires a reliable method for the BMO/Ironic service to boot the discovery ISO on the physical host. The choice of method is constrained by network infrastructure and BMC capabilities.
+
+**Assumption**
+Cluster installation method is IPI, Agent-based Installer (ABI), or Assisted Installer (AI).
+
+**Alternatives**
+
+- iPXE Booting (Network Boot)
+- Redfish Virtual Media Booting
+
+**Justification**
+
+- **iPXE Booting (Network Boot):** Provides fast, zero-touch provisioning typically favored in centralized data centers. It relies on robust PXE/DHCP/TFTP infrastructure.
+- **Redfish Virtual Media Booting:** Leverages the BMC's ability to mount a remote ISO image, ensuring reliability even if the host's primary network configuration is complex. This is a common requirement for edge or disconnected deployments using ABI/AI.
+
+**Implications**
+
+- **iPXE Booting (Network Boot):** Requires a provisioning network and adherence to network prerequisites like DHCP, TFTP, and Web servers.
+- **Redfish Virtual Media Booting:** This is the mandatory choice if Provisioning Network is not used. It requires that the BMC supports the Virtual Media feature via the chosen Redfish/IPMI protocol.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-BM-10
+
+**Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
 
 **Architectural Question**
@@ -380,7 +421,7 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 
 ---
 
-## OCP-BM-10
+## OCP-BM-11
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -401,13 +442,13 @@ N/A
 
 **Justification**
 
-- **Dedicated partition for /var/lib/containers:** This is the recommended approach for workload partitioning and robustness, explicitly setting up a separate partition, formatted with `xfs` and mounted using `prjquota` for appropriate resource handling. This practice isolates volatile container data storage from the core OS filesystems.
-- **Co-locate /var/lib/containers on the root partition:** Simplifies the initial installation process by relying on the default RHCOS partitioning scheme. However, this risks system instability if container images or ephemeral volumes consume excessive disk space, impacting the root filesystem.
+- **Dedicated partition for `/var/lib/containers`:** This is the recommended approach for workload partitioning and robustness, explicitly setting up a separate partition, formatted with `xfs` and mounted using `prjquota` for appropriate resource handling. This practice isolates volatile container data storage from the core OS filesystems.
+- **Co-locate `/var/lib/containers` on the root partition:** Simplifies the initial installation process by relying on the default RHCOS partitioning scheme. However, this risks system instability if container images or ephemeral volumes consume excessive disk space, impacting the root filesystem.
 
 **Implications**
 
-- **Dedicated partition for /var/lib/containers:** Requires custom Ignition configuration overrides within the installation manifest (e.g., `SiteConfig` or `BareMetalHost` definition). This adds complexity to the installation process.
-- **Co-locate /var/lib/containers on the root partition:** Higher risk of disk exhaustion affecting system stability if container usage is heavy or unpredictable. Management of disk quotas becomes less granular.
+- **Dedicated partition for `/var/lib/containers`:** Requires custom Ignition configuration overrides within the installation manifest (e.g., `SiteConfig` or `BareMetalHost` definition). This adds complexity to the installation process.
+- **Co-locate `/var/lib/containers` on the root partition:** Higher risk of disk exhaustion affecting system stability if container usage is heavy or unpredictable. Management of disk quotas becomes less granular.
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -420,7 +461,49 @@ N/A
 
 ---
 
-## OCP-BM-11
+## OCP-BM-12
+
+**Title**
+Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
+
+**Architectural Question**
+How will required container images (OCP release, operators, application base images) be transferred and prepared on bare metal edge nodes prior to or during installation/upgrade to minimize network latency and bandwidth dependency?
+
+**Issue or Problem**
+In disconnected environments or at the far edge, pulling large container images during installation or upgrade (JIT pull) can be slow or unreliable. A structured method is needed to pre-position images on the node's container storage partition, supporting efficient Zero Touch Provisioning (ZTP) and Image-Based Upgrades (IBU).
+
+**Assumption**
+Nodes utilize disk partitioning to include a shared container partition (`/var/lib/containers`).
+Cluster is on the edge.
+
+**Alternatives**
+
+- Client-side Image Pre-caching via Ignition/IBU
+- Just-In-Time (JIT) Pull during Installation and Runtime
+
+**Justification**
+
+- **Client-side Image Pre-caching via Ignition/IBU:** This method significantly reduces installation time and network load, which is critical for far edge or constrained environments. It integrates seamlessly with ZTP using `ignitionConfigOverride` to configure mount points and launch services to extract pre-cached images before the cluster installation fully proceeds..
+- **Just-In-Time (JIT) Pull during Installation and Runtime:** This simplifies the pre-install setup since no manual image pre-packaging or partition management is required. It relies on the network being stable and high-bandwidth enough to pull all necessary images when needed.
+
+**Implications**
+
+- **Client-side Image Pre-caching via Ignition/IBU:** Requires careful configuration of OS disk partitioning (e.g., separating `/var/lib/containers`) and precise Ignition/systemd units to manage mounting and extraction of compressed image artifacts (tarballs) before core services start. This adds complexity to the Day 1 manifests.
+- **Just-In-Time (JIT) Pull during Installation and Runtime:** Risk of installation/upgrade failure or significant delays due to network instability or slow download speeds, common challenges at the far edge.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-BM-13
 
 **Title**
 Bare Metal Operator Namespace Scope
@@ -460,7 +543,7 @@ Bare Metal Operator (BMO) is enabled.
 
 ---
 
-## OCP-BM-12
+## OCP-BM-14
 
 **Title**
 Bare Metal Node Remediation
@@ -503,7 +586,7 @@ N/A.
 
 ---
 
-## OCP-BM-13
+## OCP-BM-15
 
 **Title**
 Bare Metal Node Firmware Management
@@ -543,7 +626,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-14
+## OCP-BM-16
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -583,19 +666,60 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-15
+## OCP-BM-17
 
 **Title**
-Workload Partitioning (CPU Isolation) for SNO
+Bare Metal Kernel Selection: Real-Time Kernel Implementation
 
 **Architectural Question**
-What strategy will be implemented for dedicating CPU resources (workload partitioning) to isolate performance-sensitive tenant workloads from host and OpenShift platform processes on a Single Node OpenShift (SNO) cluster?
+Should the OpenShift Container Platform nodes leverage the Real-Time Kernel for low-latency performance, and how will this requirement be enforced and configured across the cluster nodes?
 
 **Issue or Problem**
-On a Single Node OpenShift (SNO) cluster, application pods and critical platform components (like etcd, MCO, and kubelet) inherently share the same physical node. For performance-critical or low-latency workloads (like RAN Distributed Units, or vDU applications), this contention leads to performance jitter. Defining isolated and reserved CPU sets is critical to meet required performance constraints.
+Bare metal deployments for demanding workloads, such as virtual Distributed Unit (vDU) applications in Telco environments, require guaranteed low latency and high performance. The standard RHCOS kernel may introduce unacceptable jitter or delay, necessitating the use of the Real-Time (RT) kernel.
 
 **Assumption**
-Cluster has Single Node topology (SNO).
+Workloads require strict low-latency guarantees, typically falling into the CNF/vDU/AI/ML categories.
+
+**Alternatives**
+
+- Enable Real-Time Kernel via Performance Profile
+- Enable Workload Partitioning
+
+**Justification**
+
+- **Enable Real-Time Kernel via Performance Profile:** This is the recommended approach for running low-latency applications on OpenShift Container Platform. Enabling the RT kernel through the `PerformanceProfile` custom resource is crucial for isolating CPU resources and achieving performance guarantees required by vDU applications.
+- **Use Default Standard Kernel:** This simplifies cluster management and updates, as the standard kernel is fully supported and requires fewer specialized tunings. It avoids the overhead associated with the RT kernel but cannot guarantee the low latency required for critical applications.
+
+**Implications**
+
+- **Enable Real-Time Kernel via Performance Profile:** Requires the use of the Node Tuning Operator and specific configurations in the `PerformanceProfile` (e.g., setting `realTimeKernel: enabled: true`). Changes to this kernel may require node reboots for application. This configuration is mandated for VDU workloads.
+- **Use Default Standard Kernel:** May lead to performance instability, resource jitter, or failure to meet Service Level Objectives (SLOs) for latency-sensitive applications.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-BM-18
+
+**Title**
+Workload Partitioning (CPU Isolation)
+
+**Architectural Question**
+What strategy will be implemented for dedicating CPU resources (workload partitioning) to isolate performance-sensitive tenant workloads from host and OpenShift platform processes?
+
+**Issue or Problem**
+For bare metal deployments hosting performance-critical or low-latency workloads (like RAN Distributed Units, or vDU applications), unpartitioned CPU usage leads to performance jitter due to contention between application pods and platform/kernel components. Defining isolated and reserved CPU sets is critical to meet required performance constraints.
+
+**Assumption**
+Low-latency or high-performance application workloads (like vDUs) must be isolated on dedicated CPU cores, likely requiring the real-time kernel.
 
 **Alternatives**
 
@@ -605,7 +729,7 @@ Cluster has Single Node topology (SNO).
 **Justification**
 
 - **No Partitioning (Default):** This is the simplest operational model. All platform and application pods are scheduled across all available CPU cores, which is sufficient for workloads without real-time or low-latency requirements.
-- **Enable Workload Partitioning:** This is the required method for isolating performance-sensitive workloads. It involves creating a `PerformanceProfile` to divide the node's CPUs into a `reserved` set (for platform/OS processes) and an `isolated` set (exclusively for tenant workloads)..
+- **Enable Workload Partitioning:** This is the required method for isolating performance-sensitive workloads. It involves creating a `PerformanceProfile` to divide the node's CPUs into a `reserved` set (for platform/OS processes) and an `isolated` set (exclusively for tenant workloads).
 
 **Implications**
 
