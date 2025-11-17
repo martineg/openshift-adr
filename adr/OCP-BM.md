@@ -1,4 +1,4 @@
-# ARCHITECTURE DECISION RECORDS FOR: OpenShift Container Platform - Specifics of baremetal installation
+# ARCHITECTURE DECISION RECORDS FOR: OpenShift Container Platform - Bare metal platform installation specificities
 
 ## OCP-BM-01
 

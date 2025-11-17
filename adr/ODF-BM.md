@@ -1,4 +1,4 @@
-# OpenShift Data Foundation - Bare Metal
+# ARCHITECTURE DECISION RECORDS FOR: OpenShift Data Foundation - Bare metal platform installation specificities
 
 ## ODF-BM-01
 

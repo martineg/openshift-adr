@@ -1,4 +1,4 @@
-# OpenShift Logging
+# ARCHITECTURE DECISION RECORDS FOR: OpenShift Logging
 
 ## LOG-01
 

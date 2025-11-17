@@ -1,4 +1,4 @@
-# OpenShift Container Platform Security and Compliance
+# ARCHITECTURE DECISION RECORDS FOR: OpenShift Container Platform - Security and Compliance
 
 ## OCP-SEC-01
 

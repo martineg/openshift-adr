@@ -1,4 +1,4 @@
-# Red Hat OpenShift AI Self Managed - Architecture Decisions
+# ARCHITECTURE DECISION RECORDS FOR: OpenShift AI Self-Managed
 
 ## RHOAI-SM-01
 

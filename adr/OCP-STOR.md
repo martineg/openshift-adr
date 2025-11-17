@@ -1,4 +1,4 @@
-# OpenShift Container Platform storage
+# ARCHITECTURE DECISION RECORDS FOR: OpenShift Container Platform - Storage
 
 ## OCP-STOR-01
 

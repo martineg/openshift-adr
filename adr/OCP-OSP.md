@@ -1,4 +1,4 @@
-# OpenShift Container Platform on OpenStack
+# ARCHITECTURE DECISION RECORDS FOR: OpenShift Container Platform - OpenStack platform installation specificities
 
 ## OCP-OSP-01
 

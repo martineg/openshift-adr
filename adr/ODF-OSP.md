@@ -1,4 +1,4 @@
-# OpenShift Data Foundation - OpenStack
+# ARCHITECTURE DECISION RECORDS FOR: OpenShift Data Foundation - OpenStack platform installation specificities
 
 ## ODF-OSP-01
 

@@ -1,4 +1,4 @@
-# ARCHITECTURE DECISION RECORDS FOR: OpenShift Container Platform - General plaftorm high level considerations
+# ARCHITECTURE DECISION RECORDS FOR: OpenShift Container Platform - General platform high level considerations
 
 ## OCP-BASE-01
 

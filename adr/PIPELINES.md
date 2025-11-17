@@ -1,4 +1,4 @@
-# OpenShift Pipelines
+# ARCHITECTURE DECISION RECORDS FOR: OpenShift Pipelines
 
 ## PIPELINES-01
 

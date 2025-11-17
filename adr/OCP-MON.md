@@ -1,4 +1,4 @@
-# OpenShift Container Platform monitoring
+# ARCHITECTURE DECISION RECORDS FOR: OpenShift Container Platform - Monitoring stacks (Metrics)
 
 ## OCP-MON-01
 

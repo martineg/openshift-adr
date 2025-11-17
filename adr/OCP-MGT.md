@@ -1,4 +1,4 @@
-# OpenShift Cluster Management
+# ARCHITECTURE DECISION RECORDS FOR: OpenShift Container Platform - Cluster general administration and Day2 operations management
 
 ## OCP-MGT-01
 
