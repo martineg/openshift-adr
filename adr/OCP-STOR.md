@@ -38,5 +38,5 @@ N/A
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Platform administrator
-- Person: #TODO#, Role: Storage expert
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Storage Expert

@@ -52,7 +52,7 @@ N/A
 ## OCP-BM-02
 
 **Title**
-RHCEnable Bare Metal Operator (BMO) for UPI
+Bare Metal Operator (BMO) for UPI
 
 **Architectural Question**
 Will the Bare Metal Operator (BMO) be enabled for a User-Provisioned Infrastructure (UPI) deployment?
@@ -265,7 +265,7 @@ Which Baseboard Management Controller (BMC) protocol (Redfish, IPMI, or propriet
 The Bare Metal Operator (BMO) requires reliable, consistent, and secure connectivity to the BMC for key operations such as power management, image deployment, and hardware inspection. Different protocols offer varying levels of security, support for modern features (like firmware management), and compatibility across diverse hardware vendors, necessitating a standardized choice for cluster management.
 
 **Assumption**
-The cluster installation method is Installer-Provisioned Infrastructure (IPI) or the Bare Metal Operator (BMO) is installed and operational for post-installation management, scaling, or remediation tasks.
+Cluster installation method is IPI / Assisted Installer / Agent-based installer / IBI or UPI with Bare Metal Operator enabled.
 
 **Alternatives**
 
@@ -423,6 +423,46 @@ N/A
 ## OCP-BM-11
 
 **Title**
+Bare Metal Operator Namespace Scope
+
+**Architectural Question**
+Should the Bare Metal Operator (BMO) be configured to manage BareMetalHost resources across all namespaces in the cluster?
+
+**Issue or Problem**
+To enable features like Bare Metal as a Service (BMaaS) or GitOps ZTP, the BMO must be configured to find and manage BareMetalHost resources created outside its default namespace. Deciding this scope is a fundamental configuration for the BMO.
+
+**Assumption**
+Bare Metal Operator (BMO) is enabled.
+
+**Alternatives**
+
+- BMO Watches All Namespaces (Watch-All)
+- BMO Watches Specific/Limited Namespaces (Default)
+
+**Justification**
+
+- **BMO Watches All Namespaces (Watch-All):** This is **required for BMaaS and GitOps ZTP**. It allows the BMO on the **Hub Cluster** to discover `BareMetalHost` CRs created in any namespace (e.g., a spoke cluster namespace) and provision them.
+- **BMO Watches Specific/Limited Namespaces (Default):** This is the default behavior. BMO will only discover and provision hosts defined in its own `openshift-machine-api` namespace. All other `BareMetalHost` CRs in the cluster are ignored.
+
+**Implications**
+
+- **BMO Watches All Namespaces (Watch-All):** The BMO `Provisioning` CR must be patched to set `watchAllNamespaces: true`, enabling advanced, cluster-wide provisioning workflows.
+- **BMO Watches Specific/Limited Namespaces (Default):** The cluster is isolated, and advanced, multi-namespace provisioning workflows like BMaaS and GitOps ZTP are not possible.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-12
+
+**Title**
 Bare Metal Node Remediation
 
 **Architectural Question**
@@ -459,11 +499,51 @@ N/A.
 
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Operation Expert
 
 ---
 
-## OCP-BM-12
+## OCP-BM-13
+
+**Title**
+Bare Metal Node Firmware Management
+
+**Architectural Question**
+How will ongoing firmware updates (BIOS, BMC, NIC) for bare metal nodes be managed and automated post-installation?
+
+**Issue or Problem**
+Managing firmware updates manually (BIOS, BMC, NICs) across a bare metal fleet is complex, time-consuming, and prone to error, posing maintenance and compliance risks. A standardized, automatable process is required, especially when leveraging the Bare Metal Operator (BMO) for node lifecycle management, utilizing resources like `HostFirmwareComponents` and `HostUpdatePolicy`.
+
+**Assumption**
+Cluster installation method is IPI / Assisted Installer / Agent-based installer / IBI or UPI with Bare Metal Operator enabled.
+
+**Alternatives**
+
+- Automated Management via HostFirmware/HostUpdate CRs
+- External/Vendor Management Tools
+
+**Justification**
+
+- **Automated Management via HostFirmware/HostUpdate CRs:** Leverages native BMO capabilities (`HostFirmwareComponents`, `HostUpdatePolicy`) to apply, track, and manage firmware versions for components like BIOS, BMC, and NICs directly through Kubernetes Custom Resources, supporting automated updates and inspection.
+- **External/Vendor Management Tools:** Relies on existing organizational tools (e.g., vendor-specific console or infrastructure automation) to perform firmware updates. This allows separation of concerns if the platform team is not responsible for hardware maintenance.
+
+**Implications**
+
+- **Automated Management via HostFirmware/HostUpdate CRs:** Requires defining, testing, and maintaining `HostFirmwareComponents` and `HostUpdatePolicy` CRs. The process may cause node disruption and require coordination (e.g., node draining).
+- **External/Vendor Management Tools:** Updates are decoupled from the OpenShift workflow, potentially simplifying BMO configuration, but resulting in a manual process that requires coordinating external maintenance windows with cluster availability (e.g., node draining, cluster remediation).
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-14
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -500,3 +580,44 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: AI/ML Platform Owner
+
+---
+
+## OCP-BM-15
+
+**Title**
+Workload Partitioning (CPU Isolation) for SNO
+
+**Architectural Question**
+What strategy will be implemented for dedicating CPU resources (workload partitioning) to isolate performance-sensitive tenant workloads from host and OpenShift platform processes on a Single Node OpenShift (SNO) cluster?
+
+**Issue or Problem**
+On a Single Node OpenShift (SNO) cluster, application pods and critical platform components (like etcd, MCO, and kubelet) inherently share the same physical node. For performance-critical or low-latency workloads (like RAN Distributed Units, or vDU applications), this contention leads to performance jitter. Defining isolated and reserved CPU sets is critical to meet required performance constraints.
+
+**Assumption**
+Cluster has Single Node topology (SNO).
+
+**Alternatives**
+
+- No Partitioning (Default)
+- Enable Workload Partitioning
+
+**Justification**
+
+- **No Partitioning (Default):** This is the simplest operational model. All platform and application pods are scheduled across all available CPU cores, which is sufficient for workloads without real-time or low-latency requirements.
+- **Enable Workload Partitioning:** This is the required method for isolating performance-sensitive workloads. It involves creating a `PerformanceProfile` to divide the node's CPUs into a `reserved` set (for platform/OS processes) and an `isolated` set (exclusively for tenant workloads)..
+
+**Implications**
+
+- **No Partitioning (Default):** This configuration will not support real-time workloads like vDUs, as platform and application CPU contention will cause unacceptable performance jitter and potential service failure.
+- **Enable Workload Partitioning:** This adds configuration complexity, requiring a `PerformanceProfile` and `Tuned` CRs. It also "costs" CPU cores, as the `reserved` cores are permanently removed from the schedulable capacity for general pods, but this is necessary to guarantee performance for isolated workloads.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Network Expert

@@ -38,8 +38,9 @@ N/A
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Platform administrator
-- Person: #TODO#, Role: Application team leadership
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: DevOps Engineer
+- Person: #TODO#, Role: Operations Engineer
 
 ---
 

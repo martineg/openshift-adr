@@ -39,7 +39,7 @@ ODF will be deployed on the OpenStack cluster (see OCP-STOR-01).
 
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: Storage Expert
-- Person: #TODO#, Role: OpenStack administrator
+- Person: #TODO#, Role: Infra Leader
 
 ---
 
@@ -79,4 +79,4 @@ ODF will be deployed on the OpenStack cluster, and the OpenStack environment has
 
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: Storage Expert
-- Person: #TODO#, Role: OpenStack administrator
+- Person: #TODO#, Role: Infra Leader
