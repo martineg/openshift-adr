@@ -3,7 +3,9 @@ You are an expert architect. Your task is to use the **context you just read** (
 Your ONLY task is to suggest NEW ADs with the prefix **{PREFIX_DASH}** that are **not already covered** in the baseline.
 Do NOT review, update, or remove existing ADRs.
 
-Use this exact format:
+**If you find no new, relevant topics to suggest, respond ONLY with "No new relevant ADRs found."**
+
+Otherwise, use this exact format:
 
 **1. ADs to Create**
 (New ADs. Full skeleton. `**[Title]:**` format.)
