@@ -115,12 +115,12 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 **Justification**
 
 - **Install RHCOS using ISO:** This is straightforward for a small number of nodes. The administrator must manually provide the Ignition configuration file during installation.
-- **Installer-Provisioned Infrastructure (IPI):** Enables fully automated, "zero-touch" provisioning for a large number of nodes.
+- **Install RHCOS using PXE (Network Boot):** To enable highly automated, "zero-touch" provisioning of RHCOS for a large number of UPI nodes. This method is preferred when scalable provisioning with network infrastructure support is available.
 
 **Implications**
 
 - **Install RHCOS using ISO:** Requires minimal-to-no additional network infrastructure. High operational overhead. Requires manual intervention (or complex scripting) on every node's BMC for large-scale UPI deployments.
-- **Installer-Provisioned Infrastructure (IPI):** Enables full, scalable, "zero-touch" provisioning, which is ideal for large-scale UPI deployments. Requires significant prerequisite infrastructure (DHCP, TFTP, Web servers) and network configuration (IP helpers, etc.), adding complexity.
+- **Install RHCOS using PXE (Network Boot):** Enables full, scalable, "zero-touch" provisioning, which is ideal for large-scale UPI deployments. Requires significant prerequisite infrastructure (DHCP, TFTP, Web servers) and network configuration (IP helpers, etc.), adding complexity.
 
   **Agreeing Parties**
 
