@@ -1,6 +1,9 @@
 # OpenShift Container Platform on OpenStack
 
-## OCP-OSP-01: OCP installation method on OSP infrastructure
+## OCP-OSP-01
+
+**Title**
+OCP installation method on OSP infrastructure
 
 **Architectural Question**
 Which OCP installation method will be used to deploy a cluster on OpenStack infrastructure?
@@ -37,7 +40,10 @@ N/A
 
 ---
 
-## OCP-OSP-02: OpenStack Project Tenancy
+## OCP-OSP-02
+
+**Title**
+OpenStack Project Tenancy
 
 **Architectural Question**
 How will the OpenShift cluster resources be isolated within the OpenStack platform?
@@ -74,7 +80,10 @@ N/A
 
 ---
 
-## OCP-OSP-03: OpenStack CNI Integration (Kuryr)
+## OCP-OSP-03
+
+**Title**
+OpenStack CNI Integration (Kuryr)
 
 **Architectural Question**
 Which CNI plugin will be used for pod networking on OpenStack?
@@ -112,7 +121,10 @@ The OpenStack environment has Neutron and Octavia services available.
 
 ---
 
-## OCP-OSP-04: OpenStack Storage Integration
+## OCP-OSP-04
+
+**Title**
+OpenStack Storage Integration
 
 **Architectural Question**
 How will OpenShift integrate with OpenStack's storage services (Cinder and Manila) for application persistent volumes?

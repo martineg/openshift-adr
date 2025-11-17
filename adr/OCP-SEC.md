@@ -1,6 +1,9 @@
 # OpenShift Container Platform Security and Compliance
 
-## OCP-SEC-01: FIPS Compliance Requirement
+## OCP-SEC-01
+
+**Title**
+FIPS Compliance Requirement
 
 **Architectural Question**
 Will OpenShift Container Platform be configured to operate in FIPS mode to meet regulatory requirements?
@@ -37,7 +40,10 @@ N/A
 
 ---
 
-## OCP-SEC-02: Compliance Automation Strategy
+## OCP-SEC-02
+
+**Title**
+Compliance Automation Strategy
 
 **Architectural Question**
 How will regulatory compliance (e.g., STIG, PCI-DSS) be enforced, tracked, and remediated across the cluster lifecycle, considering the FIPS decision?
@@ -77,7 +83,10 @@ N/A
 
 ---
 
-## OCP-SEC-03: Identity Provider Selection
+## OCP-SEC-03
+
+**Title**
+Identity Provider Selection
 
 **Architectural Question**
 Which authentication identity provider (IdP) will OpenShift use for user login?
@@ -120,7 +129,10 @@ N/A
 
 ---
 
-## OCP-SEC-04: Identity Provider Group Synchronization
+## OCP-SEC-04
+
+**Title**
+Identity Provider Group Synchronization
 
 **Architectural Question**
 How will user groups from the external identity provider be synchronized with OpenShift for RBAC?
@@ -163,7 +175,10 @@ An external LDAP-compatible or OIDC IdP providing group claims is used (OCP-SEC-
 
 ---
 
-## OCP-SEC-05: Multi-Tenant Identity Provider Integration
+## OCP-SEC-05
+
+**Title**
+Multi-Tenant Identity Provider Integration
 
 **Architectural Question**
 How will the platform support multiple distinct identity providers, potentially for different tenants?
@@ -200,7 +215,10 @@ Multiple, distinct IdPs are required.
 
 ---
 
-## OCP-SEC-06: Security Context Constraint (SCC) / Pod Security Admission (PSA) Policy
+## OCP-SEC-06
+
+**Title**
+Security Context Constraint (SCC) / Pod Security Admission (PSA) Policy
 
 **Architectural Question**
 What default level of security enforcement (privileges) will be applied to user application workloads (pods)?
@@ -240,7 +258,10 @@ N/A
 
 ---
 
-## OCP-SEC-07: Admission Control Strategy (Custom Policies)
+## OCP-SEC-07
+
+**Title**
+Admission Control Strategy (Custom Policies)
 
 **Architectural Question**
 How will custom organizational policies (beyond basic SCC/PSA) regarding resource definitions and configurations be enforced?
@@ -280,7 +301,10 @@ Need for custom policy enforcement exists.
 
 ---
 
-## OCP-SEC-08: Container Image Trust and Signature Verification
+## OCP-SEC-08
+
+**Title**
+Container Image Trust and Signature Verification
 
 **Architectural Question**
 What solution will enforce image authenticity by verifying signatures for container images consumed by the cluster?
@@ -320,7 +344,10 @@ Supply chain security is a requirement.
 
 ---
 
-## OCP-SEC-09: Data Protection (etcd) Encryption
+## OCP-SEC-09
+
+**Title**
+Data Protection (etcd) Encryption
 
 **Architectural Question**
 Should sensitive API resources stored in etcd (Secrets, ConfigMaps, Routes, OAuth tokens) be encrypted at the application layer?
@@ -357,7 +384,10 @@ Protection of sensitive configuration data at rest is required.
 
 ---
 
-## OCP-SEC-10: Centralized Secret Management Integration
+## OCP-SEC-10
+
+**Title**
+Centralized Secret Management Integration
 
 **Architectural Question**
 What method will safely externalize and inject sensitive configuration data (secrets) into application workloads, especially those managed by GitOps?

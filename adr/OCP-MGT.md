@@ -1,6 +1,9 @@
 # OpenShift Cluster Management
 
-## OCP-MGT-01: Namespace/Project Allocation Strategy
+## OCP-MGT-01
+
+**Title**
+Namespace/Project Allocation Strategy
 
 **Architectural Question**
 What is the strategy for grouping and allocating namespaces (projects) to users, teams, and applications?
@@ -43,7 +46,10 @@ N/A
 
 ---
 
-## OCP-MGT-02: RBAC Model (Delegation Strategy)
+## OCP-MGT-02
+
+**Title**
+RBAC Model (Delegation Strategy)
 
 **Architectural Question**
 What is the strategy for delegating project-level administration and resource management permissions?
@@ -84,7 +90,10 @@ Project Allocation Strategy (OCP-MGT-01) is defined. Identity Provider and Group
 
 ---
 
-## OCP-MGT-03: Image Registry Strategy (Application Images)
+## OCP-MGT-03
+
+**Title**
+Image Registry Strategy (Application Images)
 
 **Architectural Question**
 Which image registry will be used for storing internally built application images (including custom RHOAI notebook images)?
@@ -126,7 +135,10 @@ Internal applications/images will be built and deployed. Custom RHOAI images mig
 
 ---
 
-## OCP-MGT-04: Project Resource Quotas Strategy
+## OCP-MGT-04
+
+**Title**
+Project Resource Quotas Strategy
 
 **Architectural Question**
 What strategy will enforce resource consumption limits (CPU, memory, storage, GPUs) at the project (tenant) level?
@@ -167,7 +179,10 @@ Multi-tenancy or resource contention is expected. Project Allocation (OCP-MGT-01
 
 ---
 
-## OCP-MGT-05: Platform Backup and Restore Strategy
+## OCP-MGT-05
+
+**Title**
+Platform Backup and Restore Strategy
 
 **Architectural Question**
 What is the strategy for backing up and restoring OpenShift cluster state (etcd) and application persistent data (PVs)?

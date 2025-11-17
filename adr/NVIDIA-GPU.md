@@ -1,6 +1,9 @@
 # NVIDIA GPU Operator
 
-## NVIDIA-GPU-01: GPU Operator Deployment Method
+## NVIDIA-GPU-01
+
+**Title**
+GPU Operator Deployment Method
 
 **Architectural Question**
 Which method will be used to deploy the NVIDIA GPU Operator onto the OpenShift cluster?
@@ -37,7 +40,10 @@ GPUs will be used for AI/ML or high-performance computing workloads.
 
 ---
 
-## NVIDIA-GPU-02: GPU Resource Configuration
+## NVIDIA-GPU-02
+
+**Title**
+GPU Resource Configuration
 
 **Architectural Question**
 How will GPU resources be partitioned or shared among multiple workloads?
@@ -76,7 +82,10 @@ Multiple applications or tenants will share physical GPU hardware.
 
 ---
 
-## NVIDIA-GPU-03: GPUDirect Technology Enablement
+## NVIDIA-GPU-03
+
+**Title**
+GPUDirect Technology Enablement
 
 **Architectural Question**
 Which GPUDirect technologies will be enabled to accelerate data transfer?
@@ -114,7 +123,10 @@ Extreme performance is required for specific workloads, and the hardware (NICs, 
 
 ---
 
-## NVIDIA-GPU-04: Monitoring Strategy
+## NVIDIA-GPU-04
+
+**Title**
+Monitoring Strategy
 
 **Architectural Question**
 How will NVIDIA GPU metrics be monitored?

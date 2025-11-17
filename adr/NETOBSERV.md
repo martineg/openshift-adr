@@ -1,6 +1,9 @@
 # Network Observability
 
-## NETOBSERV-01: Network Observability
+## NETOBSERV-01
+
+**Title**
+Network Observability
 
 **Architectural Question**
 Will network flow data be collected for visibility and troubleshooting?

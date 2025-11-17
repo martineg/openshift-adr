@@ -1,6 +1,9 @@
 # OpenShift Data Foundation - Bare Metal
 
-## ODF-BM-01: ODF Deployment on Bare Metal
+## ODF-BM-01
+
+**Title**
+ODF Deployment on Bare Metal
 
 **Architectural Question**
 What is the deployment strategy for OpenShift Data Foundation on the Bare Metal cluster?
@@ -37,7 +40,10 @@ ODF will be deployed on the Bare Metal cluster (see OCP-STOR-01).
 
 ---
 
-## ODF-BM-02: Bare Metal Node and Device Failure Domain Awareness
+## ODF-BM-02
+
+**Title**
+Bare Metal Node and Device Failure Domain Awareness
 
 **Architectural Question**
 How will the ODF cluster be configured for high availability across physical failure domains (e.g., nodes, racks, chassis) on Bare Metal?

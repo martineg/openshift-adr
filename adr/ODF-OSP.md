@@ -1,6 +1,9 @@
 # OpenShift Data Foundation - OpenStack
 
-## ODF-OSP-01: ODF Deployment on OpenStack
+## ODF-OSP-01
+
+**Title**
+ODF Deployment on OpenStack
 
 **Architectural Question**
 What is the deployment strategy for OpenShift Data Foundation on the OpenStack cluster?
@@ -40,7 +43,10 @@ ODF will be deployed on the OpenStack cluster (see OCP-STOR-01).
 
 ---
 
-## ODF-OSP-02: OpenStack Failure Domain and Availability Zone (AZ) Awareness
+## ODF-OSP-02
+
+**Title**
+OpenStack Failure Domain and Availability Zone (AZ) Awareness
 
 **Architectural Question**
 How will the ODF cluster be configured for high availability across OpenStack Availability Zones?

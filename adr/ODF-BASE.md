@@ -1,6 +1,9 @@
 # OpenShift Data Foundation - Base
 
-## ODF-BASE-01: ODF Deployment Approach (Internal vs External)
+## ODF-BASE-01
+
+**Title**
+ODF Deployment Approach (Internal vs External)
 
 **Architectural Question**
 Will OpenShift Data Foundation (ODF) be deployed internally on existing OpenShift worker nodes, or externally/in a separate cluster?
@@ -37,7 +40,10 @@ OpenShift Data Foundation (ODF) will be deployed as the storage solution (see OC
 
 ---
 
-## ODF-BASE-02: Storage Class Design
+## ODF-BASE-02
+
+**Title**
+Storage Class Design
 
 **Architectural Question**
 What specific `StorageClasses` will be created to expose ODF's capabilities (File, Block, Object) to different types of workloads?
@@ -73,7 +79,10 @@ OpenShift Data Foundation (ODF) will be deployed as the primary storage solution
 
 ---
 
-## ODF-BASE-03: On-Cluster Object Storage
+## ODF-BASE-03
+
+**Title**
+On-Cluster Object Storage
 
 **Architectural Question**
 Will Red Hat OpenShift Data Foundation's Object Storage service be utilized?

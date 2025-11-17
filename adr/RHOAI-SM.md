@@ -1,6 +1,9 @@
 # Red Hat OpenShift AI Self Managed - Architecture Decisions
 
-## RHOAI-SM-01: Red Hat OpenShift AI instances and purposes
+## RHOAI-SM-01
+
+**Title**
+Red Hat OpenShift AI instances and purposes
 
 **Architectural Question**
 How many Red Hat OpenShift AI instances will be installed? What will be the main objective of each Red Hat OpenShift AI instance?
@@ -43,7 +46,10 @@ N/A
 
 ---
 
-## RHOAI-SM-02: Red Hat OpenShift AI host OpenShift clusters
+## RHOAI-SM-02
+
+**Title**
+Red Hat OpenShift AI host OpenShift clusters
 
 **Architectural Question**
 Which OpenShift clusters will be used to host Red Hat OpenShift AI instances?
@@ -86,7 +92,10 @@ Red Hat OpenShift AI instances have been defined (RHOAI-SM-01).
 
 ---
 
-## RHOAI-SM-03: Environment connectivity
+## RHOAI-SM-03
+
+**Title**
+Environment connectivity
 
 **Architectural Question**
 Should Red Hat OpenShift AI Self-Managed be deployed in a connected or disconnected environment?
@@ -125,7 +134,10 @@ N/A
 
 ---
 
-## RHOAI-SM-04: Mirror registry (disconnected environment)
+## RHOAI-SM-04
+
+**Title**
+Mirror registry (disconnected environment)
 
 **Architectural Question**
 If deploying in a disconnected environment, what mirror registry will be used for RHOAI components?
@@ -164,7 +176,10 @@ OpenShift cluster is in a disconnected environment.
 
 ---
 
-## RHOAI-SM-05: Identity provider Integration
+## RHOAI-SM-05
+
+**Title**
+Identity provider Integration
 
 **Architectural Question**
 Which OpenShift identity provider (IdP) will be used to authenticate users accessing Red Hat OpenShift AI?
@@ -199,7 +214,10 @@ An appropriate OpenShift IdP must be configured (see OCP-SEC-03).
 
 ---
 
-## RHOAI-SM-06: User/Group Dashboard Access Configuration
+## RHOAI-SM-06
+
+**Title**
+User/Group Dashboard Access Configuration
 
 **Architectural Question**
 How will access to the OpenShift AI dashboard be controlled based on user groups?
@@ -237,7 +255,10 @@ Access to the OpenShift AI dashboard must be restricted based on OpenShift user 
 
 ---
 
-## RHOAI-SM-07: OpenShift AI Namespace Strategy (Core Components)
+## RHOAI-SM-07
+
+**Title**
+OpenShift AI Namespace Strategy (Core Components)
 
 **Architectural Question**
 What namespace strategy will be used for deploying OpenShift AI core components?
@@ -275,7 +296,10 @@ N/A
 
 ---
 
-## RHOAI-SM-08: CA Certificate management
+## RHOAI-SM-08
+
+**Title**
+CA Certificate management
 
 **Architectural Question**
 Which CA certificate bundle will be used for Red Hat OpenShift AI components, and how will its lifecycle be managed?
@@ -314,7 +338,10 @@ Secure communication using TLS is required.
 
 ---
 
-## RHOAI-SM-09: S3 Object Storage Location
+## RHOAI-SM-09
+
+**Title**
+S3 Object Storage Location
 
 **Architectural Question**
 Will S3-compatible object storage be used for OpenShift AI, and if so, where will it be hosted?
@@ -356,7 +383,10 @@ Model serving (RHOAI-SM-27) and/or Data Science Pipelines (RHOAI-SM-33) capabili
 
 ---
 
-## RHOAI-SM-10: Default storage class for Red Hat OpenShift AI components
+## RHOAI-SM-10
+
+**Title**
+Default storage class for Red Hat OpenShift AI components
 
 **Architectural Question**
 Which default storage class (StorageClass) will be configured for use by Red Hat OpenShift AI components requiring dynamic Persistent Volume provisioning?
@@ -395,7 +425,10 @@ Dynamic volume provisioning is used. Components like Workbenches (RHOAI-SM-14) w
 
 ---
 
-## RHOAI-SM-11: Usage data collection (Telemetry)
+## RHOAI-SM-11
+
+**Title**
+Usage data collection (Telemetry)
 
 **Architectural Question**
 Will you enable usage data collection (telemetry) for Red Hat OpenShift AI?
@@ -434,7 +467,10 @@ N/A
 
 ---
 
-## RHOAI-SM-12: Red Hat partner solutions integration
+## RHOAI-SM-12
+
+**Title**
+Red Hat partner solutions integration
 
 **Architectural Question**
 Which Red Hat partner software (ISV) components will be enabled or integrated with Red Hat OpenShift AI?
@@ -484,9 +520,10 @@ N/A
 
 ---
 
-**(Start of User Environment Section)**
+## RHOAI-SM-13
 
-## RHOAI-SM-13: Data science project allocation strategy (User Namespaces)
+**Title**
+Data science project allocation strategy (User Namespaces)
 
 **Architectural Question**
 How will OpenShift Projects (Kubernetes Namespaces) be allocated and used for data science activities (workbenches, pipelines, models)?
@@ -532,7 +569,10 @@ Data science workloads need namespace isolation beyond the core RHOAI components
 
 ---
 
-## RHOAI-SM-14: Notebook images for data scientists
+## RHOAI-SM-14
+
+**Title**
+Notebook images for data scientists
 
 **Architectural Question**
 What notebook images (providing JupyterLab or other IDE environments) will be made available to data scientists?
@@ -581,7 +621,10 @@ Workbenches will be used (RHOAI-SM-16).
 
 ---
 
-## RHOAI-SM-15: Required Python packages (for Custom Notebook Images)
+## RHOAI-SM-15
+
+**Title**
+Required Python packages (for Custom Notebook Images)
 
 **Architectural Question**
 If building custom notebook images, what additional Python packages (beyond the base image) are required by data scientists?
@@ -627,7 +670,10 @@ Custom notebook images will be built (Decision from RHOAI-SM-14).
 
 ---
 
-## RHOAI-SM-16: Custom notebook images location
+## RHOAI-SM-16
+
+**Title**
+Custom notebook images location
 
 **Architectural Question**
 Where will custom-built notebook server images be stored and accessed from?
@@ -666,7 +712,10 @@ Custom notebook images will be built (Decision from RHOAI-SM-14).
 
 ---
 
-## RHOAI-SM-17: Workbenches provisioning strategy
+## RHOAI-SM-17
+
+**Title**
+Workbenches provisioning strategy
 
 **Architectural Question**
 How will workbenches (JupyterLab or other IDE environments) be provisioned and managed for data scientists?
@@ -709,7 +758,10 @@ N/A
 
 ---
 
-## RHOAI-SM-18: code-server workbenches enablement
+## RHOAI-SM-18
+
+**Title**
+code-server workbenches enablement
 
 **Architectural Question**
 Will the `code-server` (VS Code in browser) workbench option be enabled alongside JupyterLab?
@@ -747,7 +799,10 @@ Red Hat notebook server images (RHOAI-SM-14) are used. Workbenches are provision
 
 ---
 
-## RHOAI-SM-19: Cluster Storage (PVC) Sizing for Workbenches
+## RHOAI-SM-19
+
+**Title**
+Cluster Storage (PVC) Sizing for Workbenches
 
 **Architectural Question**
 How will Persistent Volume Claim (PVC) sizing be managed for workbench local storage (/home/jovyan)?
@@ -791,7 +846,10 @@ Workbenches are configured (RHOAI-SM-17). Local PVC storage is used (RHOAI-SM-20
 
 ---
 
-## RHOAI-SM-20: Notebook file storage location
+## RHOAI-SM-20
+
+**Title**
+Notebook file storage location
 
 **Architectural Question**
 Where will data scientists primarily store their notebook files (`.ipynb`) and associated code/scripts developed within workbenches?
@@ -829,7 +887,10 @@ Workbenches are used (RHOAI-SM-17).
 
 ---
 
-## RHOAI-SM-21: Notebook Git repository structure
+## RHOAI-SM-21
+
+**Title**
+Notebook Git repository structure
 
 **Architectural Question**
 If using Git for notebook storage, how will repositories be structured and managed for data science collaboration?
@@ -873,9 +934,10 @@ Notebook files/code primarily stored in Git (RHOAI-SM-20).
 
 ---
 
-**(Start of Data & Accelerators Section)**
+## RHOAI-SM-22
 
-## RHOAI-SM-22: Data sources accessibility
+**Title**
+Data sources accessibility
 
 **Architectural Question**
 Which types of data sources need to be accessible to data scientists within the OpenShift AI platform?
@@ -933,7 +995,10 @@ Data scientists will need to access data beyond local workbench storage. S3 Loca
 
 ---
 
-## RHOAI-SM-23: NVIDIA GPU Support enablement
+## RHOAI-SM-23
+
+**Title**
+NVIDIA GPU Support enablement
 
 **Architectural Question**
 Will NVIDIA GPUs be utilized by Red Hat OpenShift AI workloads?
@@ -974,7 +1039,10 @@ Workloads potentially require GPU acceleration. Sizing Strategy considered (OCP-
 
 ---
 
-## RHOAI-SM-24: Intel HPU Accelerator Usage
+## RHOAI-SM-24
+
+**Title**
+Intel HPU Accelerator Usage
 
 **Architectural Question**
 Will Intel HPUs (e.g., Gaudi) be utilized by Red Hat OpenShift AI workloads?
@@ -1015,7 +1083,10 @@ Workloads potentially require HPU acceleration. Sizing Strategy considered (OCP-
 
 ---
 
-## RHOAI-SM-25: AMD GPU Accelerator Usage
+## RHOAI-SM-25
+
+**Title**
+AMD GPU Accelerator Usage
 
 **Architectural Question**
 Will AMD GPUs (ROCm) be utilized by Red Hat OpenShift AI workloads?
@@ -1056,7 +1127,10 @@ Workloads potentially require GPU acceleration. Sizing Strategy considered (OCP-
 
 ---
 
-## RHOAI-SM-26: Workbenches on Intel hardware
+## RHOAI-SM-26
+
+**Title**
+Workbenches on Intel hardware
 
 **Architectural Question**
 If using Intel accelerators (e.g., Intel Data Center GPUs, potentially HPUs), will Intel-optimized workbench images be used?
@@ -1094,9 +1168,10 @@ Intel accelerators are available (RHOAI-SM-24). Intel partner component might be
 
 ---
 
-**(Start of Pipelines & Distributed Workloads Section)**
+## RHOAI-SM-27
 
-## RHOAI-SM-27: Data Science Pipelines enablement (KFP/Tekton)
+**Title**
+Data Science Pipelines enablement (KFP/Tekton)
 
 **Architectural Question**
 Will the Data Science Pipelines component (based on Kubeflow Pipelines with Tekton backend) be enabled within RHOAI?
@@ -1136,7 +1211,10 @@ Orchestration of ML workflows is required.
 
 ---
 
-## RHOAI-SM-28: Pipelines in JupyterLab (Elyra) usage
+## RHOAI-SM-28
+
+**Title**
+Pipelines in JupyterLab (Elyra) usage
 
 **Architectural Question**
 Will the Elyra extension for visual pipeline authoring within JupyterLab be enabled and utilized for Data Science Pipelines?
@@ -1174,7 +1252,10 @@ Data Science Pipelines component is enabled (RHOAI-SM-27). Users primarily use J
 
 ---
 
-## RHOAI-SM-29: Pipeline database backend (KFP)
+## RHOAI-SM-29
+
+**Title**
+Pipeline database backend (KFP)
 
 **Architectural Question**
 Which database backend will be used for storing Red Hat OpenShift AI Pipelines (Kubeflow Pipelines / KFP Tekton) metadata?
@@ -1214,7 +1295,10 @@ Data Science Pipelines component is enabled (RHOAI-SM-27).
 
 ---
 
-## RHOAI-SM-30: Distributed workloads enablement (Ray/CodeFlare)
+## RHOAI-SM-30
+
+**Title**
+Distributed workloads enablement (Ray/CodeFlare)
 
 **Architectural Question**
 Will the capability for distributed AI/ML workloads using Ray (via CodeFlare/KubeRay) be enabled?
@@ -1254,7 +1338,10 @@ Workloads might benefit from distributed computation.
 
 ---
 
-## RHOAI-SM-31: Quota management for distributed workloads (Kueue)
+## RHOAI-SM-31
+
+**Title**
+Quota management for distributed workloads (Kueue)
 
 **Architectural Question**
 How will resource quotas and scheduling for distributed workloads (Ray clusters via CodeFlare) be managed?
@@ -1292,7 +1379,10 @@ Distributed workloads (CodeFlare/KubeRay) are enabled (RHOAI-SM-30).
 
 ---
 
-## RHOAI-SM-32: Authentication Method for Ray Dashboard
+## RHOAI-SM-32
+
+**Title**
+Authentication Method for Ray Dashboard
 
 **Architectural Question**
 Which authentication method will be used to secure access to the Ray Dashboard associated with distributed Ray clusters?
@@ -1331,7 +1421,10 @@ Distributed workloads (CodeFlare/KubeRay) are enabled (RHOAI-SM-30).
 
 ---
 
-## RHOAI-SM-33: Distributed workloads monitoring (Ray)
+## RHOAI-SM-33
+
+**Title**
+Distributed workloads monitoring (Ray)
 
 **Architectural Question**
 Will monitoring be enabled for distributed workloads (Ray clusters)?
@@ -1370,9 +1463,10 @@ Distributed workloads (CodeFlare/KubeRay) are enabled (RHOAI-SM-30).
 
 ---
 
-**(Start of Model Serving Section)**
+## RHOAI-SM-34
 
-## RHOAI-SM-34: Model Serving Platform Selection
+**Title**
+Model Serving Platform Selection
 
 **Architectural Question**
 Which model serving platform architecture will be used in Red Hat OpenShift AI?
@@ -1412,7 +1506,10 @@ Model deployment capabilities are required.
 
 ---
 
-## RHOAI-SM-35: Authorization provider for KServe Model Serving
+## RHOAI-SM-35
+
+**Title**
+Authorization provider for KServe Model Serving
 
 **Architectural Question**
 Will an authorization provider (Authorino) be used for KServe single-model serving endpoints?
@@ -1451,7 +1548,10 @@ Single-model serving platform (KServe) is enabled (RHOAI-SM-34).
 
 ---
 
-## RHOAI-SM-36: Model-serving runtime for KServe
+## RHOAI-SM-36
+
+**Title**
+Model-serving runtime for KServe
 
 **Architectural Question**
 Which specific model serving runtime(s) will be primarily used within the KServe single-model serving platform?
@@ -1500,7 +1600,10 @@ Single-model serving platform (KServe) is enabled (RHOAI-SM-34).
 
 ---
 
-## RHOAI-SM-37: NVIDIA NIM Serving Platform Integration
+## RHOAI-SM-37
+
+**Title**
+NVIDIA NIM Serving Platform Integration
 
 **Architectural Question**
 Will NVIDIA NIM integration be enabled for the single-model serving platform in Red Hat OpenShift AI?
@@ -1541,10 +1644,13 @@ NVIDIA GPU acceleration is enabled (RHOAI-SM-23). Single-model serving (KServe) 
 
 ---
 
-## RHOAI-SM-38: Distributed Inference with LLM-D [TECH-PREVIEW]
+## RHOAI-SM-38
+
+**Title**
+Distributed Inference with LLM-D (TP)
 
 **Architectural Question**
-Will the Distributed Inference with llm-d component [TECH-PREVIEW] be used for large language model serving?
+Will the Distributed Inference with llm-d component (TP) be used for large language model serving?
 
 **Issue or Problem**
 Serving LLMs often requires significant resources and sharding workloads across multiple nodes/GPUs, which is complex for scaling/recovery. `llm-d` aims to simplify this.
@@ -1554,7 +1660,7 @@ LLMs requiring distributed processing (multi-GPU/multi-node) are planned for dep
 
 **Alternatives**
 
-- Enable Distributed Inference with llm-d [TECH-PREVIEW]
+- Enable Distributed Inference with llm-d (TP)
 - Rely on Standard KServe (Single-Instance or basic scaling) Deployment
 
 **Decision**
@@ -1581,9 +1687,10 @@ LLMs requiring distributed processing (multi-GPU/multi-node) are planned for dep
 
 ---
 
-**(Start of Monitoring & Lifecycle Section)**
+## RHOAI-SM-39
 
-## RHOAI-SM-39: Single-model serving platform (KServe) monitoring enablement
+**Title**
+Single-model serving platform (KServe) monitoring enablement
 
 **Architectural Question**
 Will monitoring be enabled for the KServe single-model serving platform?
@@ -1622,7 +1729,10 @@ Single-model serving platform (KServe) is enabled (RHOAI-SM-34).
 
 ---
 
-## RHOAI-SM-40: NVIDIA NIM Metrics collection
+## RHOAI-SM-40
+
+**Title**
+NVIDIA NIM Metrics collection
 
 **Architectural Question**
 If using NVIDIA NIM, will metrics collection be enabled for NIM-based KServe deployments?
@@ -1661,7 +1771,10 @@ NVIDIA NIM integration is enabled (RHOAI-SM-37). User Workload Monitoring (UWM) 
 
 ---
 
-## RHOAI-SM-41: TrustyAI Monitoring for Data Science Models
+## RHOAI-SM-41
+
+**Title**
+TrustyAI Monitoring for Data Science Models
 
 **Architectural Question**
 Will the TrustyAI component be enabled for monitoring model fairness and explainability?
@@ -1702,7 +1815,10 @@ Model serving (likely KServe, RHOAI-SM-34) is enabled.
 
 ---
 
-## RHOAI-SM-42: Persistent Volume Claim (PVC) Backup Strategy for RHOAI
+## RHOAI-SM-42
+
+**Title**
+Persistent Volume Claim (PVC) Backup Strategy for RHOAI
 
 **Architectural Question**
 Will backup be implemented for Persistent Volume Claims (PVCs) used specifically by Red Hat OpenShift AI components (e.g., workbenches, pipeline metadata DB if internal)?

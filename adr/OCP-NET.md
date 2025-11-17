@@ -1,6 +1,9 @@
 # OpenShift Container Platform Networking
 
-## OCP-NET-01: Machine IP Range
+## OCP-NET-01
+
+**Title**
+Machine IP Range
 
 **Architectural Question**
 Which IP address range will be used for the cluster nodes (control plane, compute machines)?
@@ -37,7 +40,10 @@ N/A
 
 ---
 
-## OCP-NET-02: Node IP Address Management
+## OCP-NET-02
+
+**Title**
+Node IP Address Management
 
 **Architectural Question**
 How will the cluster nodes (Control Plane and Compute) obtain their IP addresses from the Machine IP Range?
@@ -74,7 +80,10 @@ Machine IP Range (OCP-NET-01) is defined.
 
 ---
 
-## OCP-NET-03: Pod Network CIDR Selection
+## OCP-NET-03
+
+**Title**
+Pod Network CIDR Selection
 
 **Architectural Question**
 Which internal IP address range will be used for Pod networking?
@@ -111,7 +120,10 @@ N/A
 
 ---
 
-## OCP-NET-04: Service Network CIDR Selection
+## OCP-NET-04
+
+**Title**
+Service Network CIDR Selection
 
 **Architectural Question**
 Which IP address range will be used for the Cluster Service network?
@@ -148,7 +160,10 @@ N/A
 
 ---
 
-## OCP-NET-05: CNI Plugin Selection (Platform Specific)
+## OCP-NET-05
+
+**Title**
+CNI Plugin Selection (Platform Specific)
 
 **Architectural Question**
 Which Container Network Interface (CNI) plugin will manage Pod networking?
@@ -186,7 +201,10 @@ Cluster platform (OCP-BASE-03) is known. For OpenStack, Neutron and Octavia are 
 
 ---
 
-## OCP-NET-06: Outbound Connectivity (External Firewall/Proxy)
+## OCP-NET-06
+
+**Title**
+Outbound Connectivity (External Firewall/Proxy)
 
 **Architectural Question**
 How will cluster egress traffic destined for external networks (e.g., Internet, other corporate networks) be managed by external firewalls and/or proxies?
@@ -224,7 +242,10 @@ Cluster Network Connectivity Model (OCP-BASE-07) is decided (Connected/Disconnec
 
 ---
 
-## OCP-NET-07: External Firewall Rule Granularity (Connected Environments)
+## OCP-NET-07
+
+**Title**
+External Firewall Rule Granularity (Connected Environments)
 
 **Architectural Question**
 If using direct outbound connectivity (behind firewalls) in a connected environment, how granular will the firewall rules be?
@@ -262,7 +283,10 @@ Cluster is Connected (OCP-BASE-07) and uses Direct Outbound (OCP-NET-06).
 
 ---
 
-## OCP-NET-08: DNS Forwarding Configuration
+## OCP-NET-08
+
+**Title**
+DNS Forwarding Configuration
 
 **Architectural Question**
 How will the cluster's internal DNS resolve external hostnames?
@@ -299,7 +323,10 @@ N/A
 
 ---
 
-## OCP-NET-09: Load Balancer Strategy (API & Ingress)
+## OCP-NET-09
+
+**Title**
+Load Balancer Strategy (API & Ingress)
 
 **Architectural Question**
 Which load balancer solution will expose the OpenShift API and application ingress traffic?
@@ -337,7 +364,10 @@ External access to API and applications is required.
 
 ---
 
-## OCP-NET-10: Ingress Controller Strategy
+## OCP-NET-10
+
+**Title**
+Ingress Controller Strategy
 
 **Architectural Question**
 How will ingress controllers be deployed and managed for routing external traffic to applications?
@@ -378,7 +408,10 @@ Applications need to be exposed externally.
 
 ---
 
-## OCP-NET-11: Ingress Controller Replica Count
+## OCP-NET-11
+
+**Title**
+Ingress Controller Replica Count
 
 **Architectural Question**
 How many replicas will be deployed for each ingress controller instance (default and dedicated)?
@@ -416,7 +449,10 @@ Ingress Controller strategy (OCP-NET-10) is decided.
 
 ---
 
-## OCP-NET-12: SSL/TLS Termination Strategy
+## OCP-NET-12
+
+**Title**
+SSL/TLS Termination Strategy
 
 **Architectural Question**
 Where will SSL/TLS encryption for application ingress traffic be terminated?
@@ -457,7 +493,10 @@ Application traffic requires HTTPS.
 
 ---
 
-## OCP-NET-13: Default Network Policy (Pod Isolation)
+## OCP-NET-13
+
+**Title**
+Default Network Policy (Pod Isolation)
 
 **Architectural Question**
 What default network policy will govern pod communication _within_ and _between_ namespaces?
@@ -498,7 +537,10 @@ Network segmentation between projects/pods is desired or required.
 
 ---
 
-## OCP-NET-14: Administrative Network Policy Strategy (Cluster-wide)
+## OCP-NET-14
+
+**Title**
+Administrative Network Policy Strategy (Cluster-wide)
 
 **Architectural Question**
 Will cluster-scoped administrative network policies (`AdminNetworkPolicy`/`BaselineAdminNetworkPolicy`) enforce baseline security rules above tenant-controlled `NetworkPolicy`?
@@ -538,7 +580,10 @@ Cluster uses OVN-Kubernetes CNI (OCP-NET-05). Centralized network policy enforce
 
 ---
 
-## OCP-NET-15: Egress IP Address Strategy
+## OCP-NET-15
+
+**Title**
+Egress IP Address Strategy
 
 **Architectural Question**
 How will outbound traffic from specific pods/projects ensure a predictable source IP address when connecting to external services requiring IP whitelisting?
@@ -579,7 +624,10 @@ External services require source IP whitelisting.
 
 ---
 
-## OCP-NET-16: Secondary Network Strategy (Multus / SR-IOV)
+## OCP-NET-16
+
+**Title**
+Secondary Network Strategy (Multus / SR-IOV)
 
 **Architectural Question**
 How will pods connect to additional, specialized networks (e.g., VLANs, high-performance NICs) beyond the primary cluster network?

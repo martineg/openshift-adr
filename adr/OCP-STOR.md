@@ -1,6 +1,9 @@
 # OpenShift Container Platform storage
 
-## OCP-STOR-01: Storage
+## OCP-STOR-01
+
+**Title**
+Storage provider
 
 **Architectural Question**
 Which storage provider will be deployed in each cluster for persistent application data?

@@ -1,6 +1,9 @@
 # OpenShift Container Platform monitoring
 
-## OCP-MON-01: Monitoring
+## OCP-MON-01
+
+**Title**
+Monitoring
 
 **Architectural Question**
 What is the strategy for monitoring cluster and application metrics?
@@ -40,7 +43,10 @@ N/A
 
 ---
 
-## OCP-MON-02: Custom Monitoring Stack (Cluster Observability Operator)
+## OCP-MON-02
+
+**Title**
+Custom Monitoring Stack (Cluster Observability Operator)
 
 **Architectural Question**
 Will the Cluster Observability Operator (COO) be deployed to enable highly customized, cluster-scoped monitoring configurations?
