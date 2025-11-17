@@ -300,6 +300,47 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 ## OCP-BM-08
 
 **Title**
+BMC Credential Security and Storage Strategy
+
+**Architectural Question**
+How will the highly sensitive Baseboard Management Controller (BMC) credentials, necessary for Bare Metal Operator (BMO) operation, Agent-based Installation (ABI), and GitOps Zero Touch Provisioning (ZTP), be securely stored and accessed by the OpenShift control plane?
+
+**Issue or Problem**
+The automated bare metal workflow requires storing BMC login credentials (username/password) as Kubernetes Secrets (referenced by bmcCredentialsName). These secrets grant full out-of-band control over physical hosts (e.g., power cycle, firmware updates, OS installation). Protecting these secrets is critical for platform security.
+
+**Assumption**
+The Bare Metal Operator (BMO) is enabled, or the cluster relies on BMC access for installation (IPI, ABI, AI/ZTP).
+
+**Alternatives**
+
+- Standard Kubernetes Secrets with OCP/etcd Encryption
+- External Secret Management System Integration
+
+**Justification**
+
+- **Standard Kubernetes Secrets with OCP/etcd Encryption:** This is the native pattern used by the Agent Installer and GitOps ZTP (via `bmcCredentialsName`). Protection relies on Role-Based Access Control (RBAC) and application-layer encryption in etcd (if enabled). This simplifies deployment as no external dependencies are introduced during installation.
+- **External Secret Management System Integration:** Credentials are stored exclusively outside of the Kubernetes cluster (e.g., in HashiCorp Vault or CyberArk). OCP components/operators would retrieve the secrets just-in-time via an integration service (e.g., external Secrets Operator). This approach offers stronger separation of duties and auditing for access to critical infrastructure credentials.
+
+**Implications**
+
+- **Standard Kubernetes Secrets with OCP/etcd Encryption:** If an attacker gains sufficient privilege to read Kubernetes Secrets, the BMC credentials for all managed hosts are exposed. Requires stringent RBAC enforcement on the namespace containing the secrets.
+- **External Secret Management System Integration:** Increases Day 1 complexity by requiring deployment and highly available integration with the external secret system. Adds an external dependency that must be reachable and operational for BMO functions (like host remediation and provisioning) to succeed.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-09
+
+**Title**
 Bare Metal Node Secure Boot Strategy
 
 **Architectural Question**
@@ -340,7 +381,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-09
+## OCP-BM-10
 
 **Title**
 BMO Provisioning Boot Mechanism
@@ -381,7 +422,7 @@ Cluster installation method is IPI, Agent-based Installer (ABI), or Assisted Ins
 
 ---
 
-## OCP-BM-10
+## OCP-BM-11
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -421,7 +462,7 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 
 ---
 
-## OCP-BM-11
+## OCP-BM-12
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -461,7 +502,7 @@ N/A
 
 ---
 
-## OCP-BM-12
+## OCP-BM-13
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -503,7 +544,7 @@ Cluster is on the edge.
 
 ---
 
-## OCP-BM-13
+## OCP-BM-14
 
 **Title**
 Bare Metal Operator Namespace Scope
@@ -543,7 +584,7 @@ Bare Metal Operator (BMO) is enabled.
 
 ---
 
-## OCP-BM-14
+## OCP-BM-15
 
 **Title**
 Bare Metal Node Remediation
@@ -586,7 +627,7 @@ N/A.
 
 ---
 
-## OCP-BM-15
+## OCP-BM-16
 
 **Title**
 Bare Metal Node Firmware Management
@@ -626,7 +667,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-16
+## OCP-BM-17
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -666,7 +707,48 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-17
+## OCP-BM-18
+
+**Title**
+Bare Metal Host Firmware Optimization for Performance
+
+**Architectural Question**
+How will specific BIOS and hardware firmware settings required for low-latency and performance-sensitive workloads (e.g., vDU) be consistently configured and validated across the bare metal host fleet?
+
+**Issue or Problem**
+To achieve optimal performance and low latency for workloads like virtual Distributed Units (vDU), critical host firmware settings (such as SMT/Hyperthreading, CPU C-states, and I/O settings) must be precisely configured. Manual configuration is non-scalable, error-prone, and can lead to configuration drift, which impacts application performance and stability.
+
+**Assumption**
+Performance-sensitive workloads requiring specialized tuning (e.g., Real-Time Kernel, Workload Partitioning) are planned for deployment.
+
+**Alternatives**
+
+- Manual/Out-of-Band Configuration
+- Automated Configuration via GitOps ZTP/SiteConfig
+
+**Justification**
+
+- **Manual/Out-of-Band Configuration:** Requires using vendor-specific tools (e.g., iDRAC console, command-line utilities) or custom scripting outside of the OCP GitOps framework. This relies on existing IT operational processes but is highly challenging to validate and enforce consistently at scale.
+- **Automated Configuration via GitOps ZTP/SiteConfig:** Leverages the OpenShift ecosystem by defining firmware settings in the `SiteConfig` CR using the `biosConfigRef` field, which references an external hardware profile file. This approach centralizes the desired configuration in the source of truth (Git) and makes auditing possible, ensuring hosts meet the recommended firmware configuration for vDU application workloads.
+
+**Implications**
+
+- **Manual/Out-of-Band Configuration:** Highest operational overhead for Day 2 management and validation. Configuration state exists outside the GitOps pipeline.
+- **Automated Configuration via GitOps ZTP/SiteConfig:** Requires maintaining standardized hardware profiles (e.g., `.profile files`) referenced by the `biosConfigRef` field. This approach relies on the underlying bare metal automation to support pushing these settings via BMC protocols.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-19
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -707,7 +789,7 @@ Workloads require strict low-latency guarantees, typically falling into the CNF/
 
 ---
 
-## OCP-BM-18
+## OCP-BM-20
 
 **Title**
 Workload Partitioning (CPU Isolation)
