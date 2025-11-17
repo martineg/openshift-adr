@@ -7,12 +7,9 @@ from pathlib import Path
 # --- Configuration (Relative to project root) ---
 ADR_DIRECTORY = "adr"
 PROMPT_DIRECTORY = "prompts"
-DICT_DIRECTORY = "dictionaries"
-DOC_MAPPING_FILENAME = "adr_doc_prefix_mapping.md"
-CREATE_LOAD_TEMPLATE = "template-adr-create-load.md"  # <-- NEW
-CREATE_EXEC_TEMPLATE = "adr-create.md"            # <-- NEW
+CREATE_TEMPLATE_FILENAME = "adr-create.md"
 CHAR_LIMIT = 1950
-WRAPPER_ESTIMATE = 200 # Increased buffer for multi-part prompts
+WRAPPER_ESTIMATE = 150 
 SAFE_CHUNK_LIMIT = CHAR_LIMIT - WRAPPER_ESTIMATE
 
 # --- "LOAD" Prompt Wrappers (for UPDATE) ---
@@ -79,125 +76,50 @@ def read_file(file_path: Path) -> str:
         print(f"Error: Could not read file {file_path}: {e}", file=sys.stderr)
         sys.exit(1)
 
-def parse_doc_mapping(content: str, target_prefix: str) -> (list, list):
-    source_of_truth_files = []
-    all_prefixes = set()
-    
-    # **BUG FIX**: Iterate all lines, but add checks for header/junk
-    lines = content.split('\n')
-    for line in lines:
-        if not line.strip() or not line.startswith('|'):
-            continue
-        
-        parts = [col.strip() for col in line.strip('|').split('|')]
-        if len(parts) < 2:
-            continue
-            
-        doc_file, prefixes_in_row_str = parts[0], parts[1]
-
-        # **BUG FIX**: Skip header, separator, or empty rows
-        if doc_file.lower() == "documentation file" or doc_file.startswith(':'):
-            continue
-            
-        prefixes_in_row = [p.strip() for p in prefixes_in_row_str.split(',')]
-        
-        for prefix in prefixes_in_row:
-            if not prefix or prefix.lower() == 'id_ad_prefix' or prefix.startswith(':'):
-                continue
-                
-            all_prefixes.add(f"{prefix}-") # Add to the "baseline" list
-            
-            if prefix == target_prefix:
-                source_of_truth_files.append(f"- `{doc_file}`")
-                
-    return sorted(source_of_truth_files), sorted(list(all_prefixes))
-
 def get_next_adr_id(adr_file_content: str, prefix_with_dash: str) -> str:
+    """Finds the highest existing ADR ID and returns the next one."""
     pattern = re.compile(r"^\#\#\s*{prefix}(\d+)".format(prefix=re.escape(prefix_with_dash)),
                          re.MULTILINE | re.IGNORECASE)
     ids = [int(match.group(1)) for match in pattern.finditer(adr_file_content)]
     if not ids:
         return "01"
     next_id = max(ids) + 1
-    return f"{next_id:02d}" # Format as two digits
+    return f"{next_id:02d}" # Format as two digits, e.g., "08"
 
-# --- NEW 'CREATE' WORKFLOW FUNCTION ---
+# --- NEW SIMPLIFIED 'CREATE' FUNCTION ---
 def handle_create_prompt(project_root: Path, prefix_base: str):
-    """Generates a two-part conversational 'CREATE' prompt."""
+    """Generates the 'CREATE' prompt (v36)."""
     
-    load_template_path = project_root / PROMPT_DIRECTORY / CREATE_LOAD_TEMPLATE
-    exec_template_path = project_root / PROMPT_DIRECTORY / CREATE_EXEC_TEMPLATE
-    mapping_file_path = project_root / DICT_DIRECTORY / DOC_MAPPING_FILENAME
+    prompt_template_path = project_root / PROMPT_DIRECTORY / CREATE_TEMPLATE_FILENAME
     adr_file_path = project_root / ADR_DIRECTORY / f"{prefix_base}.md"
 
-    load_template_content = read_file(load_template_path)
-    exec_template_content = read_file(exec_template_path)
-    mapping_content = read_file(mapping_file_path)
+    prompt_template_content = read_file(prompt_template_path)
     
     adr_file_content = ""
     if adr_file_path.exists():
         adr_file_content = adr_file_path.read_text()
-    
+    else:
+        print(f"Info: ADR file '{adr_file_path.name}' not found. Assuming next ID is '01'.", file=sys.stderr)
+
     prefix_with_dash = f"{prefix_base}-"
     
-    # 1. Get data from helper functions
-    source_files, baseline_prefixes = parse_doc_mapping(mapping_content, prefix_base)
+    # 1. Get the next ADR ID
     next_id = get_next_adr_id(adr_file_content, prefix_with_dash)
     
-    source_file_list_str = '\n'.join(source_files) or "N/A (Using all sources)"
-    baseline_prefix_list_str = '`' + '`, `'.join(baseline_prefixes) + '`'
-
-    # 2. Generate Prompt 1 (LOAD) - This is the long one
-    prompt1_load_content = f"**1. Your Source of Truth (FOCUSED FILE LIST):**\n" \
-                           f"Your analysis must be based **ONLY** on the following document(s):\n" \
-                           f"{source_file_list_str}\n\n" \
-                           f"**2. Baseline ADRs (DO NOT DUPLICATE):**\n" \
-                           f"You must check against the following list of *all existing ADR prefixes*. Do not suggest topics that are already covered by these prefixes.\n" \
-                           f"{baseline_prefix_list_str}"
+    # 2. Inject into the prompt template
+    final_prompt = prompt_template_content.replace("[PREFIX]", prefix_base)
+    final_prompt = final_prompt.replace("[STARTING_ID]", next_id)
     
-    # 3. Generate Prompt 2 (EXECUTE)
-    prompt2_execute = exec_template_content.format(
-        PREFIX_DASH=prefix_with_dash,
-        NEXT_ADR_ID=next_id
-    )
+    # 3. Check length (should be fine, but good practice)
+    prompt_len = len(final_prompt)
+    if prompt_len > CHAR_LIMIT:
+         print(f"# !!!!!!!!! WARNING: 'CREATE' PROMPT IS {prompt_len} CHARS. MIGHT BE TOO LONG. !!!!!!!!!", file=sys.stderr)
 
-    # 4. Print the two-part conversation
-    print(f"# --- START OF 'CREATE' WORKFLOW FOR {prefix_base} ---")
-    print(f"# This is a 2-step process. Run Prompt 1, then run Prompt 2.\n")
-    
-    # --- Check length of Prompt 1 and split if needed ---
-    if len(prompt1_load_content) + WRAPPER_ESTIMATE <= CHAR_LIMIT:
-        # It fits in one prompt
-        final_prompt1 = load_template_content.format(ADR_FULL_TEXT=prompt1_load_content)
-        print(f"# --- PROMPT 1: LOAD CONTEXT (1 part) ---")
-        print(final_prompt1.strip())
-        print(f"# --- END OF PROMPT 1 ---")
-    else:
-        # It's too long, split it
-        print(f"# --- NOTE: 'CREATE' CONTEXT IS TOO LONG. SPLITTING INTO MULTIPLE PROMPTS... ---")
-        chunks = split_text_into_chunks(prompt1_load_content, SAFE_CHUNK_LIMIT)
-        total_chunks = len(chunks)
-        
-        for part_num, chunk_content in enumerate(chunks, 1):
-            next_part = part_num + 1
-            if part_num == 1:
-                final_prompt = PROMPT_MULTI_START.format(total=total_chunks, ADR_FULL_TEXT=chunk_content)
-            elif part_num == total_chunks:
-                final_prompt = PROMPT_MULTI_END.format(part_num=part_num, total=total_chunks, ADR_FULL_TEXT=chunk_content)
-            else:
-                final_prompt = PROMPT_MULTI_PART.format(part_num=part_num, total=total_chunks, next_part=next_part, ADR_FULL_TEXT=chunk_content)
-            
-            print(f"# --- START OF PROMPT 1 (Part {part_num}/{total_chunks}) ---")
-            print(final_prompt.strip())
-            print(f"# --- END OF PROMPT 1 (Part {part_num}/{total_chunks}) ---")
+    print(f"# --- START OF 'CREATE' PROMPT FOR {prefix_base} (Next ID: {next_id}) ---")
+    print(final_prompt.strip())
+    print(f"# --- END OF 'CREATE' PROMPT ---")
 
-    print(f"\n# --- PROMPT 2: EXECUTE TASK ---")
-    print(f"# (Run this prompt *after* the context above is fully loaded)\n")
-    print(prompt2_execute.strip())
-    print(f"# --- END OF 'CREATE' WORKFLOW ---")
-
-
-# --- This function (handle_review_update_prompts) is unchanged ---
+# --- THIS FUNCTION (handle_review_update_prompts) IS UNCHANGED ---
 def handle_review_update_prompts(project_root: Path, target: str):
     """Generates one or more 'LOAD' prompts for the 'REVIEW/UPDATE' workflow."""
     
@@ -326,7 +248,7 @@ Example usage (run from project root '~/workspace/adr'):
             sys.exit(1)
         handle_create_prompt(project_root, args.target)
         
-    elif args.review_update:
+    elif args.review-update:
         handle_review_update_prompts(project_root, args.target)
 
 if __name__ == "__main__":
