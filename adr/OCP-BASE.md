@@ -244,7 +244,6 @@ N/A
 
 **Alternatives**
 
-- Public Cloud Managed (ROSA/ARO/OSD)
 - Self-Managed Public Cloud (AWS, Azure, GCP, OCI, IBM Cloud, Azure Stack Hub, ALIBABA Cloud)
 - Bare Metal / On-Premise Virtualized (vSphere, RHOSP, Bare Metal, Nutanix, IBM Power, IBM Z/LinuxONE, External/None)
 
@@ -253,13 +252,11 @@ N/A
 
 **Justification**
 
-- **Public Cloud Managed (ROSA/ARO/OSD):** To leverage fully automated installation and rely on Red Hat and/or the cloud vendor for control plane management. Simplifies Day 2 operations but limits customization.
 - **Self-Managed Public Cloud (AWS, Azure, GCP, OCI, IBM Cloud, Azure Stack Hub, ALIBABA Cloud):** Supports Installer-Provisioned Infrastructure (IPI) on platforms including AWS, Azure, GCP, Azure Stack Hub, and IBM Cloud Classic/VPC. User-Provisioned Infrastructure (UPI) maximizes flexibility and is supported on AWS, Azure, GCP, OCI, Azure Stack Hub, and ALIBABA Cloud. The Assisted Installer (AI) is supported for OCI. The Agent-based Installer (ABI) is supported for OCI.
 - **Bare Metal / On-Premise Virtualized (vSphere, RHOSP, Bare Metal, Nutanix, IBM Power, IBM Z/LinuxONE, External/None):** Provides full hardware control. Supported IPI options include vSphere, RHOSP, Bare Metal, and Nutanix. UPI is supported on platforms including vSphere, RHOSP, Bare Metal, IBM Power®, IBM Z®/IBM® LinuxONE, and External/None. Assisted Installer (AI) is supported on vSphere, Bare Metal, Nutanix, IBM Power®, IBM Z®, External, and None. Agent-based Installer (ABI) is supported on Bare Metal, vSphere, IBM Power®, IBM Z®, External, and None.
 
 **Implications**
 
-- **Public Cloud Managed (ROSA/ARO/OSD):** Reduces administrative overhead for underlying infrastructure components. Installation methods are limited to the managed service offering.
 - **Self-Managed Public Cloud (AWS, Azure, GCP, OCI, IBM Cloud, Azure Stack Hub, ALIBABA Cloud):** IPI mode (on AWS, Azure, GCP, IBM Cloud, etc.) abstracts infrastructure management via the Machine API, simplifying cluster scaling and node lifecycle. Requires cloud credentials and IAM setup. UPI (on AWS, Azure, GCP, OCI, etc.) requires manual management of underlying resources and does not support the Machine API post-installation.
 - **Bare Metal / On-Premise Virtualized (vSphere, RHOSP, Bare Metal, Nutanix, IBM Power, IBM Z/LinuxONE, External/None):** For User-Provisioned Infrastructure (UPI) deployment, administrators must manually manage all underlying infrastructure components. IPI (on vSphere, RHOSP, Nutanix, Bare Metal) and Assisted/Agent Installer (on Bare Metal, vSphere, Nutanix, etc.) automate provisioning of infrastructure. For Bare Metal IPI, core infrastructure resources (networking, load balancing, storage, bootstrap machine) must be provided by the user.
 
@@ -285,8 +282,7 @@ How will the OpenShift platform be deployed across multiple physical sites (data
 Deploying a platform across multiple sites introduces significant complexity related to network latency, failure domains, and data replication. A clear strategy is required to balance the operational overhead against the business requirements for resilience and service availability, while adhering to Red Hat supportability guidelines.
 
 **Assumption**
-
-Plaftorm infrastructure is self-managed public cloud or on-premise.
+N/A
 
 **Alternatives**
 
@@ -294,7 +290,7 @@ Plaftorm infrastructure is self-managed public cloud or on-premise.
 - Multi-Cluster (Independent Cluster per Site)
 
 **Decision**
-#TODO: Document the decision.#
+#TODO: Document the decision for each cluster.#
 
 **Justification**
 
@@ -424,7 +420,7 @@ In a disconnected environment, which mirrored images registry solution will be u
 In a disconnected environment, the cluster needs access to Red Hat software (release images, operators) via a local mirror registry for installation and updates.
 
 **Assumption**
-Environment is disconnected (as decided in OCP-BASE-07).
+Environment is disconnected.
 
 **Alternatives**
 

@@ -52,10 +52,51 @@ N/A
 ## OCP-BM-02
 
 **Title**
+RHCEnable Bare Metal Operator (BMO) for UPI
+
+**Architectural Question**
+Will the Bare Metal Operator (BMO) be enabled for a User-Provisioned Infrastructure (UPI) deployment?
+
+**Issue or Problem**
+A standard UPI installation does not include the Bare Metal Operator, meaning all Day 2 operations (like node remediation, scaling, or hardware management) are fully manual. Enabling BMO on UPI adds this automation but requires additional configuration.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- BMO will not be enabled
+- BMO will be enabled
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **BMO will not be enabled:** This maintains a pure UPI model where the platform has no control over the physical hardware, relying on manual intervention or external automation for all node lifecycle management.
+- **BMO will be enabled:** This creates a "hybrid" model that combines the Day 1 control of UPI with the Day 2 automation benefits of IPI, such as automated node remediation and hardware inspection.
+
+**Implications**
+
+- **BMO will not be enabled:** The organization is fully responsible for all Day 2 bare metal operations, and ADRs related to BMCs (remediation, protocol, NC-SI) are not applicable.
+- **BMO will be enabled:** Subsequent ADRs for BMC protocols, NC-SI, and automated remediation must be addressed, and the operator must be manually installed and configured post-installation.
+
+  **Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-03
+
+**Title**
 RHCOS Provisioning Method for Bare Metal Nodes
 
 **Architectural Question**
-How will Red Hat Enterprise Linux CoreOS (RHCOS) be provisioned onto the bare metal nodes?
+How will Red Hat Enterprise Linux CoreOS (RHCOS) be provisioned onto the bare metal nodes when using UPI method deployment?
 
 **Issue or Problem**
 The method chosen to boot and install RHCOS on physical hardware dictates the required network infrastructure (e.g., PXE services) and the level of manual effort (e.g., ISO mounting). This decision is a prerequisite for User-Provisioned method.
@@ -89,7 +130,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-03
+## OCP-BM-04
 
 **Title**
 RHCOS Day-1 Customization Method
@@ -132,7 +173,47 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-04
+## OCP-BM-05
+
+**Title**
+Provisioning Network Strategy for Installer-Provisioned Bare Metal
+
+**Architectural Question**
+Will a dedicated provisioning network be used during IPI cluster deployment?
+
+**Issue or Problem**
+The Installer-Provisioned Infrastructure (IPI) deployment model, especially on bare metal, defaults to leveraging an optional, segregated provisioning network to manage tasks like DHCP, TFTP, and operating system deployment via Ironic. Deciding whether to utilize this network or provision entirely over the routable bare metal network dictates hardware requirements (NIC count) and the mandatory use of certain Baseboard Management Controller (BMC) protocols (virtual media).
+
+**Assumption**
+Cluster installation method is Installer-Provisioned Infrastructure (IPI).
+
+**Alternatives**
+
+- A dedicated provisioning network is used for deploying the cluster
+- The provisioning will be performed on the routable bare metal network
+
+**Justification**
+
+- **A dedicated provisioning network is used for deploying the cluster:** This method is the default Managed provisioning network setting. It automatically enables the Ironic-dnsmasq DHCP server on the provisioner node and is required for deployments using PXE booting. Using this network isolates the operating system provisioning traffic onto a non-routable network segment.
+- **The provisioning will be performed on the routable bare metal network:** This approach is configured by setting `provisioningNetwork: "Disabled"` in the `install-config.yaml` file. This simplifies networking requirements by eliminating the need for a dedicated physical NIC for provisioning. This option enables the use of the Assisted Installer.
+
+**Implications**
+
+- **A dedicated provisioning network is used for deploying the cluster:** Requires a dedicated physical network interface (NIC1) on all nodes, distinct from the routable baremetal network (NIC2). This network must be isolated and cannot have an external DHCP server if configured as Managed.
+- **The provisioning will be performed on the routable bare metal network:** This approach mandates the use of virtual media BMC addressing options (such as `redfish-virtualmedia` or `idrac-virtualmedia`). The BMCs must be accessible from the routable bare metal network. If disabled, the installation program requires two IP addresses on the bare metal network for provisioning services.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-BM-06
 
 **Title**
 Network Controller Sideband Interface (NC-SI) Support Enforcement
@@ -144,7 +225,7 @@ For OpenShift Container Platform bare metal deployments utilizing hardware where
 OpenShift Container Platform require NC-SI compliant hardware when the BMC shares a system NIC. Without the correct configuration, powering down the host can cause the loss of BMC connectivity (NC-SI connection loss), interrupting bare metal provisioning or management operations.
 
 **Assumption**
-Cluster installation method is User-Provisioned Infrastructure (UPI).
+Cluster installation method is IPI / Assisted Installer / Agent-based installer / IBI or UPI with Bare Metal Operator enabled.
 
 **Alternatives**
 
@@ -172,7 +253,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-05
+## OCP-BM-07
 
 **Title**
 BMC protocol
@@ -216,7 +297,50 @@ The cluster installation method is Installer-Provisioned Infrastructure (IPI) or
 
 ---
 
-## OCP-BM-06
+## OCP-BM-08
+
+**Title**
+Bare Metal Node Secure Boot Strategy
+
+**Architectural Question**
+Will Secure Boot be enabled on bare metal cluster nodes?
+
+**Issue or Problem**
+Secure Boot is often required for security compliance to ensure nodes only boot with trusted software. The implementation method chosen (disabled, manual, or managed) has different operational overheads, specific setup requirements (e.g., reliance on Redfish virtual media), and stringent hardware compatibility restrictions.
+
+**Assumption**
+The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
+
+**Alternatives**
+
+- Secure Boot will not be enabled
+- Secure Boot will be enabled manually
+- Secure Boot will be enabled through Managed Secure Boot (TP)
+
+**Justification**
+
+- **Secure Boot will not be enabled:** This simplifies installation and avoids the complex hardware compatibility constraints associated with enabling Secure Boot.
+- **Secure Boot will be enabled manually:** This approach utilizes the node's native Secure Boot feature, which is supported during IPI deployments when using **Redfish virtual media**. This is also the only supported method for UPI deployment. This method provides flexibility across more diverse hardware platforms compared to the Managed option and avoids reliance on a Technology Preview feature.
+- **Secure Boot will be enabled through Managed Secure Boot (TP):** This option automates Secure Boot provisioning by setting `bootMode: "UEFISecureBoot"` in the `install-config.yaml` file. It streamlines node configuration and management, and crucially, does **not** require using Redfish virtual media for the installation.
+
+**Implications**
+
+- **Secure Boot will not be enabled:** This approach might fail to meet security or regulatory compliance standards that require verifying the integrity of the boot chain.
+- **Secure Boot will be enabled manually:** Requires manual configuration of UEFI boot mode and Secure Boot settings on _each_ control plane and worker node. This is the only supported method when using UPI deployment. Furthermore, Red Hat explicitly supports this manual configuration for IPI only when the installation uses Redfish virtual media.
+- **Secure Boot will be enabled through Managed Secure Boot (TP):** This feature is only supported on specific hardware models: **10th generation HPE hardware** and **13th generation Dell hardware** running firmware version **2.75.75.75 or greater**. This capability is currently designated as a Technology Preview (TP) feature.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-09
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -256,7 +380,7 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 
 ---
 
-## OCP-BM-07
+## OCP-BM-10
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -268,7 +392,7 @@ How should the root disk be partitioned on bare metal nodes to accommodate conta
 If the container storage (`/var/lib/containers`) directory resides on the same partition as the root filesystem, aggressive application logging or large image pull caches can lead to the control plane nodes or worker nodes running out of disk space, potentially causing instability or failure. Defining a dedicated partition ensures predictable capacity management and allows for specific filesystem tuning.
 
 **Assumption**
-Cluster installation method is User-Provisioned Infrastructure (UPI).
+N/A
 
 **Alternatives**
 
@@ -296,7 +420,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-08
+## OCP-BM-11
 
 **Title**
 Bare Metal Node Remediation
@@ -339,7 +463,7 @@ N/A.
 
 ---
 
-## OCP-BM-09
+## OCP-BM-12
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
