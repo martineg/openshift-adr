@@ -467,6 +467,129 @@ Cluster installation method is IPI, Agent-based Installer (ABI), or Assisted Ins
 ## OCP-BM-12
 
 **Title**
+RHCOS Installation Boot Device Selection
+
+**Architectural Question**
+Will Red Hat Enterprise Linux CoreOS (RHCOS) be installed and booted from local internal storage (e.g., NVMe, SATA SSD) or from network-attached iSCSI SAN storage?
+
+**Issue or Problem**
+The choice of boot device impacts storage management, failure domains, and the complexity of the installation process. Integrating with existing Storage Area Networks (SANs) requires specific installation steps (iSCSI target/initiator configuration) not needed for local disk deployment.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Local Disk Installation (Internal NVMe/SSD/HDD)
+- iSCSI Boot Device Installation (SAN Storage)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Local Disk Installation (Internal NVMe/SSD/HDD):** This is the default, simpler installation path, requiring less complex networking and kernel configuration during the RHCOS installation boot process.
+- **iSCSI Boot Device Installation (SAN Storage):** This is required to leverage centralized, highly available, and potentially multi-pathed SAN infrastructure for the OS root disk. It supports fully diskless machines.
+
+**Implications**
+
+- **Local Disk Installation (Internal NVMe/SSD/HDD):** Resilience relies entirely on the local disk health (e.g., RAID, if configured, OCP-BM-12). Storage capacity and performance are confined to the internal server limits.
+- **iSCSI Boot Device Installation (SAN Storage):** Significantly increases installation complexity, requiring configuration of the iSCSI target portal, IQN, and LUN, either manually or via firmware tables. Adds a hard dependency on the storage network and SAN availability during node boot and operation.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-13
+
+**Title**
+iSCSI Boot Configuration Method for RHCOS
+
+**Architectural Question**
+When using an iSCSI boot device for RHCOS, should the configuration be handled manually via the live installer shell/scripts and kernel arguments, or automatically via iBFT (iSCSI Boot Firmware Table)?
+
+**Issue or Problem**
+Installing RHCOS onto iSCSI requires the initiator and target information (IQN, LUN, etc.) to be passed to the kernel and the `coreos-installer`. A choice must be made between highly automated firmware integration (iBFT) and explicit manual configuration/scripting.
+
+**Assumption**
+iSCSI boot device is used
+
+**Alternatives**
+
+- Manual/Scripted iSCSI Configuration
+- iBFT/Firmware-Based iSCSI Configuration
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Manual/Scripted iSCSI Configuration:** Allows explicit control over the entire iSCSI mounting and unmounting process using scripts embedded in the live image (e.g., `--pre-install` / `--post-install` scripts) and explicit kernel arguments (e.g., `rd.iscsi.initiator=`).
+- **iBFT/Firmware-Based iSCSI Configuration:** Enables a more automated, cleaner configuration path for diskless machines by allowing the RHCOS installer to read the iSCSI parameters directly from the BIOS firmware during boot. This simplifies the kernel argument configuration during PXE/ISO boot.
+
+**Implications**
+
+- **Manual/Scripted iSCSI Configuration:** Higher setup complexity requiring maintenance of external scripts and detailed kernel parameter passing during boot, but offers maximum flexibility, especially if the firmware is older or iBFT support is unreliable.
+- **iBFT/Firmware-Based iSCSI Configuration:** Requires ensuring BIOS/UEFI firmware is correctly configured to expose the iSCSI parameters. If not properly configured, installation will fail without manual overrides.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-14
+
+**Title**
+RHCOS Multipathing Enablement Strategy
+
+**Architectural Question**
+Will multipathing be explicitly enabled for Red Hat Enterprise Linux CoreOS (RHCOS) disks (primary boot or secondary data disks) during installation to enhance resilience against hardware failure?
+
+**Issue or Problem**
+Multipathing is essential for highly available storage backends (especially iSCSI/Fibre Channel), providing redundant data paths. Failure to enable it at installation time in certain configurations (e.g., IBM Z) prevents its use later, or can lead to I/O system errors if not optimized initially.
+
+**Assumption**
+Boot devices or secondary devices are SAN storage.
+
+**Alternatives**
+
+- Enable Multipathing at Installation Time
+- Rely on Default Single-Path Configuration
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Enable Multipathing at Installation Time:** This is the recommended approach for providing stronger resilience and achieving higher host availability, especially for primary boot disks. This is done via kernel arguments (`rd.multipath=default`) for the primary disk or by using Butane/Ignition configuration for secondary disks.
+- **Rely on Default Single-Path Configuration:** This avoids the complexity of installing Multipathd and configuring the device mapper during the Day 1 installation process. Suitable if the underlying storage only provides a single path, or if redundancy is handled exclusively at the storage array level.
+
+**Implications**
+
+- **Enable Multipathing at Installation Time:** Mandatory in setups where non-optimized paths result in I/O system errors. For secondary disks, requires careful use of Ignition configuration via Butane config and systemd units.
+- **Rely on Default Single-Path Configuration:** Increases the vulnerability of the node to a Single Point of Failure (SPoF) if a network path, cable, or HBA connected to the storage array fails. Not recommended for production environments requiring high availability.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-15
+
+**Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
 
 **Architectural Question**
@@ -504,7 +627,7 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 
 ---
 
-## OCP-BM-13
+## OCP-BM-16
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -544,7 +667,7 @@ N/A
 
 ---
 
-## OCP-BM-14
+## OCP-BM-17
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -587,7 +710,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-15
+## OCP-BM-18
 
 **Title**
 Bare Metal Operator Namespace Scope
@@ -629,7 +752,7 @@ To enable features like Bare Metal as a Service (BMaaS) or GitOps ZTP, the BMO m
 
 ---
 
-## OCP-BM-16
+## OCP-BM-19
 
 **Title**
 Bare Metal Node Remediation
@@ -672,7 +795,7 @@ N/A.
 
 ---
 
-## OCP-BM-17
+## OCP-BM-20
 
 **Title**
 Bare Metal Node Firmware Management
@@ -712,7 +835,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-18
+## OCP-BM-21
 
 **Title**
 Bare Metal Fleet Cluster Upgrade Strategy
@@ -755,7 +878,7 @@ Managing simultaneous upgrades across a large fleet of bare metal clusters, part
 
 ---
 
-## OCP-BM-19
+## OCP-BM-22
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -795,7 +918,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-20
+## OCP-BM-23
 
 **Title**
 Bare Metal Host Firmware Configuration
@@ -836,7 +959,7 @@ GitOps ZTP is used
 
 ---
 
-## OCP-BM-21
+## OCP-BM-24
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -877,7 +1000,7 @@ Workloads require strict low-latency guarantees, typically falling into the CNF/
 
 ---
 
-## OCP-BM-22
+## OCP-BM-25
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -918,7 +1041,7 @@ Low-latency or high-performance application workloads (like vDUs) must be isolat
 
 ---
 
-## OCP-BM-23
+## OCP-BM-26
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -959,7 +1082,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-24
+## OCP-BM-27
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1001,7 +1124,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-25
+## OCP-BM-28
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection for Performance Workloads
@@ -1043,7 +1166,48 @@ The cluster supports SR-IOV capable NICs.
 
 ---
 
-## OCP-BM-26
+## OCP-BM-29
+
+**Title**
+SR-IOV Virtual Function Bonding Strategy for High Availability
+
+**Architectural Question**
+How will multiple Single Root I/O Virtualization (SR-IOV) Virtual Functions (VFs) attached to a dual-port Network Interface Card (NIC) be configured for network resilience and high availability for application workloads?
+
+**Issue or Problem**
+For high-performance network components like SR-IOV VFs, a single virtual function presents a single failure path. Utilizing dual-port NICs to create a bond provides network high availability (HA) and load balancing capabilities, especially for critical workloads like OpenShift Virtualization or vDU.
+
+**Assumption**
+The bare metal cluster has SR-IOV capable NICs
+
+**Alternatives**
+
+- Bond multiple SR-IOV Virtual Functions (VFs)
+- Utilize separate, unbonded SR-IOV Virtual Functions (VFs)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Bond multiple SR-IOV Virtual Functions (VFs):** This approach supports the use of bonds for high availability with the Link Aggregation Control Protocol (LACP), leveraging a single, high-speed dual port NIC partitioned into VFs. This is critical for highly available virtualization or performance-sensitive applications.
+- **Utilize separate, unbonded SR-IOV Virtual Functions (VFs):** This simplifies configuration and avoids the complexity of OVS bonding setup. It may be sufficient for non-critical testing or development environments where HA is not a priority.
+
+**Implications**
+
+- **Bond multiple SR-IOV Virtual Functions (VFs):** Requires complex network configuration, potentially involving OVS bonding modes like `balance-slb`. This complexity must be managed via MachineConfig/NMState configuration during installation. Failure requires coordinating external maintenance windows with cluster availability (e.g., node draining, cluster remediation).
+- **Utilize separate, unbonded SR-IOV Virtual Functions (VFs):** Provides no network redundancy or HA across physical NIC ports for application workloads using the VFs.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-30
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
