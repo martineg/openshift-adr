@@ -21,7 +21,7 @@ N/A
 - Per-Environment Model
 
 **Decision**
-#TODO#
+#TODO: Document the decision.#
 
 **Justification**
 
@@ -65,7 +65,7 @@ N/A
 - Hybrid Cloud Model
 
 **Decision**
-#TODO#
+#TODO: Document the decision.#
 
 **Justification**
 
@@ -453,37 +453,34 @@ Environment is disconnected.
 ## OCP-BASE-11
 
 **Title**
-Platform Installation and Upgrade Automation Strategy
+Fleet Management
 
 **Architectural Question**
-What strategy or tooling will be used for automating the installation and ongoing upgrades of OpenShift Container Platform clusters?
+What strategic model will be used to manage the lifecycle (provisioning, upgrades, governance, and observability) of the OpenShift cluster fleet?
 
 **Issue or Problem**
-Manual installation and upgrade processes are prone to human error, lead to configuration drift, and do not scale effectively for a fleet of clusters. A clear automation strategy is needed.
+Managing clusters individually ("pets") leads to configuration drift, inconsistent security postures, and operational bottlenecks as the fleet grows. A strategy is needed to determine if clusters will be managed autonomously or via a unified, centralized control plane.
 
 **Assumption**
 N/A
 
 **Alternatives**
 
-- **Manual Installation/Upgrade:** Using the CLI (`openshift-install`) or web console for initial deployment and triggering upgrades manually.
-- **Automated with Corporate Tooling:** Using an existing corporate automation solution (e.g., Ansible, Terraform, custom CI/CD pipelines) to wrap and orchestrate the installation and upgrade processes.
-- **Automated with Red Hat Advanced Cluster Management (RHACM):** Using the native GitOps Zero Touch Provisioning (ZTP) and policy-based management features of RHACM to declaratively manage the entire cluster lifecycle.
+- **Decentralized Management:** Each cluster is provisioned, upgraded, and configured independently using disparate tools (CLI, Jenkins, Ansible) and individual consoles.
+- **Centralized Fleet Management (RHACM):** A hub-and-spoke architecture is used where a central "Hub" cluster (running Red Hat Advanced Cluster Management) orchestrates the lifecycle and governance of all "Spoke" clusters.
 
 **Decision**
-#TODO: Document the decision.#
+#TODO: Document the decision#
 
 **Justification**
 
-- **Manual Installation/Upgrade:** Suitable for initial proof-of-concept (PoC) environments or highly customized, one-off User-Provisioned Infrastructure (UPI) builds where granular control is paramount. This approach does not scale and is not recommended for production.
-- **Automated with Corporate Tooling:** Leverages existing team skills and tools (e.g., Ansible, Terraform). This is a good choice for integrating cluster builds into a pre-existing Infrastructure-as-Code (IaC) framework.
-- **Automated with Red Hat Advanced Cluster Management (RHACM):** This is the strategic Red Hat solution for managing a _fleet_ of clusters at scale. It provides a single, declarative control plane for deploying, upgrading, and enforcing configuration across multiple clusters.
+- **Decentralized Management:** Suitable only for very small, static environments where the overhead of a management hub is not justified.
+- **Centralized Fleet Management (RHACM):** The strategic requirement for enterprise scale. It provides a single pane of glass for observability, a unified engine for policy-based governance (GRC), and enables advanced provisioning workflows (like GitOps ZTP) across all infrastructure providers.
 
 **Implications**
 
-- **Manual Installation/Upgrade:** High reliance on human expertise and runbooks; high risk of configuration drift and human error.
-- **Automated with Corporate Tooling:** The organization is responsible for creating and maintaining the automation scripts/playbooks and integrating them with the OpenShift installers and CVO/MCO upgrade operators.
-- **Automated with Red Hat Advanced Cluster Management (RHACM):** Requires a separate "hub" cluster to run RHACM. This introduces higher initial complexity but provides the most scalable, declarative, and repeatable management solution for Day 0 through Day 2 operations.
+- **Decentralized Management:** High operational overhead per cluster; auditing compliance across the fleet is manual and error-prone.
+- **Centralized Fleet Management (RHACM):** Requires deploying and maintaining a dedicated Hub cluster. Establishes the dependency required for advanced automation patterns like GitOps Zero Touch Provisioning (ZTP) and Hosted Control Planes.
 
 **Agreeing Parties**
 

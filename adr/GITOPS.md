@@ -139,6 +139,9 @@ Multi-tenancy must support isolation between application delivery teams (tenants
 
 **Alternatives** - Standard Deployment from Control Plane (Legacy/GA) - Applications in any namespace (GA) + ApplicationSets in non-control plane namespaces (TP)
 
+**Decision**
+#TODO: Document the decision for each cluster.#
+
 **Justification**
 
 - **Applications in any namespace (GA) + ApplicationSets in non-control plane namespaces (TP):** This approach maximizes security and flexibility for isolated teams by allowing them to manage their Application/ApplicationSet resources within their own namespaces. The Applications feature is Generally Available (GA) since OpenShift GitOps 1.13.0. Leveraging ApplicationSets in non-control plane namespaces greatly improves scalability and deployment pattern repeatability for tenants, although this part is **Technology Preview (TP)**.
@@ -148,9 +151,6 @@ Multi-tenancy must support isolation between application delivery teams (tenants
 
 - **Applications in any namespace (GA) + ApplicationSets in non-control plane namespaces (TP):** Requires the cluster administrator to explicitly enable and configure target namespaces in the ArgoCD CR using `.spec.sourceNamespaces`. Administrators must also enforce strict separation by creating **user-defined AppProject instances** in the control plane namespace and ensuring tenants do not configure non-control plane namespaces in privileged AppProjects to **prevent privilege escalations**. Relying on ApplicationSets in non-control plane namespaces means relying on a feature that is **not supported with Red Hat production service level agreements (SLAs) (TP)**.
 - **Standard Deployment from Control Plane (Legacy/GA):** Increases centralized management overhead and may reduce tenant flexibility.
-
-**Decision**
-#TODO: Document the decision for each cluster.#
 
 **Agreeing Parties**
 
@@ -222,6 +222,9 @@ OpenShift SSO (Dex) is the primary method for human user authentication. Dedicat
 - SSO Integration (Automated Token Generation via external means)
 - Local User Management (via Argo CD CR)
 
+**Decision**
+#TODO: Document the decision for each cluster.#
+
 **Justification**
 
 - **Local User Management (via Argo CD CR):** Provides **built-in support for managing local users** intended for automation scenarios that require API tokens. Allows declarative definition of users, automatic token generation/renewal, configuration of token lifetimes, and secure storage in Kubernetes secrets. This simplifies creating API tokens for automation tasks compared to relying solely on external SSO systems.
@@ -231,9 +234,6 @@ OpenShift SSO (Dex) is the primary method for human user authentication. Dedicat
 
 - **Local User Management (via Argo CD CR):** Requires administrators to declaratively manage local user definitions and token configurations within the Argo CD Custom Resource. The Argo CD Operator handles the token lifecycle, including automatic renewal for tokens with set lifetimes greater than 0h. **Disabled users cannot log in or use an API token**, but their configuration is preserved.
 - **SSO Integration (Automated Token Generation via external means):** Requires managing external integration components and ensuring the proper RBAC configuration outside of the Argo CD CR itself.
-
-**Decision**
-#TODO: Document the decision for each cluster.#
 
 **Agreeing Parties**
 
@@ -263,6 +263,9 @@ Argo CD workloads must run reliably in environments constrained by quotas. Initi
 - Standardized Low Profile
 - Standardized High Profile
 
+**Decision**
+#TODO: Document the decision for each cluster.#
+
 **Justification**
 
 - **Default Operator Settings:** Using the default resource requests and limits provided by the Operator ensures compatibility and avoids failure in namespaces with quotas. Example requests include **250m CPU and 1Gi memory for the Application Controller**, and **250m CPU and 512Mi memory for the ApplicationSet Controller**.
@@ -273,10 +276,6 @@ Argo CD workloads must run reliably in environments constrained by quotas. Initi
 
 - **Standardized Low Profile:** Custom sizing ensures compliance with resource quotas upon deployment. Patches may be required post-installation to update specific components if resource usage changes. **Increasing memory limits for Redis** might be necessary when managing a large number of resources.
 - **Default Operator Settings:** These settings reflect the necessary minimums and limits for the default installation but might require overrides if the cluster needs to accommodate significantly high load or extremely strict quotas.
-
-**Decision**
-
-#TODO: Document the decision for each cluster.#
 
 **Agreeing Parties**
 

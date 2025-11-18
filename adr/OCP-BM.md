@@ -52,6 +52,48 @@ N/A
 ## OCP-BM-02
 
 **Title**
+Bare Metal Provisioning Workflow
+
+**Architectural Question**
+How will the provisioning of bare metal clusters be orchestrated and automated to ensure reproducibility and scale?
+
+**Issue or Problem**
+Bare metal provisioning involves complex steps (BMC interaction, ISO booting, host discovery). Performing these manually or via ad-hoc scripts is error-prone and inconsistent. A workflow is needed that leverages the Centralized Fleet Management strategy (RHACM).
+
+**Assumption**
+
+- Cluster is managed by RHACM.
+- Cluster installation method is Agent-based Installer (ABI), Assisted Installer, or Image-based Installer (IBI)
+
+**Alternatives**
+
+- **Manual / Imperative Provisioning (Console/API):** Operators manually define clusters and hosts using the RHACM web console or trigger provisioning via imperative scripts/API calls to the Assisted Service.
+- **GitOps Zero Touch Provisioning (ZTP):** A declarative, pipeline-based approach where cluster definitions are managed in Git and applied by OpenShift GitOps (Argo CD) to the RHACM Hub.
+
+**Decision**
+#TODO: Document the decision#
+
+**Justification**
+
+- **Manual / Imperative Provisioning (Console/API):** Simplifies the user experience for Day 0 ("ClickOps") or allows for custom integration via API scripts. However, it lacks a native audit trail, makes disaster recovery harder (no "state" in Git), and is difficult to scale consistently across hundreds of sites.
+- **GitOps Zero Touch Provisioning (ZTP):** Treats infrastructure-as-code. The entire cluster definition (hardware, network, configuration) is versioned in Git. This is the standard Red Hat solution for mass-scale edge deployments, enabling "factory-precaching" and ensuring the actual state always matches the desired state in Git.
+
+**Implications**
+
+- **Manual / Imperative Provisioning:** Deployment intent is not stored in Git, increasing the risk of configuration drift over time.
+- **GitOps Zero Touch Provisioning (ZTP):** Requires setting up an Argo CD pipeline on the Hub. Establishes strict requirements for downstream decisions, such as the need for `watchAllNamespaces` on the BMO and specific firmware management via `ClusterInstance`.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-03
+
+**Title**
 Bare Metal Operator (BMO) for UPI
 
 **Architectural Question**
@@ -90,7 +132,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-03
+## OCP-BM-04
 
 **Title**
 RHCOS Provisioning Method for Bare Metal Nodes
@@ -130,7 +172,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-04
+## OCP-BM-05
 
 **Title**
 RHCOS Day-1 Customization Method
@@ -173,7 +215,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-05
+## OCP-BM-06
 
 **Title**
 Provisioning Network Strategy for Installer-Provisioned Bare Metal
@@ -192,6 +234,9 @@ Cluster installation method is Installer-Provisioned Infrastructure (IPI).
 - A dedicated provisioning network is used for deploying the cluster
 - The provisioning will be performed on the routable bare metal network
 
+**Decision**
+#TODO: Document the decision for each cluster.#
+
 **Justification**
 
 - **A dedicated provisioning network is used for deploying the cluster:** This method is the default Managed provisioning network setting. It automatically enables the Ironic-dnsmasq DHCP server on the provisioner node and is required for deployments using PXE booting. Using this network isolates the operating system provisioning traffic onto a non-routable network segment.
@@ -201,49 +246,6 @@ Cluster installation method is Installer-Provisioned Infrastructure (IPI).
 
 - **A dedicated provisioning network is used for deploying the cluster:** Requires a dedicated physical network interface (NIC1) on all nodes, distinct from the routable baremetal network (NIC2). This network must be isolated and cannot have an external DHCP server if configured as Managed.
 - **The provisioning will be performed on the routable bare metal network:** This approach mandates the use of virtual media BMC addressing options (such as `redfish-virtualmedia` or `idrac-virtualmedia`). The BMCs must be accessible from the routable bare metal network. If disabled, the installation program requires two IP addresses on the bare metal network for provisioning services.
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Infra Leader
-- Person: #TODO#, Role: Network Expert
-
----
-
-## OCP-BM-06
-
-**Title**
-Network Controller Sideband Interface (NC-SI) Support Enforcement
-
-**Architectural Question**
-For OpenShift Container Platform bare metal deployments utilizing hardware where the Baseboard Management Controller (BMC) shares a system Network Interface Card (NIC) via NC-SI, how must the cluster ensure continuous BMC connectivity during power events?
-
-**Issue or Problem**
-OpenShift Container Platform require NC-SI compliant hardware when the BMC shares a system NIC. Without the correct configuration, powering down the host can cause the loss of BMC connectivity (NC-SI connection loss), interrupting bare metal provisioning or management operations.
-
-**Assumption**
-Cluster installation method is IPI / Assisted Installer / Agent-based installer / IBI or UPI with Bare Metal Operator enabled.
-
-**Alternatives**
-
-- BMC uses Network Controller Sideband Interface (NC-SI) for management traffic
-- BMC uses a dedicated network interface for management traffic
-
-**Justification**
-
-- **BMC uses Network Controller Sideband Interface (NC-SI) for management traffic:** This approach reduces the overall physical network port requirement per server by allowing the BMC to share a system NIC with the host for management traffic. This method is supported on OpenShift Container Platform if the hardware is NC-SI compliant. However, this configuration mandates the use of the `DisablePowerOff` feature to ensure soft reboots do not result in the loss of BMC connectivity.
-- **BMC uses a dedicated network interface for management traffic:** This method enhances performance and improves security by isolating the BMC traffic onto a separate physical NIC and network, avoiding the complications and dependencies inherent in NC-SI deployments. This avoids the specific requirement to utilize the `DisablePowerOff` feature.
-
-**Implications**
-
-- **BMC uses Network Controller Sideband Interface (NC-SI) for management traffic:** Requires verification that BMCs and NICs support NC-SI. The `BareMetalHost` resource must be explicitly configured with `disablePowerOff: true` to prevent loss of BMC connectivity during host power-off states.
-- **BMC uses a dedicated network interface for management traffic:** This requires additional physical NIC hardware dedicated solely to out-of-band management. If a separate management network is implemented, the provisioner node must have routing access to this network for a successful installer-provisioned installation.
-
-**Decision**
-#TODO: Document the decision for each cluster.#
 
 **Agreeing Parties**
 
@@ -256,6 +258,46 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 ## OCP-BM-07
 
 **Title**
+Network Controller Sideband Interface (NC-SI) Support Enforcement
+
+**Architectural Question**
+For OpenShift Container Platform bare metal deployments utilizing hardware where the Baseboard Management Controller (BMC) shares a system Network Interface Card (NIC) via NC-SI, how must the cluster ensure continuous BMC connectivity during power events?
+
+**Issue or Problem**
+OpenShift Container Platform require NC-SI compliant hardware when the BMC shares a system NIC. Without the correct configuration, powering down the host can cause the loss of BMC connectivity (NC-SI connection loss), interrupting bare metal provisioning or management operations.
+
+**Assumption**
+Bare Metal Operator is enabled.
+
+**Alternatives**
+
+- BMC uses Network Controller Sideband Interface (NC-SI) for management traffic
+- BMC uses a dedicated network interface for management traffic
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **BMC uses Network Controller Sideband Interface (NC-SI) for management traffic:** This approach reduces the overall physical network port requirement per server by allowing the BMC to share a system NIC with the host for management traffic. This method is supported on OpenShift Container Platform if the hardware is NC-SI compliant. However, this configuration mandates the use of the `DisablePowerOff` feature to ensure soft reboots do not result in the loss of BMC connectivity.
+- **BMC uses a dedicated network interface for management traffic:** This method enhances performance and improves security by isolating the BMC traffic onto a separate physical NIC and network, avoiding the complications and dependencies inherent in NC-SI deployments. This avoids the specific requirement to utilize the `DisablePowerOff` feature.
+
+**Implications**
+
+- **BMC uses Network Controller Sideband Interface (NC-SI) for management traffic:** Requires verification that BMCs and NICs support NC-SI. The `BareMetalHost` resource must be explicitly configured with `disablePowerOff: true` to prevent loss of BMC connectivity during host power-off states.
+- **BMC uses a dedicated network interface for management traffic:** This requires additional physical NIC hardware dedicated solely to out-of-band management. If a separate management network is implemented, the provisioner node must have routing access to this network for a successful installer-provisioned installation.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-BM-08
+
+**Title**
 BMC protocol
 
 **Architectural Question**
@@ -265,13 +307,16 @@ Which Baseboard Management Controller (BMC) protocol (Redfish, IPMI, or propriet
 The Bare Metal Operator (BMO) requires reliable, consistent, and secure connectivity to the BMC for key operations such as power management, image deployment, and hardware inspection. Different protocols offer varying levels of security, support for modern features (like firmware management), and compatibility across diverse hardware vendors, necessitating a standardized choice for cluster management.
 
 **Assumption**
-Cluster installation method is IPI / Assisted Installer / Agent-based installer / IBI or UPI with Bare Metal Operator enabled.
+Bare Metal Operator is enabled.
 
 **Alternatives**
 
 - Redfish
 - IPMI
 - Other proprietary protocol
+
+**Decision**
+#TODO: Document the decision for each cluster.#
 
 **Justification**
 
@@ -285,9 +330,6 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 - **IPMI:** **IPMI does not encrypt communications** and requires use over a secured or dedicated management network. It cannot be used for managed Secure Boot deployments. If PXE booting is used with IPMI, a provisioning network is mandatory.
 - **Other proprietary protocol:** Management capabilities (especially advanced features like firmware configuration) may be limited to specific BMO drivers (like Fujitsu iRMC or HP iLO) and might not support the full range of vendor-independent Redfish capabilities.
 
-**Decision**
-#TODO: Document the decision for each cluster.#
-
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
@@ -297,7 +339,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-08
+## OCP-BM-09
 
 **Title**
 BMC Credential Security and Storage Strategy
@@ -309,12 +351,15 @@ How will the highly sensitive Baseboard Management Controller (BMC) credentials,
 The automated bare metal workflow requires storing BMC login credentials (username/password) as Kubernetes Secrets (referenced by bmcCredentialsName). These secrets grant full out-of-band control over physical hosts (e.g., power cycle, firmware updates, OS installation). Protecting these secrets is critical for platform security.
 
 **Assumption**
-The Bare Metal Operator (BMO) is enabled, or the cluster relies on BMC access for installation (IPI, ABI, AI/ZTP).
+Bare Metal Operator is enabled.
 
 **Alternatives**
 
 - Standard Kubernetes Secrets with OCP/etcd Encryption
 - External Secret Management System Integration
+
+**Decision**
+#TODO: Document the decision for each cluster.#
 
 **Justification**
 
@@ -326,9 +371,6 @@ The Bare Metal Operator (BMO) is enabled, or the cluster relies on BMC access fo
 - **Standard Kubernetes Secrets with OCP/etcd Encryption:** If an attacker gains sufficient privilege to read Kubernetes Secrets, the BMC credentials for all managed hosts are exposed. Requires stringent RBAC enforcement on the namespace containing the secrets.
 - **External Secret Management System Integration:** Increases Day 1 complexity by requiring deployment and highly available integration with the external secret system. Adds an external dependency that must be reachable and operational for BMO functions (like host remediation and provisioning) to succeed.
 
-**Decision**
-#TODO: Document the decision for each cluster.#
-
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
@@ -338,7 +380,7 @@ The Bare Metal Operator (BMO) is enabled, or the cluster relies on BMC access fo
 
 ---
 
-## OCP-BM-09
+## OCP-BM-10
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -358,6 +400,9 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 - Secure Boot will be enabled manually
 - Secure Boot will be enabled through Managed Secure Boot (TP)
 
+**Decision**
+#TODO: Document the decision for each cluster.#
+
 **Justification**
 
 - **Secure Boot will not be enabled:** This simplifies installation and avoids the complex hardware compatibility constraints associated with enabling Secure Boot.
@@ -370,9 +415,6 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 - **Secure Boot will be enabled manually:** Requires manual configuration of UEFI boot mode and Secure Boot settings on _each_ control plane and worker node. This is the only supported method when using UPI deployment. Furthermore, Red Hat explicitly supports this manual configuration for IPI only when the installation uses Redfish virtual media.
 - **Secure Boot will be enabled through Managed Secure Boot (TP):** This feature is only supported on specific hardware models: **10th generation HPE hardware** and **13th generation Dell hardware** running firmware version **2.75.75.75 or greater**. This capability is currently designated as a Technology Preview (TP) feature.
 
-**Decision**
-#TODO: Document the decision for each cluster.#
-
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
@@ -381,7 +423,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-10
+## OCP-BM-11
 
 **Title**
 BMO Provisioning Boot Mechanism
@@ -400,6 +442,9 @@ Cluster installation method is IPI, Agent-based Installer (ABI), or Assisted Ins
 - iPXE Booting (Network Boot)
 - Redfish Virtual Media Booting
 
+**Decision**
+#TODO: Document the decision for each cluster.#
+
 **Justification**
 
 - **iPXE Booting (Network Boot):** Provides fast, zero-touch provisioning typically favored in centralized data centers. It relies on robust PXE/DHCP/TFTP infrastructure.
@@ -410,9 +455,6 @@ Cluster installation method is IPI, Agent-based Installer (ABI), or Assisted Ins
 - **iPXE Booting (Network Boot):** Requires a provisioning network and adherence to network prerequisites like DHCP, TFTP, and Web servers.
 - **Redfish Virtual Media Booting:** This is the mandatory choice if Provisioning Network is not used. It requires that the BMC supports the Virtual Media feature via the chosen Redfish/IPMI protocol.
 
-**Decision**
-#TODO: Document the decision for each cluster.#
-
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
@@ -422,7 +464,7 @@ Cluster installation method is IPI, Agent-based Installer (ABI), or Assisted Ins
 
 ---
 
-## OCP-BM-11
+## OCP-BM-12
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -441,6 +483,9 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 - Configure and use supported Hardware RAID volumes for the installation drive.
 - Configure the installation drive without using Hardware RAID.
 
+**Decision**
+#TODO: Document the decision for each cluster.#
+
 **Justification**
 
 - **Configure and use supported Hardware RAID volumes for the installation drive:** Leveraging hardware RAID provides disk redundancy and potential performance improvements managed entirely by the hardware controller/BMC interface, which is supported for specific configurations.
@@ -451,9 +496,6 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 - **Configure and use supported Hardware RAID volumes for the installation drive:** Requires specifying the logical drives within the `hardwareRAIDVolumes` parameter of the installation configuration. Incorrect configuration or use with unsupported BMC versions or RAID levels may lead to unsupported clusters or installation failure.
 - **Configure the installation drive without using Hardware RAID:** Node resiliency relies solely on the underlying physical disk health, which might not be desirable for critical bare metal components if a disk fails.
 
-**Decision**
-#TODO: Document the decision for each cluster.#
-
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
@@ -462,7 +504,7 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 
 ---
 
-## OCP-BM-12
+## OCP-BM-13
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -481,6 +523,9 @@ N/A
 - Dedicated partition for `/var/lib/containers`
 - Co-locate `/var/lib/containers` on the root partition
 
+**Decision**
+#TODO: Document the decision for each cluster.#
+
 **Justification**
 
 - **Dedicated partition for `/var/lib/containers`:** This is the recommended approach for workload partitioning and robustness, explicitly setting up a separate partition, formatted with `xfs` and mounted using `prjquota` for appropriate resource handling. This practice isolates volatile container data storage from the core OS filesystems.
@@ -488,11 +533,8 @@ N/A
 
 **Implications**
 
-- **Dedicated partition for `/var/lib/containers`:** Requires custom Ignition configuration overrides within the installation manifest (e.g., `SiteConfig` or `BareMetalHost` definition). This adds complexity to the installation process.
+- **Dedicated partition for `/var/lib/containers`:** Requires custom Ignition configuration overrides within the installation manifest. This adds complexity to the installation process.
 - **Co-locate `/var/lib/containers` on the root partition:** Higher risk of disk exhaustion affecting system stability if container usage is heavy or unpredictable. Management of disk quotas becomes less granular.
-
-**Decision**
-#TODO: Document the decision for each cluster.#
 
 **Agreeing Parties**
 
@@ -502,7 +544,7 @@ N/A
 
 ---
 
-## OCP-BM-13
+## OCP-BM-14
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -514,13 +556,17 @@ How will required container images (OCP release, operators, application base ima
 In disconnected environments or at the far edge, pulling large container images during installation or upgrade (JIT pull) can be slow or unreliable. A structured method is needed to pre-position images on the node's container storage partition, supporting efficient Zero Touch Provisioning (ZTP) and Image-Based Upgrades (IBU).
 
 **Assumption**
-Nodes utilize disk partitioning to include a shared container partition (`/var/lib/containers`).
+GitOps ZTP is used.
 Cluster is on the edge.
+Nodes utilize disk partitioning to include a shared container partition (`/var/lib/containers`).
 
 **Alternatives**
 
 - Client-side Image Pre-caching via Ignition/IBU
 - Just-In-Time (JIT) Pull during Installation and Runtime
+
+**Decision**
+#TODO: Document the decision for each cluster.#
 
 **Justification**
 
@@ -532,9 +578,6 @@ Cluster is on the edge.
 - **Client-side Image Pre-caching via Ignition/IBU:** Requires careful configuration of OS disk partitioning (e.g., separating `/var/lib/containers`) and precise Ignition/systemd units to manage mounting and extraction of compressed image artifacts (tarballs) before core services start. This adds complexity to the Day 1 manifests.
 - **Just-In-Time (JIT) Pull during Installation and Runtime:** Risk of installation/upgrade failure or significant delays due to network instability or slow download speeds, common challenges at the far edge.
 
-**Decision**
-#TODO: Document the decision for each cluster.#
-
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
@@ -544,7 +587,7 @@ Cluster is on the edge.
 
 ---
 
-## OCP-BM-14
+## OCP-BM-15
 
 **Title**
 Bare Metal Operator Namespace Scope
@@ -556,12 +599,17 @@ Should the Bare Metal Operator (BMO) be configured to manage BareMetalHost resou
 To enable features like Bare Metal as a Service (BMaaS) or GitOps ZTP, the BMO must be configured to find and manage BareMetalHost resources created outside its default namespace. Deciding this scope is a fundamental configuration for the BMO.
 
 **Assumption**
-Bare Metal Operator (BMO) is enabled.
+
+- The Bare Metal Operator (BMO) is enabled on the cluster.
+- The cluster fulfills a management role: It is either an ACM Hub Cluster managing a ZTP fleet OR a centralized BMaaS provider allocating physical nodes to various namespaces.
 
 **Alternatives**
 
 - BMO Watches All Namespaces (Watch-All)
 - BMO Watches Specific/Limited Namespaces (Default)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
 
 **Justification**
 
@@ -573,9 +621,6 @@ Bare Metal Operator (BMO) is enabled.
 - **BMO Watches All Namespaces (Watch-All):** The BMO `Provisioning` CR must be patched to set `watchAllNamespaces: true`, enabling advanced, cluster-wide provisioning workflows.
 - **BMO Watches Specific/Limited Namespaces (Default):** The cluster is isolated, and advanced, multi-namespace provisioning workflows like BMaaS and GitOps ZTP are not possible.
 
-**Decision**
-#TODO: Document the decision for each cluster.#
-
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
@@ -584,7 +629,7 @@ Bare Metal Operator (BMO) is enabled.
 
 ---
 
-## OCP-BM-15
+## OCP-BM-16
 
 **Title**
 Bare Metal Node Remediation
@@ -617,7 +662,7 @@ N/A.
 
 - **No Automated Remediation:** High operational burden and slow recovery times. Not recommended for a production cluster.
 - **Node Health Check (NHC) with Self Node Remediation:** Provides software-level remediation. It ensures workloads are moved but does not fix the underlying node, which will remain unavailable until manually repaired.
-- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** This is the most robust, fully automated solution. It attempts to recover the node by "turning it off and on again" via its BMC. This requires a reliable IPI installation and stable Redfish/IPMI connectivity. Furthermore, the BMO facilitates the **Cluster API management of compute nodes (TP)** for dynamic lifecycle management. Advanced operational features, such as performing **live updates to HostFirmwareSettings (TP)** or **HostFirmwareComponents (TP)**, are available through BMO, but utilizing live updates requires setting the **HostUpdatePolicy (TP)** resource to `onReboot`. **We do not recommend that you perform live updates to the BMC on OpenShift Container Platform 4.20 for test purposes, especially on earlier generation hardware**
+- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** This is the most robust, fully automated solution. It attempts to recover the node by "turning it off and on again" via its BMC. This requires a reliable IPI installation and stable Redfish/IPMI connectivity. Furthermore, the BMO facilitates the **Cluster API management of compute nodes (TP)** for dynamic lifecycle management. Advanced operational features, such as performing **live updates to HostFirmwareSettings (TP)** or **HostFirmwareComponents (TP)**, are available through BMO, but utilizing live updates requires setting the **HostUpdatePolicy (TP)** resource to `onReboot`. **We do not recommend that you perform live updates to the BMC for test purposes, especially on earlier generation hardware**
 
 **Agreeing Parties**
 
@@ -627,7 +672,7 @@ N/A.
 
 ---
 
-## OCP-BM-16
+## OCP-BM-17
 
 **Title**
 Bare Metal Node Firmware Management
@@ -646,6 +691,9 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 - Automated Management via HostFirmware/HostUpdate CRs
 - External/Vendor Management Tools
 
+**Decision**
+#TODO: Document the decision for each cluster.#
+
 **Justification**
 
 - **Automated Management via HostFirmware/HostUpdate CRs:** Leverages native BMO capabilities (`HostFirmwareComponents`, `HostUpdatePolicy`) to apply, track, and manage firmware versions for components like BIOS, BMC, and NICs directly through Kubernetes Custom Resources, supporting automated updates and inspection.
@@ -656,9 +704,6 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 - **Automated Management via HostFirmware/HostUpdate CRs:** Requires defining, testing, and maintaining `HostFirmwareComponents` and `HostUpdatePolicy` CRs. The process may cause node disruption and require coordination (e.g., node draining).
 - **External/Vendor Management Tools:** Updates are decoupled from the OpenShift workflow, potentially simplifying BMO configuration, but resulting in a manual process that requires coordinating external maintenance windows with cluster availability (e.g., node draining, cluster remediation).
 
-**Decision**
-#TODO: Document the decision for each cluster.#
-
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
@@ -667,7 +712,50 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-17
+## OCP-BM-18
+
+**Title**
+Bare Metal Fleet Cluster Upgrade Strategy
+
+**Architectural Question**
+How will large-scale, distributed bare metal cluster updates (OCP version upgrades) be managed and orchestrated from the central hub cluster?
+
+**Issue or Problem**
+Managing simultaneous upgrades across a large fleet of bare metal clusters, particularly Single Node OpenShift (SNO) clusters at the edge, requires a robust orchestration mechanism that can handle sequencing, image consistency, and minimal disruption. A choice must be made between the currently supported policy-driven approach and the image-based method designed for rapid edge updates.
+
+**Assumption**
+
+- Cluster topology is Single-Node (SNO)
+- Cluster is managed using ZTP.
+
+**Alternatives**
+
+- Policy-Driven Rollout using TALM and PolicyGenerator CRs
+- Image-Based Group Upgrade (IBGU) (TP)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Policy-Driven Rollout using TALM and PolicyGenerator CRs:** This is the standard, generally available approach for managing configurations and upgrades via policies, enabling granular control over rollout sequencing, customization, and remediation actions.
+- **Image-Based Group Upgrade (IBGU) (TP):** This methodology is designed to reduce deployment time significantly, especially for SNO clusters. It leverages the Lifecycle Agent (LCA) to deploy new operating system images (stateroots), making it suitable for rapid, consistent rollouts in edge environments.
+
+**Implications**
+
+- **Policy-Driven Rollout using TALM and PolicyGenerator CRs:** Upgrades rely on ensuring policy compliance across the fleet, which may involve individual cluster reboots initiated by configuration changes (e.g., Node Tuning Operator). This approach requires meticulous policy management but is fully supported.
+- **Image-Based Group Upgrade (IBGU) (TP):** Is a Technology Preview feature only and is not supported with Red Hat production SLAs. While offering faster, image-based upgrades, reliance on this method for production clusters introduces support risk.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-19
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -686,6 +774,9 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 - Kernel Module Management (KMM) Operator
 - Manual build and DaemonSet deployment (Driver Toolkit approach)
 
+**Decision**
+#TODO: Document the decision for each cluster.#
+
 **Justification**
 
 - **Kernel Module Management (KMM) Operator:** KMM is designed to simplify the lifecycle management of kernel modules by automating the build process, tracking kernel versions, and optionally signing the resulting kernel objects.
@@ -696,9 +787,6 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 - **Kernel Module Management (KMM) Operator:** Requires installing and maintaining the KMM Operator and associated secrets/config maps. Provides high operational stability by ensuring modules match the current running kernel version automatically.
 - **Manual build and DaemonSet deployment (Driver Toolkit approach):** High maintenance burden, as module compatibility must be manually verified and re-deployed on every kernel update or cluster upgrade.
 
-**Decision**
-#TODO: Document the decision for each cluster.#
-
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
@@ -707,37 +795,37 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-18
+## OCP-BM-20
 
 **Title**
-Bare Metal Host Firmware Optimization for Performance
+Bare Metal Host Firmware Configuration
 
 **Architectural Question**
-How will specific BIOS and hardware firmware settings required for low-latency and performance-sensitive workloads (e.g., vDU) be consistently configured and validated across the bare metal host fleet?
+How will host firmware settings (BIOS/UEFI) be applied, validated, and maintained to ensure consistency and compliance across the bare metal fleet?
 
 **Issue or Problem**
-To achieve optimal performance and low latency for workloads like virtual Distributed Units (vDU), critical host firmware settings (such as SMT/Hyperthreading, CPU C-states, and I/O settings) must be precisely configured. Manual configuration is non-scalable, error-prone, and can lead to configuration drift, which impacts application performance and stability.
+Managing firmware settings manually across a fleet of physical servers leads to configuration drift, inconsistent node behavior, and increased troubleshooting time. A standardized method is required to ensure that every host is provisioned with the exact same BIOS/UEFI configuration defined by the platform standards.
 
 **Assumption**
-Performance-sensitive workloads requiring specialized tuning (e.g., Real-Time Kernel, Workload Partitioning) are planned for deployment.
+GitOps ZTP is used
 
 **Alternatives**
 
 - Manual/Out-of-Band Configuration
-- Automated Configuration via GitOps ZTP/SiteConfig
-
-**Justification**
-
-- **Manual/Out-of-Band Configuration:** Requires using vendor-specific tools (e.g., iDRAC console, command-line utilities) or custom scripting outside of the OCP GitOps framework. This relies on existing IT operational processes but is highly challenging to validate and enforce consistently at scale.
-- **Automated Configuration via GitOps ZTP/SiteConfig:** Leverages the OpenShift ecosystem by defining firmware settings in the `SiteConfig` CR using the `biosConfigRef` field, which references an external hardware profile file. This approach centralizes the desired configuration in the source of truth (Git) and makes auditing possible, ensuring hosts meet the recommended firmware configuration for vDU application workloads.
-
-**Implications**
-
-- **Manual/Out-of-Band Configuration:** Highest operational overhead for Day 2 management and validation. Configuration state exists outside the GitOps pipeline.
-- **Automated Configuration via GitOps ZTP/SiteConfig:** Requires maintaining standardized hardware profiles (e.g., `.profile files`) referenced by the `biosConfigRef` field. This approach relies on the underlying bare metal automation to support pushing these settings via BMC protocols.
+- Automated Configuration via GitOps ZTP
 
 **Decision**
 #TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Manual/Out-of-Band Configuration:** Relies on server administrators manually configuring BIOS settings via vendor consoles (e.g., iDRAC, iLO) or ad-hoc scripts. This is prone to human error and makes auditing the actual state of the fleet difficult.
+- **Automated Configuration via GitOps ZTP:** Uses the **Infrastructure-as-Code** model. Firmware settings are defined in a `HardwareProfile` file stored in Git and referenced by the CR (`biosConfigRef`). The underlying automation (BMO) applies these settings during provisioning, ensuring every node matches the definition in Git.
+
+**Implications**
+
+- **Manual/Out-of-Band Configuration:** High operational overhead. No automated way to detect or remediate if a server's settings drift from the standard.
+- **Automated Configuration via GitOps ZTP:** Requires creating and maintaining hardware profile files (e.g., `.profile`) in the Git repository. Provides a single source of truth for hardware configuration, simplifying audits and disaster recovery.
 
 **Agreeing Parties**
 
@@ -748,7 +836,7 @@ Performance-sensitive workloads requiring specialized tuning (e.g., Real-Time Ke
 
 ---
 
-## OCP-BM-19
+## OCP-BM-21
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -767,6 +855,9 @@ Workloads require strict low-latency guarantees, typically falling into the CNF/
 - Enable Real-Time Kernel via Performance Profile
 - Enable Workload Partitioning
 
+**Decision**
+#TODO: Document the decision for each cluster.#
+
 **Justification**
 
 - **Enable Real-Time Kernel via Performance Profile:** This is the recommended approach for running low-latency applications on OpenShift Container Platform. Enabling the RT kernel through the `PerformanceProfile` custom resource is crucial for isolating CPU resources and achieving performance guarantees required by vDU applications.
@@ -777,9 +868,6 @@ Workloads require strict low-latency guarantees, typically falling into the CNF/
 - **Enable Real-Time Kernel via Performance Profile:** Requires the use of the Node Tuning Operator and specific configurations in the `PerformanceProfile` (e.g., setting `realTimeKernel: enabled: true`). Changes to this kernel may require node reboots for application. This configuration is mandated for VDU workloads.
 - **Use Default Standard Kernel:** May lead to performance instability, resource jitter, or failure to meet Service Level Objectives (SLOs) for latency-sensitive applications.
 
-**Decision**
-#TODO: Document the decision for each cluster.#
-
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
@@ -789,7 +877,7 @@ Workloads require strict low-latency guarantees, typically falling into the CNF/
 
 ---
 
-## OCP-BM-20
+## OCP-BM-22
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -808,6 +896,9 @@ Low-latency or high-performance application workloads (like vDUs) must be isolat
 - No Partitioning (Default)
 - Enable Workload Partitioning
 
+**Decision**
+#TODO: Document the decision for each cluster.#
+
 **Justification**
 
 - **No Partitioning (Default):** This is the simplest operational model. All platform and application pods are scheduled across all available CPU cores, which is sufficient for workloads without real-time or low-latency requirements.
@@ -818,9 +909,6 @@ Low-latency or high-performance application workloads (like vDUs) must be isolat
 - **No Partitioning (Default):** This configuration will not support real-time workloads like vDUs, as platform and application CPU contention will cause unacceptable performance jitter and potential service failure.
 - **Enable Workload Partitioning:** This adds configuration complexity, requiring a `PerformanceProfile` and `Tuned` CRs. It also "costs" CPU cores, as the `reserved` cores are permanently removed from the schedulable capacity for general pods, but this is necessary to guarantee performance for isolated workloads.
 
-**Decision**
-#TODO: Document the decision for each cluster.#
-
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
@@ -830,7 +918,7 @@ Low-latency or high-performance application workloads (like vDUs) must be isolat
 
 ---
 
-## OCP-BM-21
+## OCP-BM-23
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -855,7 +943,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 **Justification**
 
 - **Default Container Runtime (CRI-O):** Simplifies installation and operational maintenance by relying on the standard, supported container engine bundled with Red Hat Enterprise Linux CoreOS (RHCOS).
-- **Optimized Container Runtime (CRUN):** This option is strongly recommended for OpenShift Container Platform version 4.13 and later for performance workloads, such as vDU, to achieve specific low-latency optimization.
+- **Optimized Container Runtime (CRUN):** This option is strongly recommended for performance workloads, such as vDU, to achieve specific low-latency optimization.
 
 **Implications**
 
@@ -869,7 +957,9 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 - Person: #TODO#, Role: Infra Leader
 - Person: #TODO#, Role: Operations Expert
 
-## OCP-BM-22
+---
+
+## OCP-BM-24
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -911,7 +1001,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-23
+## OCP-BM-25
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection for Performance Workloads
@@ -923,7 +1013,8 @@ Which SR-IOV Virtual Function (VF) device type—`vfio-pci` or `netdevice`—wil
 When configuring SR-IOV devices using the `SriovNetworkNodePolicy` Custom Resource, the choice of the VF device driver type (`vfio-pci` or `netdevice`) dictates how the network resource is presented to the container. This impacts latency, performance characteristics, and the flexibility for applications (e.g., requiring kernel bypass versus standard Linux networking).
 
 **Assumption**
-The cluster supports SR-IOV capable NICs and requires high-performance, low-latency network connectivity for production workloads.
+Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal cluster.
+The cluster supports SR-IOV capable NICs.
 
 **Alternatives**
 
@@ -950,7 +1041,9 @@ The cluster supports SR-IOV capable NICs and requires high-performance, low-late
 - Person: #TODO#, Role: AI/ML Platform Owner
 - Person: #TODO#, Role: OCP Platform Owner
 
-## OCP-BM-24
+---
+
+## OCP-BM-26
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
