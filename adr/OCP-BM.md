@@ -623,7 +623,7 @@ N/A.
 
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operation Expert
+- Person: #TODO#, Role: Operations Expert
 
 ---
 
@@ -827,3 +827,165 @@ Low-latency or high-performance application workloads (like vDUs) must be isolat
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Infra Leader
 - Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-BM-21
+
+**Title**
+Container Runtime Selection for Bare Metal Performance Workloads
+
+**Architectural Question**
+Should the default CRI-O container runtime be replaced or augmented with CRUN to optimize performance for latency-sensitive workloads on bare metal nodes?
+
+**Issue or Problem**
+To support stringent latency and high-performance requirements typical of applications like virtual Distributed Units (vDU), relying solely on the default container runtime may not be sufficient. Utilizing an optimized runtime like CRUN is often recommended for these performance-sensitive environments.
+
+**Assumption**
+Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal cluster.
+
+**Alternatives**
+
+- Default Container Runtime (CRI-O)
+- Optimized Container Runtime (CRUN)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Default Container Runtime (CRI-O):** Simplifies installation and operational maintenance by relying on the standard, supported container engine bundled with Red Hat Enterprise Linux CoreOS (RHCOS).
+- **Optimized Container Runtime (CRUN):** This option is strongly recommended for OpenShift Container Platform version 4.13 and later for performance workloads, such as vDU, to achieve specific low-latency optimization.
+
+**Implications**
+
+- **Default Container Runtime (CRI-O):** May lead to sub-optimal latency performance for critical telecommunication or AI/ML workloads.
+- **Optimized Container Runtime (CRUN):** **It is strongly recommended to include `crun` manifests as part of the additional install-time manifests**. This requires defining `ContainerRuntimeConfig` manifests (e.g., `enable-crun-master.yaml`, `enable-crun-worker.yaml`) via the GitOps ZTP pipeline or equivalent mechanism.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Operations Expert
+
+## OCP-BM-22
+
+**Title**
+Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
+
+**Architectural Question**
+How will highly accurate time synchronization be achieved and managed on bare metal nodes to meet the strict timing requirements of low-latency applications (e.g., vDU)?
+
+**Issue or Problem**
+Standard Network Time Protocol (NTP) often lacks the precision required by workloads such as vDU (Virtual Distributed Unit) applications, which require Precision Time Protocol (PTP) synchronization to function correctly. A standardized mechanism is needed to deploy and manage PTP services across the cluster nodes.
+
+**Assumption**
+Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal cluster.
+
+**Alternatives**
+
+- Rely Solely on Standard NTP
+- Managed PTP using the PTP Operator
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Rely Solely on Standard NTP:** Minimizes cluster complexity but fails to meet the time synchronization requirements for stringent low-latency workloads like vDU.
+- **Managed PTP using the PTP Operator:** This approach ensures the cluster can support low latency applications by managing time synchronization through the **PTP Operator**. It allows for configuration of specific roles like `boundary` or `slave` using `PtpConfig` CRs.
+
+**Implications**
+
+- **Rely Solely on Standard NTP:** Critical applications (like vDU) will likely fail due to insufficient time synchronization precision.
+- **Managed PTP using the PTP Operator:** Requires installing the PTP Operator and configuring appropriate `PtpConfig` resources for roles, interfaces, and options (e.g., `ptp4lOpts`, `phc2sysOpts`). Managing PTP requires ensuring interfaces are correctly configured for PTP, potentially using specific network interface cards (NICs), and integrating with kernel tuning profiles.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-23
+
+**Title**
+SR-IOV Virtual Function (VF) Driver Selection for Performance Workloads
+
+**Architectural Question**
+Which SR-IOV Virtual Function (VF) device type—`vfio-pci` or `netdevice`—will be standardized for use by high-performance application pods (e.g., vDU, AI/ML inference) requiring direct hardware access on bare metal nodes?
+
+**Issue or Problem**
+When configuring SR-IOV devices using the `SriovNetworkNodePolicy` Custom Resource, the choice of the VF device driver type (`vfio-pci` or `netdevice`) dictates how the network resource is presented to the container. This impacts latency, performance characteristics, and the flexibility for applications (e.g., requiring kernel bypass versus standard Linux networking).
+
+**Assumption**
+The cluster supports SR-IOV capable NICs and requires high-performance, low-latency network connectivity for production workloads.
+
+**Alternatives**
+
+- VFIO-PCI Driver (`vfio-pci`)
+- Netdevice Driver (`netdevice`)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **VFIO-PCI Driver (`vfio-pci`):** Recommended when true hardware passthrough (Device Passthrough) is required, often for applications using Data Plane Development Kit (DPDK) or needing kernel bypass to achieve the lowest possible latency.
+- **Netdevice Driver (`netdevice`):** Recommended when standard Linux network semantics (e.g., standard CNI features, DHCP, IP address management by the kernel) are required, offering higher flexibility for debugging and standard networking but potentially higher latency than VFIO.
+
+**Implications**
+
+- **VFIO-PCI Driver (`vfio-pci`):** Applications must be designed to utilize device passthrough frameworks (like DPDK). The VF is not exposed as a traditional network interface to the OS, complicating standard networking and monitoring tools.
+- **Netdevice Driver (`netdevice`):** Provides simpler integration with standard container networking. However, this configuration might introduce additional latency compared to kernel-bypass methods.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: OCP Platform Owner
+
+## OCP-BM-24
+
+**Title**
+Network Diagnostics Operator Deployment Strategy
+
+**Architectural Question**
+Should the cluster intentionally disable the core OpenShift Network Diagnostics functionality to conserve resources or reduce the management footprint, especially in resource-constrained bare metal or edge deployments?
+
+**Issue or Problem**
+For highly optimized, resource-constrained environments (like those running vDU workloads), reducing platform overhead is critical. The default configuration may include network components that consume resources but are deemed non-essential if comprehensive external monitoring is already in place.
+
+**Assumption**
+The environment is resource-constrained (e.g., Single Node OpenShift or Compact HA) and requires minimizing non-application resource consumption.
+
+**Alternatives**
+
+- Default Network Diagnostics (Enabled)
+- Disabled Network Diagnostics
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Default Network Diagnostics (Enabled):** Provides valuable built-in troubleshooting tools for validating networking health, simplifying Day 2 operations and identifying connectivity issues proactively.
+- **Disabled Network Diagnostics:** **Setting `disableNetworkDiagnostics: true` in the Network CR** explicitly removes this feature, reducing the overall platform footprint and conserving CPU/memory resources, which is highly beneficial for edge sites.
+
+**Implications**
+
+- **Default Network Diagnostics (Enabled):** Consumes node resources (CPU/memory) via associated diagnostic pods and daemon sets.
+- **Disabled Network Diagnostics:** Removes a built-in diagnostic safety net. Troubleshooting complex network failures must rely solely on external tools or manual inspection, increasing operational complexity when issues arise.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
