@@ -33,6 +33,9 @@ Use this exact format:
 - [Alternative 1 Title]
 - [Alternative 2 Title]
 
+**Decision**
+#TODO: Document the decision for each cluster.#
+
 **Justification**
 
 - **[Alt 1 Title]:** [Justification (*why choose it?*)]
@@ -42,9 +45,6 @@ Use this exact format:
 
 - **[Alt 1 Title]:** [Implication (*consequence/risk?*)]
 - **[Alt 2 Title]:** [Implication (*consequence/risk?*)]
-
-**Decision**
-#TODO: Document the decision for each cluster.#
 
 **Agreeing Parties**
 
@@ -57,3 +57,4 @@ Use this exact format:
 - **Parties:** Use `Person: #TODO#, Role: [Role Name]` format. Pull roles from `ad_parties_role_dictionnary.md`.
 - **Semantics:** Justification = _why choose_. Implication = _consequence_.
 - **Flags:** Mark all Tech-Preview as `(TP)`.
+- **Versioning:** Do NOT mention specific OCP versions (e.g., "4.20", "4.19") in the content. Assume "latest" version.
