@@ -52,8 +52,7 @@ How will the cluster nodes (Control Plane and Compute) obtain their IP addresses
 IP Address Management (IPAM) affects node address predictability, critical for setup, security policies, and installation method compatibility.
 
 **Assumption**
-Machine IP Range (OCP-NET-01) is defined.
-
+N/A
 **Alternatives**
 
 - DHCP
@@ -172,8 +171,7 @@ Which Container Network Interface (CNI) plugin will manage Pod networking?
 The CNI plugin choice impacts network features, performance, and integration with the underlying infrastructure (especially relevant for OpenStack).
 
 **Assumption**
-Cluster platform (OCP-BASE-03) is known. For OpenStack, Neutron and Octavia are available.
-
+N/A
 **Alternatives**
 
 - **Default:** OVN-Kubernetes CNI (Platform Agnostic)
@@ -204,34 +202,34 @@ Cluster platform (OCP-BASE-03) is known. For OpenStack, Neutron and Octavia are 
 ## OCP-NET-06
 
 **Title**
-Outbound Connectivity (External Firewall/Proxy)
+OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
 
 **Architectural Question**
-How will cluster egress traffic destined for external networks (e.g., Internet, other corporate networks) be managed by external firewalls and/or proxies?
+Should the cluster nodes function as generic IP routers for non-Kubernetes traffic, or should IP forwarding be restricted to enhance security?
 
 **Issue or Problem**
-Corporate security requires controlling outbound connections. This impacts cluster installation, updates, OperatorHub access, workload external service access, and requires coordination with network security teams.
+The `ipForwarding` specification in the Network resource controls whether OVN-Kubernetes managed interfaces drop or forward traffic not explicitly related to Kubernetes. This decision impacts security (least privilege) versus flexibility (supporting existing host/legacy routing).
 
 **Assumption**
-Cluster Network Connectivity Model (OCP-BASE-07) is decided (Connected/Disconnected).
+The cluster uses the OVN-Kubernetes CNI plugin.
 
 **Alternatives**
 
-- Direct Outbound (Potentially behind Firewall Rules)
-- Via HTTP/S Proxy Server
+- Restricted IP Forwarding (New Install Default)
+- Global IP Forwarding (Upgrade Default)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Direct Outbound:** Simplifies cluster configuration if external firewalls allow required traffic (potentially restricted by rules per OCP-NET-07).
-- **Via HTTP/S Proxy:** Necessary when direct outbound access is blocked. Centralizes egress control and filtering at the proxy server, aligning with common enterprise security patterns.
+- **Restricted IP Forwarding (New Install Default):** Enhances the security posture of new installations by setting IP forwarding to drop all non-Kubernetes related traffic on OVN-Kubernetes managed interfaces. This aligns with the Principle of Least Privilege.
+- **Global IP Forwarding (Upgrade Default):** Allows forwarding of all IP traffic. This may be required for compatibility with legacy services or external components relying on broader host-level routing rules.
 
 **Implications**
 
-- **Direct Outbound:** Requires firewall rules allowing access to Red Hat registries, telemetry, cloud APIs (if applicable), and any external services needed by workloads. Firewall rule management (OCP-NET-07) is critical.
-- **Via Proxy:** Requires configuring OpenShift cluster-wide proxy settings during installation (for core components) and potentially per-workload proxy settings. Cluster functionality depends on proxy availability and correct configuration (including trusting proxy CA).
+- **Restricted IP Forwarding (New Install Default):** Requires careful planning to ensure that specialized host traffic that needs IP forwarding is correctly handled outside of OVN-Kubernetes managed interfaces.
+- **Global IP Forwarding (Upgrade Default):** Reduces security isolation compared to the restricted setting.
 
 **Agreeing Parties**
 
@@ -245,6 +243,46 @@ Cluster Network Connectivity Model (OCP-BASE-07) is decided (Connected/Disconnec
 ## OCP-NET-07
 
 **Title**
+Outbound Connectivity (External Firewall/Proxy)
+
+**Architectural Question**
+How will cluster egress traffic destined for external networks (e.g., Internet, other corporate networks) be managed by external firewalls and/or proxies?
+
+**Issue or Problem**
+Corporate security requires controlling outbound connections. This impacts cluster installation, updates, OperatorHub access, workload external service access, and requires coordination with network security teams.
+
+**Assumption**
+Cluster is in a connected environment.
+**Alternatives**
+
+- Direct Outbound (Potentially behind Firewall Rules)
+- Via HTTP/S Proxy Server
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Direct Outbound:** Simplifies cluster configuration if external firewalls allow required traffic (potentially restricted by rules).
+- **Via HTTP/S Proxy:** Necessary when direct outbound access is blocked. Centralizes egress control and filtering at the proxy server, aligning with common enterprise security patterns.
+
+**Implications**
+
+- **Direct Outbound:** Requires firewall rules allowing access to Red Hat registries, telemetry, cloud APIs (if applicable), and any external services needed by workloads. Firewall rule management is critical.
+- **Via Proxy:** Requires configuring OpenShift cluster-wide proxy settings during installation (for core components) and potentially per-workload proxy settings. Cluster functionality depends on proxy availability and correct configuration (including trusting proxy CA).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-08
+
+**Title**
 External Firewall Rule Granularity (Connected Environments)
 
 **Architectural Question**
@@ -254,7 +292,7 @@ If using direct outbound connectivity (behind firewalls) in a connected environm
 Firewall rules for direct outbound access must balance security (least privilege) with operational feasibility (allowing necessary Red Hat and workload traffic).
 
 **Assumption**
-Cluster is Connected (OCP-BASE-07) and uses Direct Outbound (OCP-NET-06).
+Cluster is in a connected environment.
 
 **Alternatives**
 
@@ -283,7 +321,7 @@ Cluster is Connected (OCP-BASE-07) and uses Direct Outbound (OCP-NET-06).
 
 ---
 
-## OCP-NET-08
+## OCP-NET-09
 
 **Title**
 DNS Forwarding Configuration
@@ -323,7 +361,7 @@ N/A
 
 ---
 
-## OCP-NET-09
+## OCP-NET-10
 
 **Title**
 Load Balancer Strategy (API & Ingress)
@@ -335,8 +373,7 @@ Which load balancer solution will expose the OpenShift API and application ingre
 A load balancer is needed for external access to the cluster API and applications. Choice impacts cost, performance, features, automation, and operational responsibility.
 
 **Assumption**
-External access to API and applications is required.
-
+N/A
 **Alternatives**
 
 - Default Platform Load Balancer (Cloud Provider LBaaS / On-Prem Keepalived/HAProxy)
@@ -364,7 +401,7 @@ External access to API and applications is required.
 
 ---
 
-## OCP-NET-10
+## OCP-NET-11
 
 **Title**
 Ingress Controller Strategy
@@ -376,7 +413,7 @@ How will ingress controllers be deployed and managed for routing external traffi
 Strategy impacts multi-tenancy, performance isolation, security, custom domain usage, and resource consumption.
 
 **Assumption**
-Applications need to be exposed externally.
+N/A
 
 **Alternatives**
 
@@ -408,7 +445,7 @@ Applications need to be exposed externally.
 
 ---
 
-## OCP-NET-11
+## OCP-NET-12
 
 **Title**
 Ingress Controller Replica Count
@@ -420,8 +457,7 @@ How many replicas will be deployed for each ingress controller instance (default
 Replica count determines HA and traffic handling capacity. Insufficient replicas cause bottlenecks or outages.
 
 **Assumption**
-Ingress Controller strategy (OCP-NET-10) is decided.
-
+N/A
 **Alternatives**
 
 - Default Replica Count (Typically 2)
@@ -449,7 +485,7 @@ Ingress Controller strategy (OCP-NET-10) is decided.
 
 ---
 
-## OCP-NET-12
+## OCP-NET-13
 
 **Title**
 SSL/TLS Termination Strategy
@@ -461,8 +497,7 @@ Where will SSL/TLS encryption for application ingress traffic be terminated?
 Decision impacts security posture, certificate management complexity, and ability to enforce end-to-end encryption.
 
 **Assumption**
-Application traffic requires HTTPS.
-
+N/A
 **Alternatives**
 
 - **Edge Termination:** TLS terminates at Ingress Controller; traffic to Pod is HTTP.
@@ -493,7 +528,7 @@ Application traffic requires HTTPS.
 
 ---
 
-## OCP-NET-13
+## OCP-NET-14
 
 **Title**
 Default Network Policy (Pod Isolation)
@@ -505,8 +540,7 @@ What default network policy will govern pod communication _within_ and _between_
 Default policy sets the baseline security posture for pod network isolation, impacting security risk and developer workflow (need to create explicit allow rules).
 
 **Assumption**
-Network segmentation between projects/pods is desired or required.
-
+N/A
 **Alternatives**
 
 - **Default Open:** All pods can communicate freely across all namespaces.
@@ -537,7 +571,7 @@ Network segmentation between projects/pods is desired or required.
 
 ---
 
-## OCP-NET-14
+## OCP-NET-15
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -549,13 +583,13 @@ Will cluster-scoped administrative network policies (`AdminNetworkPolicy`/`Basel
 Standard `NetworkPolicy` is namespace-scoped, allowing project owners to potentially bypass critical platform security requirements. A cluster-scoped mechanism enables centralized enforcement.
 
 **Assumption**
-Cluster uses OVN-Kubernetes CNI (OCP-NET-05). Centralized network policy enforcement is desired.
+Cluster uses OVN-Kubernetes CNI.
 
 **Alternatives**
 
 - Implement AdminNetworkPolicy (ANP) - Mandatory Rules
 - Implement BaselineAdminNetworkPolicy (BANP) - Default Rules (Overridable)
-- Rely Solely on Standard NetworkPolicy (OCP-NET-13)
+- Rely Solely on Standard NetworkPolicy
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -580,7 +614,7 @@ Cluster uses OVN-Kubernetes CNI (OCP-NET-05). Centralized network policy enforce
 
 ---
 
-## OCP-NET-15
+## OCP-NET-16
 
 **Title**
 Egress IP Address Strategy
@@ -592,8 +626,7 @@ How will outbound traffic from specific pods/projects ensure a predictable sourc
 External services (databases, legacy APIs) often use firewalls allowing access only from specific source IPs. Default pod egress uses the node IP, which is unpredictable.
 
 **Assumption**
-External services require source IP whitelisting.
-
+N/A
 **Alternatives**
 
 - No Egress IP Configuration
@@ -624,7 +657,48 @@ External services require source IP whitelisting.
 
 ---
 
-## OCP-NET-16
+## OCP-NET-17
+
+**Title**
+Network Diagnostics Operator Deployment Strategy
+
+**Architectural Question**
+Should the cluster intentionally disable the core OpenShift Network Diagnostics functionality to conserve resources or reduce the management footprint?
+
+**Issue or Problem**
+For highly optimized, resource-constrained environments (like Edge or vDU workloads), reducing platform overhead is critical. The default configuration includes network components that consume resources but are deemed non-essential if comprehensive external monitoring is already in place.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Default Network Diagnostics (Enabled)
+- Disabled Network Diagnostics
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Default Network Diagnostics (Enabled):** Provides valuable built-in troubleshooting tools for validating networking health, simplifying Day 2 operations and identifying connectivity issues proactively.
+- **Disabled Network Diagnostics:** **Setting `disableNetworkDiagnostics: true` in the Network CR** explicitly removes this feature, reducing the overall platform footprint and conserving CPU/memory resources.
+
+**Implications**
+
+- **Default Network Diagnostics (Enabled):** Consumes node resources (CPU/memory) via associated diagnostic pods and daemon sets.
+- **Disabled Network Diagnostics:** Removes a built-in diagnostic safety net. Troubleshooting complex network failures must rely solely on external tools or manual inspection.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-18
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -636,8 +710,7 @@ How will pods connect to additional, specialized networks (e.g., VLANs, high-per
 Certain apps (Telco, HPC, AI/ML data ingest, legacy systems) require direct access to specific physical, VLAN-based, or high-performance networks.
 
 **Assumption**
-Specific workloads require specialized network access.
-
+N/A
 **Alternatives**
 
 - No Secondary Networks
@@ -666,3 +739,85 @@ Specific workloads require specialized network access.
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Infra Leader (for SR-IOV hardware)
 - Person: #TODO#, Role: AI/ML Platform Owner (for SR-IOV use case)
+
+---
+
+## OCP-NET-19
+
+**Title**
+SR-IOV Virtual Function (VF) Driver Selection
+
+**Architectural Question**
+Which SR-IOV Virtual Function (VF) device type—`vfio-pci` or `netdevice`—will be standardized for use by high-performance application pods?
+
+**Issue or Problem**
+When configuring SR-IOV devices, the choice of the VF device driver type dictates how the network resource is presented to the container. This impacts latency, performance characteristics, and the flexibility for applications.
+
+**Assumption**
+SR-IOV is enabled.
+
+**Alternatives**
+
+- VFIO-PCI Driver (`vfio-pci`)
+- Netdevice Driver (`netdevice`)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **VFIO-PCI Driver (`vfio-pci`):** Recommended when true hardware passthrough (Device Passthrough) is required, often for applications using Data Plane Development Kit (DPDK) or needing kernel bypass to achieve the lowest possible latency.
+- **Netdevice Driver (`netdevice`):** Recommended when standard Linux network semantics (e.g., standard CNI features, DHCP) are required, offering higher flexibility for debugging and standard networking.
+
+**Implications**
+
+- **VFIO-PCI Driver (`vfio-pci`):** Applications must be designed to utilize device passthrough frameworks (like DPDK). The VF is not exposed as a traditional network interface to the OS.
+- **Netdevice Driver (`netdevice`):** Provides simpler integration with standard container networking. However, this configuration might introduce additional latency compared to kernel-bypass methods.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-20
+
+**Title**
+SR-IOV Virtual Function Bonding Strategy
+
+**Architectural Question**
+How will multiple Single Root I/O Virtualization (SR-IOV) Virtual Functions (VFs) attached to a dual-port Network Interface Card (NIC) be configured for network resilience and high availability for application workloads?
+
+**Issue or Problem**
+For high-performance network components like SR-IOV VFs, a single virtual function presents a single failure path. Utilizing dual-port NICs to create a bond provides network high availability (HA) and load balancing capabilities.
+
+**Assumption**
+SR-IOV is enabled.
+
+**Alternatives**
+
+- Bond multiple SR-IOV Virtual Functions (VFs)
+- Utilize separate, unbonded SR-IOV Virtual Functions (VFs)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Bond multiple SR-IOV Virtual Functions (VFs):** Supports the use of bonds for high availability (e.g., LACP), leveraging a single, high-speed dual port NIC partitioned into VFs. Critical for HA virtualization or performance-sensitive applications.
+- **Utilize separate, unbonded SR-IOV Virtual Functions (VFs):** Simplifies configuration. May be sufficient for non-critical testing or development environments where HA is not a priority.
+
+**Implications**
+
+- **Bond multiple SR-IOV Virtual Functions (VFs):** Requires complex network configuration. Depending on the method, this may involve OVS bonding modes at the host level or bonding configurations within the Pod network namespace (e.g., using the Bonding CNI plugin).
+- **Utilize separate, unbonded SR-IOV Virtual Functions (VFs):** Provides no network redundancy or HA across physical NIC ports for application workloads using the VFs.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader

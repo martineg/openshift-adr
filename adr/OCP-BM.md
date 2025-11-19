@@ -41,7 +41,7 @@ N/A
 - **Assisted Installer:** Requires a working internet connection during the preparation phase (unless steps are followed for a disconnected approach). It simplifies deployment by handling Ignition configuration generation and supports **full integration for bare metal platforms**. Only support TPM for disk encryption.
 - **Image-based Installer (IBI):** Primarily intended for **Single-Node OpenShift (SNO) cluster deployments**, often managed using a hub-and-spoke architecture via Red Hat Advanced Cluster Management (RHACM) and the multicluster engine for Kubernetes Operator (MCE). Does not support disk encryption.
 
-  **Agreeing Parties**
+**Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: OCP Platform Owner
@@ -68,7 +68,7 @@ Bare metal provisioning involves complex steps (BMC interaction, ISO booting, ho
 **Alternatives**
 
 - **Manual / Imperative Provisioning (Console/API):** Operators manually define clusters and hosts using the RHACM web console or trigger provisioning via imperative scripts/API calls to the Assisted Service.
-- **GitOps Zero Touch Provisioning (ZTP):** A declarative, pipeline-based approach where cluster definitions are managed in Git and applied by OpenShift GitOps (Argo CD) to the RHACM Hub.
+- **GitOps Zero Touch Provisioning (ZTP):** A declarative, pipeline-based approach where cluster definitions (`ClusterInstance`, `PolicyGenerator`) are managed in Git and applied by OpenShift GitOps (Argo CD) to the RHACM Hub.
 
 **Decision**
 #TODO: Document the decision#
@@ -123,7 +123,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 - **BMO will not be enabled:** The organization is fully responsible for all Day 2 bare metal operations, and ADRs related to BMCs (remediation, protocol, NC-SI) are not applicable.
 - **BMO will be enabled:** Subsequent ADRs for BMC protocols, NC-SI, and automated remediation must be addressed, and the operator must be manually installed and configured post-installation.
 
-  **Agreeing Parties**
+**Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: OCP Platform Owner
@@ -164,7 +164,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 - **Install RHCOS using ISO:** Requires minimal-to-no additional network infrastructure. High operational overhead. Requires manual intervention (or complex scripting) on every node's BMC for large-scale UPI deployments.
 - **Install RHCOS using PXE (Network Boot):** Enables full, scalable, "zero-touch" provisioning, which is ideal for large-scale UPI deployments. Requires significant prerequisite infrastructure (DHCP, TFTP, Web servers) and network configuration (IP helpers, etc.), adding complexity.
 
-  **Agreeing Parties**
+**Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: Network Expert
@@ -210,7 +210,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 - **ISO/PXE Customization (Embedded Keyfiles):** Requires a pre-processing step to customize the media before booting. Excellent for "Day 0" networking that is too complex for kernel args.
 - **`coreos-installer` Live Shell:** Fully manual process, breaks automation.
 
-  **Agreeing Parties**
+**Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: Network Expert
@@ -537,7 +537,7 @@ N/A
 
 **Implications**
 
-- **Local Disk Installation (Internal NVMe/SSD/HDD):** Resilience relies entirely on the local disk health (e.g., RAID, if configured, OCP-BM-12). Storage capacity and performance are confined to the internal server limits.
+- **Local Disk Installation (Internal NVMe/SSD/HDD):** Resilience relies entirely on the local disk health (e.g., RAID, if configured). Storage capacity and performance are confined to the internal server limits.
 - **iSCSI Boot Device Installation (SAN Storage):** Significantly increases installation complexity, requiring configuration of the iSCSI target portal, IQN, and LUN, either manually or via firmware tables. Adds a hard dependency on the storage network and SAN availability during node boot and operation.
 
 **Agreeing Parties**
@@ -700,7 +700,7 @@ N/A
 
 **Implications**
 
-- **Dedicated partition for `/var/lib/containers`:** Requires custom Ignition configuration overrides within the installation manifest. This adds complexity to the installation process.
+- **Dedicated partition for `/var/lib/containers`:** Requires custom Ignition configuration overrides within the installation manifest (e.g., `ClusterInstance` or `BareMetalHost` definition). This adds complexity to the installation process.
 - **Co-locate `/var/lib/containers` on the root partition:** Higher risk of disk exhaustion affecting system stability if container usage is heavy or unpredictable. Management of disk quotas becomes less granular.
 
 **Agreeing Parties**
@@ -723,7 +723,7 @@ How will required container images (OCP release, operators, application base ima
 In disconnected environments or at the far edge, pulling large container images during installation or upgrade (JIT pull) can be slow or unreliable. A structured method is needed to pre-position images on the node's container storage partition, supporting efficient Zero Touch Provisioning (ZTP) and Image-Based Upgrades (IBU).
 
 **Assumption**
-GitOps ZTP is used.
+Provisioning workflow is GitOps ZTP.
 Cluster is on the edge.
 Nodes utilize disk partitioning to include a shared container partition (`/var/lib/containers`).
 
@@ -737,7 +737,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 **Justification**
 
-- **Client-side Image Pre-caching via Ignition/IBU:** This method significantly reduces installation time and network load, which is critical for far edge or constrained environments. It integrates seamlessly with ZTP using `ignitionConfigOverride` to configure mount points and launch services to extract pre-cached images before the cluster installation fully proceeds..
+- **Client-side Image Pre-caching via Ignition/IBU:** This method significantly reduces installation time and network load, which is critical for far edge or constrained environments. It integrates seamlessly with ZTP using `ignitionConfigOverride` (configured via `ClusterInstance`) to configure mount points and launch services to extract pre-cached images before the cluster installation fully proceeds..
 - **Just-In-Time (JIT) Pull during Installation and Runtime:** This simplifies the pre-install setup since no manual image pre-packaging or partition management is required. It relies on the network being stable and high-bandwidth enough to pull all necessary images when needed.
 
 **Implications**
@@ -755,6 +755,51 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 ---
 
 ## OCP-BM-19
+
+**Title**
+Storage Architecture for the Internal Image Registry (PVC vs. Object Storage)
+
+**Architectural Question**
+How should storage be architected for the OpenShift Internal Image Registry, balancing bare metal infrastructure limitations (RWO/RWX availability) with performance and enterprise object storage requirements?
+
+**Issue or Problem**
+OpenShift Container Platform's internal image registry requires high-availability storage (supporting multiple replicas) for production clusters. On bare metal, achieving native ReadWriteMany (RWX) access is challenging, forcing a critical decision between deploying complex RWX solutions, utilizing dedicated Object Storage (S3 API), or settling for low-resilience ReadWriteOnce (RWO) storage.
+
+**Assumption**
+The cluster is installed on bare metal infrastructure and requires persistent image storage for production workloads.
+
+**Alternatives**
+
+- Dedicated Object Storage (S3 API Compatible)
+- ReadWriteMany (RWX) Access Mode
+- ReadWriteOnce (RWO) Access Mode
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Dedicated Object Storage (S3 API Compatible):** This approach leverages object storage (such as Red Hat OpenShift Data Foundation's Multicloud Gateway or an external S3 provider) for the image repository. Object storage is highly scalable and natively supports high availability (HA) required for image registries. ODF is the preferred option when Object (MCG) storage capabilities are necessary.
+- **ReadWriteMany (RWX) Access Mode:** This access mode is required to deploy an image registry that supports high availability with two or more replicas. It is typically implemented using shared file system storage.
+- **ReadWriteOnce (RWO) Access Mode:** This access mode is supported only when the image registry has one replica and explicitly requires the Recreate rollout strategy during upgrades.
+
+**Implications**
+
+- **Dedicated Object Storage (S3 API Compatible):** Requires the installation and maintenance of an Object Storage solution (e.g., ODF/MCG). This decouples image storage scalability from local block or file storage limitations.
+- **ReadWriteMany (RWX) Access Mode:** Requires coordination to provision storage that supports RWX access mode, which is necessary for HA scaled registries.
+- **ReadWriteOnce (RWO) Access Mode:** The cluster must accept reduced resiliency, as the registry cannot have more than one replica. Block storage volumes, which typically use RWO, are supported but explicitly not recommended for use with the image registry on production clusters.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-20
 
 **Title**
 Bare Metal Operator Namespace Scope
@@ -796,7 +841,7 @@ To enable features like Bare Metal as a Service (BMaaS) or GitOps ZTP, the BMO m
 
 ---
 
-## OCP-BM-20
+## OCP-BM-21
 
 **Title**
 Bare Metal Node Remediation
@@ -839,7 +884,7 @@ N/A.
 
 ---
 
-## OCP-BM-21
+## OCP-BM-22
 
 **Title**
 Bare Metal Node Firmware Management
@@ -879,7 +924,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-22
+## OCP-BM-23
 
 **Title**
 Bare Metal Fleet Cluster Upgrade Strategy
@@ -893,7 +938,7 @@ Managing simultaneous upgrades across a large fleet of bare metal clusters, part
 **Assumption**
 
 - Cluster topology is Single-Node (SNO)
-- Cluster is managed using ZTP.
+- Provisioning workflow is GitOps ZTP.
 
 **Alternatives**
 
@@ -922,7 +967,7 @@ Managing simultaneous upgrades across a large fleet of bare metal clusters, part
 
 ---
 
-## OCP-BM-23
+## OCP-BM-24
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -962,10 +1007,10 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-24
+## OCP-BM-25
 
 **Title**
-Bare Metal Host Firmware Configuration
+Bare Metal Host Firmware Configuration Management
 
 **Architectural Question**
 How will host firmware settings (BIOS/UEFI) be applied, validated, and maintained to ensure consistency and compliance across the bare metal fleet?
@@ -974,12 +1019,12 @@ How will host firmware settings (BIOS/UEFI) be applied, validated, and maintaine
 Managing firmware settings manually across a fleet of physical servers leads to configuration drift, inconsistent node behavior, and increased troubleshooting time. A standardized method is required to ensure that every host is provisioned with the exact same BIOS/UEFI configuration defined by the platform standards.
 
 **Assumption**
-GitOps ZTP is used
+Provisioning workflow is GitOps ZTP.
 
 **Alternatives**
 
 - Manual/Out-of-Band Configuration
-- Automated Configuration via GitOps ZTP
+- Automated Configuration via GitOps ZTP/ClusterInstance
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -987,12 +1032,12 @@ GitOps ZTP is used
 **Justification**
 
 - **Manual/Out-of-Band Configuration:** Relies on server administrators manually configuring BIOS settings via vendor consoles (e.g., iDRAC, iLO) or ad-hoc scripts. This is prone to human error and makes auditing the actual state of the fleet difficult.
-- **Automated Configuration via GitOps ZTP:** Uses the **Infrastructure-as-Code** model. Firmware settings are defined in a `HardwareProfile` file stored in Git and referenced by the CR (`biosConfigRef`). The underlying automation (BMO) applies these settings during provisioning, ensuring every node matches the definition in Git.
+- **Automated Configuration via GitOps ZTP/ClusterInstance:** Uses the **Infrastructure-as-Code** model. Firmware settings are defined in a `HardwareProfile` file stored in Git and referenced by the `ClusterInstance` (`biosConfigRef`). The underlying automation (BMO) applies these settings during provisioning, ensuring every node matches the definition in Git.
 
 **Implications**
 
 - **Manual/Out-of-Band Configuration:** High operational overhead. No automated way to detect or remediate if a server's settings drift from the standard.
-- **Automated Configuration via GitOps ZTP:** Requires creating and maintaining hardware profile files (e.g., `.profile`) in the Git repository. Provides a single source of truth for hardware configuration, simplifying audits and disaster recovery.
+- **Automated Configuration via GitOps ZTP/ClusterInstance:** Requires creating and maintaining hardware profile files (e.g., `.profile`) in the Git repository. Provides a single source of truth for hardware configuration, simplifying audits and disaster recovery.
 
 **Agreeing Parties**
 
@@ -1003,7 +1048,7 @@ GitOps ZTP is used
 
 ---
 
-## OCP-BM-25
+## OCP-BM-26
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1044,7 +1089,7 @@ Workloads require strict low-latency guarantees, typically falling into the CNF/
 
 ---
 
-## OCP-BM-26
+## OCP-BM-27
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1085,7 +1130,7 @@ Low-latency or high-performance application workloads (like vDUs) must be isolat
 
 ---
 
-## OCP-BM-27
+## OCP-BM-28
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1126,7 +1171,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-28
+## OCP-BM-29
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1168,90 +1213,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-29
-
-**Title**
-SR-IOV Virtual Function (VF) Driver Selection for Performance Workloads
-
-**Architectural Question**
-Which SR-IOV Virtual Function (VF) device type—`vfio-pci` or `netdevice`—will be standardized for use by high-performance application pods (e.g., vDU, AI/ML inference) requiring direct hardware access on bare metal nodes?
-
-**Issue or Problem**
-When configuring SR-IOV devices using the `SriovNetworkNodePolicy` Custom Resource, the choice of the VF device driver type (`vfio-pci` or `netdevice`) dictates how the network resource is presented to the container. This impacts latency, performance characteristics, and the flexibility for applications (e.g., requiring kernel bypass versus standard Linux networking).
-
-**Assumption**
-Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal cluster.
-The cluster supports SR-IOV capable NICs.
-
-**Alternatives**
-
-- VFIO-PCI Driver (`vfio-pci`)
-- Netdevice Driver (`netdevice`)
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **VFIO-PCI Driver (`vfio-pci`):** Recommended when true hardware passthrough (Device Passthrough) is required, often for applications using Data Plane Development Kit (DPDK) or needing kernel bypass to achieve the lowest possible latency.
-- **Netdevice Driver (`netdevice`):** Recommended when standard Linux network semantics (e.g., standard CNI features, DHCP, IP address management by the kernel) are required, offering higher flexibility for debugging and standard networking but potentially higher latency than VFIO.
-
-**Implications**
-
-- **VFIO-PCI Driver (`vfio-pci`):** Applications must be designed to utilize device passthrough frameworks (like DPDK). The VF is not exposed as a traditional network interface to the OS, complicating standard networking and monitoring tools.
-- **Netdevice Driver (`netdevice`):** Provides simpler integration with standard container networking. However, this configuration might introduce additional latency compared to kernel-bypass methods.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: AI/ML Platform Owner
-- Person: #TODO#, Role: OCP Platform Owner
-
----
-
 ## OCP-BM-30
-
-**Title**
-SR-IOV Virtual Function Bonding Strategy for High Availability
-
-**Architectural Question**
-How will multiple Single Root I/O Virtualization (SR-IOV) Virtual Functions (VFs) attached to a dual-port Network Interface Card (NIC) be configured for network resilience and high availability for application workloads?
-
-**Issue or Problem**
-For high-performance network components like SR-IOV VFs, a single virtual function presents a single failure path. Utilizing dual-port NICs to create a bond provides network high availability (HA) and load balancing capabilities, especially for critical workloads like OpenShift Virtualization or vDU.
-
-**Assumption**
-The cluster supports SR-IOV capable NICs.
-
-**Alternatives**
-
-- Bond multiple SR-IOV Virtual Functions (VFs)
-- Utilize separate, unbonded SR-IOV Virtual Functions (VFs)
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Bond multiple SR-IOV Virtual Functions (VFs):** This approach supports the use of bonds for high availability with the Link Aggregation Control Protocol (LACP), leveraging a single, high-speed dual port NIC partitioned into VFs. This is critical for highly available virtualization or performance-sensitive applications.
-- **Utilize separate, unbonded SR-IOV Virtual Functions (VFs):** This simplifies configuration and avoids the complexity of OVS bonding setup. It may be sufficient for non-critical testing or development environments where HA is not a priority.
-
-**Implications**
-
-- **Bond multiple SR-IOV Virtual Functions (VFs):** Requires complex network configuration, potentially involving OVS bonding modes like `balance-slb`. This complexity must be managed via MachineConfig/NMState configuration during installation. Failure requires coordinating external maintenance windows with cluster availability (e.g., node draining, cluster remediation).
-- **Utilize separate, unbonded SR-IOV Virtual Functions (VFs):** Provides no network redundancy or HA across physical NIC ports for application workloads using the VFs.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: Infra Leader
-
----
-
-## OCP-BM-31
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1289,45 +1251,3 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Network Expert
 - Person: #TODO#, Role: Infra Leader
-
----
-
-## OCP-BM-32
-
-**Title**
-Network Diagnostics Operator Deployment Strategy
-
-**Architectural Question**
-Should the cluster intentionally disable the core OpenShift Network Diagnostics functionality to conserve resources or reduce the management footprint, especially in resource-constrained bare metal or edge deployments?
-
-**Issue or Problem**
-For highly optimized, resource-constrained environments (like those running vDU workloads), reducing platform overhead is critical. The default configuration may include network components that consume resources but are deemed non-essential if comprehensive external monitoring is already in place.
-
-**Assumption**
-The environment is resource-constrained (e.g., Single Node OpenShift or Compact HA) and requires minimizing non-application resource consumption.
-
-**Alternatives**
-
-- Default Network Diagnostics (Enabled)
-- Disabled Network Diagnostics
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Default Network Diagnostics (Enabled):** Provides valuable built-in troubleshooting tools for validating networking health, simplifying Day 2 operations and identifying connectivity issues proactively.
-- **Disabled Network Diagnostics:** **Setting `disableNetworkDiagnostics: true` in the Network CR** explicitly removes this feature, reducing the overall platform footprint and conserving CPU/memory resources, which is highly beneficial for edge sites.
-
-**Implications**
-
-- **Default Network Diagnostics (Enabled):** Consumes node resources (CPU/memory) via associated diagnostic pods and daemon sets.
-- **Disabled Network Diagnostics:** Removes a built-in diagnostic safety net. Troubleshooting complex network failures must rely solely on external tools or manual inspection, increasing operational complexity when issues arise.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: Security Expert
-- Person: #TODO#, Role: OCP Platform Owner
