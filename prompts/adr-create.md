@@ -56,7 +56,7 @@ Format:
 
 - **ID:** Use correct Prefix from Dictionary + `XX` (e.g. `OCP-BM-XX`).
 - **Scope:** Strictly use Dictionary definitions.
-- **Quality:** Alternatives must be **architectural strategies**, NOT simple **configuration instructions** or "Right vs Wrong" settings. Choices must be **viable** (GA vs GA/TP).
+- **Quality:** Alternatives must be **valid architectural strategies**. Do NOT suggest ADRs where one alternative is **unsupported**, a **misconfiguration**, or leads to a broken state. Choices must be **viable** (GA vs GA/TP).
 - **Format:** Alts=titles. Justification/Implications=`**[Title]:** [Text]`.
 - **Parties:** Use `Person: #TODO#, Role: [Role Name]` from `adr_parties_role_dictionnary.md`.
 - **Semantics:** Assumption=Dependency on previous ADR (else N/A). Justification=why choose. Implication=consequence.
