@@ -94,6 +94,49 @@ Bare metal provisioning involves complex steps (BMC interaction, ISO booting, ho
 ## OCP-BM-03
 
 **Title**
+Bare Metal Fleet Cluster Upgrade Strategy
+
+**Architectural Question**
+How will large-scale, distributed bare metal cluster updates (OCP version upgrades) be managed and orchestrated from the central hub cluster?
+
+**Issue or Problem**
+Managing simultaneous upgrades across a large fleet of bare metal clusters, particularly Single Node OpenShift (SNO) clusters at the edge, requires a robust orchestration mechanism that can handle sequencing, image consistency, and minimal disruption. A choice must be made between the currently supported policy-driven approach and the image-based method designed for rapid edge updates.
+
+**Assumption**
+
+- Cluster topology is Single-Node (SNO)
+- Provisioning workflow is GitOps ZTP.
+
+**Alternatives**
+
+- Policy-Driven Rollout using TALM and PolicyGenerator CRs
+- Image-Based Group Upgrade (IBGU) (TP)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Policy-Driven Rollout using TALM and PolicyGenerator CRs:** This is the standard, generally available approach for managing configurations and upgrades via policies, enabling granular control over rollout sequencing, customization, and remediation actions.
+- **Image-Based Group Upgrade (IBGU) (TP):** This methodology is designed to reduce deployment time significantly, especially for SNO clusters. It leverages the Lifecycle Agent (LCA) to deploy new operating system images (stateroots), making it suitable for rapid, consistent rollouts in edge environments.
+
+**Implications**
+
+- **Policy-Driven Rollout using TALM and PolicyGenerator CRs:** Upgrades rely on ensuring policy compliance across the fleet, which may involve individual cluster reboots initiated by configuration changes (e.g., Node Tuning Operator). This approach requires meticulous policy management but is fully supported.
+- **Image-Based Group Upgrade (IBGU) (TP):** Is a Technology Preview feature only and is not supported with Red Hat production SLAs. While offering faster, image-based upgrades, reliance on this method for production clusters introduces support risk.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-04
+
+**Title**
 Bare Metal Operator (BMO) for UPI
 
 **Architectural Question**
@@ -132,88 +175,44 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-04
-
-**Title**
-RHCOS Provisioning Method for Bare Metal Nodes
-
-**Architectural Question**
-How will Red Hat Enterprise Linux CoreOS (RHCOS) be provisioned onto the bare metal nodes when using UPI method deployment?
-
-**Issue or Problem**
-The method chosen to boot and install RHCOS on physical hardware dictates the required network infrastructure (e.g., PXE services) and the level of manual effort (e.g., ISO mounting). This decision is a prerequisite for User-Provisioned method.
-
-**Assumption**
-Cluster installation method is User-Provisioned Infrastructure (UPI).
-
-**Alternatives**
-
-- Install RHCOS using ISO (via Virtual Media or USB)
-- Install RHCOS using PXE (Network Boot)
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Install RHCOS using ISO:** This is straightforward for a small number of nodes. The administrator must manually provide the Ignition configuration file during installation.
-- **Install RHCOS using PXE (Network Boot):** To enable highly automated, "zero-touch" provisioning of RHCOS for a large number of UPI nodes. This method is preferred when scalable provisioning with network infrastructure support is available.
-
-**Implications**
-
-- **Install RHCOS using ISO:** Requires minimal-to-no additional network infrastructure. High operational overhead. Requires manual intervention (or complex scripting) on every node's BMC for large-scale UPI deployments.
-- **Install RHCOS using PXE (Network Boot):** Enables full, scalable, "zero-touch" provisioning, which is ideal for large-scale UPI deployments. Requires significant prerequisite infrastructure (DHCP, TFTP, Web servers) and network configuration (IP helpers, etc.), adding complexity.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: Infra Leader
-
----
-
 ## OCP-BM-05
 
 **Title**
-RHCOS Day-1 Customization Method
+Bare Metal Operator Namespace Scope
 
 **Architectural Question**
-Which technique will be used to apply non-standard, Day-1 settings (like static networking, disk partitions, or console settings) during the UPI installation of RHCOS?
+Should the Bare Metal Operator (BMO) be configured to manage BareMetalHost resources across all namespaces in the cluster?
 
 **Issue or Problem**
-The default RHCOS installation setting is often insufficient for enterprise bare metal. We must apply custom configurations (e.g., static IP addresses, network bonds, custom disk partitions, or serial console settings) at installation time. The chosen method impacts automation, complexity, and maintainability.
+To enable features like Bare Metal as a Service (BMaaS) or GitOps ZTP, the BMO must be configured to find and manage BareMetalHost resources created outside its default namespace. Deciding this scope is a fundamental configuration for the BMO.
 
 **Assumption**
-Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+- The Bare Metal Operator (BMO) is enabled on the cluster.
+- The cluster fulfills a management role: It is either an ACM Hub Cluster managing a ZTP fleet OR a centralized BMaaS provider allocating physical nodes to various namespaces.
 
 **Alternatives**
 
-- Kernel Arguments
-- `MachineConfig` via Ignition
-- ISO/PXE Customization (Embedded Keyfiles)
-- `coreos-installer` Live Shell
+- BMO Watches All Namespaces (Watch-All)
+- BMO Watches Specific/Limited Namespaces (Default)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Kernel Arguments:** This is a simple, direct method for passing basic boot settings. It is required for core parameters like static IP (`ip=...`) and the Ignition URL (`coreos.inst.ignition_url=`).
-- **`MachineConfig` via Ignition:** This is the standard, declarative method for all complex OS configurations. `MachineConfig` manifests are placed in the `manifests/` directory and automatically bundled into the final Ignition files, making it ideal for managing partitions , files, or services (like custom NTP) as code.
-- **ISO/PXE Customization (Embedded Keyfiles):** Uses the `coreos-installer iso customize` tool to embed NetworkManager keyfiles directly into the image. This is the preferred method for complex networking (like bonding) as it avoids unmanageable kernel argument strings and applies settings automatically to the live and installed system.
-- **`coreos-installer` Live Shell:** This is a manual, interactive method used for debugging or special cases. By booting the ISO or PXE image to a shell, an administrator can run `coreos-installer` with unique flags.
+- **BMO Watches All Namespaces (Watch-All):** This is **required for BMaaS and GitOps ZTP**. It allows the BMO on the **Hub Cluster** to discover `BareMetalHost` CRs created in any namespace (e.g., a spoke cluster namespace) and provision them.
+- **BMO Watches Specific/Limited Namespaces (Default):** This is the default behavior. BMO will only discover and provision hosts defined in its own `openshift-machine-api` namespace. All other `BareMetalHost` CRs in the cluster are ignored.
 
 **Implications**
 
-- **Kernel Arguments:** Works identically for both ISO and PXE. Becomes unmanageable and error-prone for complex bonding.
-- **`MachineConfig` via Ignition:** Most robust for OS-level config, but cannot configure the _initial_ network required to fetch the Ignition file itself.
-- **ISO/PXE Customization (Embedded Keyfiles):** Requires a pre-processing step to customize the media before booting. Excellent for "Day 0" networking that is too complex for kernel args.
-- **`coreos-installer` Live Shell:** Fully manual process, breaks automation.
+- **BMO Watches All Namespaces (Watch-All):** The BMO `Provisioning` CR must be patched to set `watchAllNamespaces: true`, enabling advanced, cluster-wide provisioning workflows.
+- **BMO Watches Specific/Limited Namespaces (Default):** The cluster is isolated, and advanced, multi-namespace provisioning workflows like BMaaS and GitOps ZTP are not possible.
 
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Infra Leader
 
 ---
@@ -221,80 +220,84 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 ## OCP-BM-06
 
 **Title**
-Ignition Configuration Integrity Validation Strategy
+BMC protocol
 
 **Architectural Question**
-How will the authenticity and integrity of the fetched Ignition Configuration files be validated during Red Hat Enterprise Linux CoreOS (RHCOS) node installation?
+Which Baseboard Management Controller (BMC) protocol (Redfish, IPMI, or proprietary) should be standardized for automated provisioning, hardware inspection, and ongoing bare metal host lifecycle management using the Bare Metal Operator (BMO)?
 
 **Issue or Problem**
-During manual RHCOS installation (ISO/PXE), the Ignition config files are downloaded from an HTTP/S server. Without verification, the system is vulnerable to fetching tampered configurations. If relying on HTTP, a hash is required for integrity validation. If relying on HTTPS, the Certificate Authority (CA) might need to be explicitly trusted.
+The Bare Metal Operator (BMO) requires reliable, consistent, and secure connectivity to the BMC for key operations such as power management, image deployment, and hardware inspection. Different protocols offer varying levels of security, support for modern features (like firmware management), and compatibility across diverse hardware vendors, necessitating a standardized choice for cluster management.
 
 **Assumption**
-Cluster installation method is User-Provisioned Infrastructure (UPI).
+Bare Metal Operator is enabled.
 
 **Alternatives**
 
-- Validate using SHA512 Hash over HTTP/S
-- Validate using HTTPS TLS/CA Trust (without explicit hash)
+- Redfish
+- IPMI
+- Other proprietary protocol
 
 **Decision**
 #TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Validate using SHA512 Hash over HTTP/S:** This approach provides a strong integrity check regardless of the network protocol (HTTP or HTTPS). Using the `--ignition-hash` is required when the Ignition config file is obtained through an HTTP URL to validate its authenticity.
-- **Validate using HTTPS TLS/CA Trust (without explicit hash):** If the Ignition configuration files are provided through an HTTPS server that uses TLS, the certificate authority (CA) can be added to the system trust store before running `coreos-installer`, ensuring integrity and confidentiality during transfer.
+- **Redfish:** This is the industry-standard, modern API recommended for hardware management. It enables advanced Bare Metal Operator features such as inspecting and configuring BIOS/Firmware settings (`HostFirmwareSettings`) and updating network interface controller (NIC) firmware (`HostFirmwareComponents`), which rely on Redfish support. Furthermore, Redfish BMC addressing is required for managed Secure Boot deployments, and for using Bare Metal as a Service (BMaaS) (TP).
+- **IPMI:** IPMI is an older, widely supported protocol. It is required in specific environments, such as IBM Cloud Bare Metal (Classic) deployments, where Redfish may not be tested or supported. It is supported if hardware does not support Redfish network boot.
+- **Other proprietary protocol:** This covers vendor-specific protocols (e.g., Fujitsu iRMC, Cisco CIMC) that are explicitly supported by Ironic/BMO. It is necessary when the fleet uses hardware that primarily relies on these interfaces for BMC connectivity.
 
 **Implications**
 
-- **Validate using SHA512 Hash over HTTP/S:** Requires the administrator to obtain the SHA512 digest for each Ignition config file and pass it using the `--ignition-hash` option to `coreos-installer`.
-- **Validate using HTTPS TLS/CA Trust (without explicit hash):** If using a custom CA, requires adding the internal certificate authority (CA) to the system trust store via `coreos-installer` before installation. This relies on a correctly managed certificate chain.
+- **Redfish:** Requires ensuring hardware and BMC firmware meet the necessary compatibility versions validated for Redfish virtual media installation. If self-signed certificates are used, `disableCertificateVerification: True` must be configured in the `install-config.yaml` or `BareMetalHost` object. Enables the most robust lifecycle management features via BMO/Ironic.
+- **IPMI:** **IPMI does not encrypt communications** and requires use over a secured or dedicated management network. It cannot be used for managed Secure Boot deployments. If PXE booting is used with IPMI, a provisioning network is mandatory.
+- **Other proprietary protocol:** Management capabilities (especially advanced features like firmware configuration) may be limited to specific BMO drivers (like Fujitsu iRMC or HP iLO) and might not support the full range of vendor-independent Redfish capabilities.
 
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Infra Leader
 - Person: #TODO#, Role: Security Expert
-- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
 
 ---
 
 ## OCP-BM-07
 
 **Title**
-Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
+BMC Credential Security and Storage Strategy
 
 **Architectural Question**
-How will the hostnames for OpenShift cluster nodes (RHCOS) in a User-Provisioned Infrastructure (UPI) deployment be determined and maintained?
+How will the highly sensitive Baseboard Management Controller (BMC) credentials, necessary for Bare Metal Operator (BMO) operation, Agent-based Installation (ABI), and GitOps Zero Touch Provisioning (ZTP), be securely stored and accessed by the OpenShift control plane?
 
 **Issue or Problem**
-In UPI deployments, RHCOS nodes must obtain a hostname during boot. If this is not explicitly provided by DHCP, the system defaults to using reverse DNS lookup, which can be slow and result in critical system services detecting the hostname as "localhost". A stable and quickly resolved hostname is required for node readiness and CSR generation.
+The automated bare metal workflow requires storing BMC login credentials (username/password) as Kubernetes Secrets (referenced by bmcCredentialsName). These secrets grant full out-of-band control over physical hosts (e.g., power cycle, firmware updates, OS installation). Protecting these secrets is critical for platform security.
 
 **Assumption**
-Cluster installation method is User-Provisioned Infrastructure (UPI).
+Bare Metal Operator is enabled.
 
 **Alternatives**
 
-- DHCP-Provided Hostnames (Recommended)
-- Reverse DNS Lookup (Default Fallback)
+- Standard Kubernetes Secrets with OCP/etcd Encryption
+- External Secret Management System Integration
 
 **Decision**
 #TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **DHCP-Provided Hostnames (Recommended):** This approach minimizes operational risk by ensuring the hostname is obtained quickly and reliably during network initialization. It simplifies Day 1 setup and bypasses manual DNS record configuration errors in environments that use DNS split-horizon implementations.
-- **Reverse DNS Lookup (Default Fallback):** This requires minimal specific configuration on the DHCP server side, relying solely on the presence of accurate PTR records in the DNS infrastructure.
+- **Standard Kubernetes Secrets with OCP/etcd Encryption:** This is the native pattern used by the Agent Installer and GitOps ZTP (via `bmcCredentialsName`). Protection relies on Role-Based Access Control (RBAC) and application-layer encryption in etcd (if enabled). This simplifies deployment as no external dependencies are introduced during installation.
+- **External Secret Management System Integration:** Credentials are stored exclusively outside of the Kubernetes cluster (e.g., in HashiCorp Vault or CyberArk). OCP components/operators would retrieve the secrets just-in-time via an integration service (e.g., external Secrets Operator). This approach offers stronger separation of duties and auditing for access to critical infrastructure credentials.
 
 **Implications**
 
-- **DHCP-Provided Hostnames (Recommended):** Requires ensuring the DHCP server is configured to provide persistent IP addresses, DNS server information, and hostnames to all cluster machines for long-term management.
-- **Reverse DNS Lookup (Default Fallback):** Node initialization can be delayed while the reverse DNS lookup occurs, potentially causing system services to incorrectly start with "localhost" as the hostname.
+- **Standard Kubernetes Secrets with OCP/etcd Encryption:** If an attacker gains sufficient privilege to read Kubernetes Secrets, the BMC credentials for all managed hosts are exposed. Requires stringent RBAC enforcement on the namespace containing the secrets.
+- **External Secret Management System Integration:** Increases Day 1 complexity by requiring deployment and highly available integration with the external secret system. Adds an external dependency that must be reachable and operational for BMO functions (like host remediation and provisioning) to succeed.
 
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
 - Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Network Expert
 - Person: #TODO#, Role: Infra Leader
 
 ---
@@ -342,6 +345,47 @@ Cluster installation method is Installer-Provisioned Infrastructure (IPI).
 ## OCP-BM-09
 
 **Title**
+BMO Provisioning Boot Mechanism
+
+**Architectural Question**
+Which boot mechanism (iPXE or Redfish Virtual Media) should be standardized for provisioning bare metal hosts managed by the Bare Metal Operator (BMO)?
+
+**Issue or Problem**
+Automated bare metal provisioning (as used by IPI, ABI, and AI) requires a reliable method for the BMO/Ironic service to boot the discovery ISO on the physical host. The choice of method is constrained by network infrastructure and BMC capabilities.
+
+**Assumption**
+Cluster installation method is IPI, Agent-based Installer (ABI), or Assisted Installer (AI).
+
+**Alternatives**
+
+- iPXE Booting (Network Boot)
+- Redfish Virtual Media Booting
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **iPXE Booting (Network Boot):** Provides fast, zero-touch provisioning typically favored in centralized data centers. It relies on robust PXE/DHCP/TFTP infrastructure.
+- **Redfish Virtual Media Booting:** Leverages the BMC's ability to mount a remote ISO image, ensuring reliability even if the host's primary network configuration is complex. This is a common requirement for edge or disconnected deployments using ABI/AI.
+
+**Implications**
+
+- **iPXE Booting (Network Boot):** Requires a provisioning network and adherence to network prerequisites like DHCP, TFTP, and Web servers.
+- **Redfish Virtual Media Booting:** This is the mandatory choice if Provisioning Network is not used. It requires that the BMC supports the Virtual Media feature via the chosen Redfish/IPMI protocol.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-BM-10
+
+**Title**
 Network Controller Sideband Interface (NC-SI) Support Enforcement
 
 **Architectural Question**
@@ -379,92 +423,174 @@ Bare Metal Operator is enabled.
 
 ---
 
-## OCP-BM-10
+## OCP-BM-11
 
 **Title**
-BMC protocol
+RHCOS Provisioning Method for Bare Metal Nodes
 
 **Architectural Question**
-Which Baseboard Management Controller (BMC) protocol (Redfish, IPMI, or proprietary) should be standardized for automated provisioning, hardware inspection, and ongoing bare metal host lifecycle management using the Bare Metal Operator (BMO)?
+How will Red Hat Enterprise Linux CoreOS (RHCOS) be provisioned onto the bare metal nodes when using UPI method deployment?
 
 **Issue or Problem**
-The Bare Metal Operator (BMO) requires reliable, consistent, and secure connectivity to the BMC for key operations such as power management, image deployment, and hardware inspection. Different protocols offer varying levels of security, support for modern features (like firmware management), and compatibility across diverse hardware vendors, necessitating a standardized choice for cluster management.
+The method chosen to boot and install RHCOS on physical hardware dictates the required network infrastructure (e.g., PXE services) and the level of manual effort (e.g., ISO mounting). This decision is a prerequisite for User-Provisioned method.
 
 **Assumption**
-Bare Metal Operator is enabled.
+Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 **Alternatives**
 
-- Redfish
-- IPMI
-- Other proprietary protocol
+- Install RHCOS using ISO (via Virtual Media or USB)
+- Install RHCOS using PXE (Network Boot)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Redfish:** This is the industry-standard, modern API recommended for hardware management. It enables advanced Bare Metal Operator features such as inspecting and configuring BIOS/Firmware settings (`HostFirmwareSettings`) and updating network interface controller (NIC) firmware (`HostFirmwareComponents`), which rely on Redfish support. Furthermore, Redfish BMC addressing is required for managed Secure Boot deployments, and for using Bare Metal as a Service (BMaaS) (TP).
-- **IPMI:** IPMI is an older, widely supported protocol. It is required in specific environments, such as IBM Cloud Bare Metal (Classic) deployments, where Redfish may not be tested or supported. It is supported if hardware does not support Redfish network boot.
-- **Other proprietary protocol:** This covers vendor-specific protocols (e.g., Fujitsu iRMC, Cisco CIMC) that are explicitly supported by Ironic/BMO. It is necessary when the fleet uses hardware that primarily relies on these interfaces for BMC connectivity.
+- **Install RHCOS using ISO:** This is straightforward for a small number of nodes. The administrator must manually provide the Ignition configuration file during installation.
+- **Install RHCOS using PXE (Network Boot):** To enable highly automated, "zero-touch" provisioning of RHCOS for a large number of UPI nodes. This method is preferred when scalable provisioning with network infrastructure support is available.
 
 **Implications**
 
-- **Redfish:** Requires ensuring hardware and BMC firmware meet the necessary compatibility versions validated for Redfish virtual media installation. If self-signed certificates are used, `disableCertificateVerification: True` must be configured in the `install-config.yaml` or `BareMetalHost` object. Enables the most robust lifecycle management features via BMO/Ironic.
-- **IPMI:** **IPMI does not encrypt communications** and requires use over a secured or dedicated management network. It cannot be used for managed Secure Boot deployments. If PXE booting is used with IPMI, a provisioning network is mandatory.
-- **Other proprietary protocol:** Management capabilities (especially advanced features like firmware configuration) may be limited to specific BMO drivers (like Fujitsu iRMC or HP iLO) and might not support the full range of vendor-independent Redfish capabilities.
+- **Install RHCOS using ISO:** Requires minimal-to-no additional network infrastructure. High operational overhead. Requires manual intervention (or complex scripting) on every node's BMC for large-scale UPI deployments.
+- **Install RHCOS using PXE (Network Boot):** Enables full, scalable, "zero-touch" provisioning, which is ideal for large-scale UPI deployments. Requires significant prerequisite infrastructure (DHCP, TFTP, Web servers) and network configuration (IP helpers, etc.), adding complexity.
 
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
 - Person: #TODO#, Role: Infra Leader
-- Person: #TODO#, Role: Security Expert
-- Person: #TODO#, Role: Operations Expert
 
 ---
 
-## OCP-BM-11
+## OCP-BM-12
 
 **Title**
-BMC Credential Security and Storage Strategy
+Ignition Configuration Integrity Validation Strategy
 
 **Architectural Question**
-How will the highly sensitive Baseboard Management Controller (BMC) credentials, necessary for Bare Metal Operator (BMO) operation, Agent-based Installation (ABI), and GitOps Zero Touch Provisioning (ZTP), be securely stored and accessed by the OpenShift control plane?
+How will the authenticity and integrity of the fetched Ignition Configuration files be validated during Red Hat Enterprise Linux CoreOS (RHCOS) node installation?
 
 **Issue or Problem**
-The automated bare metal workflow requires storing BMC login credentials (username/password) as Kubernetes Secrets (referenced by bmcCredentialsName). These secrets grant full out-of-band control over physical hosts (e.g., power cycle, firmware updates, OS installation). Protecting these secrets is critical for platform security.
+During manual RHCOS installation (ISO/PXE), the Ignition config files are downloaded from an HTTP/S server. Without verification, the system is vulnerable to fetching tampered configurations. If relying on HTTP, a hash is required for integrity validation. If relying on HTTPS, the Certificate Authority (CA) might need to be explicitly trusted.
 
 **Assumption**
-Bare Metal Operator is enabled.
+Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 **Alternatives**
 
-- Standard Kubernetes Secrets with OCP/etcd Encryption
-- External Secret Management System Integration
+- Validate using SHA512 Hash over HTTP/S
+- Validate using HTTPS TLS/CA Trust (without explicit hash)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Standard Kubernetes Secrets with OCP/etcd Encryption:** This is the native pattern used by the Agent Installer and GitOps ZTP (via `bmcCredentialsName`). Protection relies on Role-Based Access Control (RBAC) and application-layer encryption in etcd (if enabled). This simplifies deployment as no external dependencies are introduced during installation.
-- **External Secret Management System Integration:** Credentials are stored exclusively outside of the Kubernetes cluster (e.g., in HashiCorp Vault or CyberArk). OCP components/operators would retrieve the secrets just-in-time via an integration service (e.g., external Secrets Operator). This approach offers stronger separation of duties and auditing for access to critical infrastructure credentials.
+- **Validate using SHA512 Hash over HTTP/S:** This approach provides a strong integrity check regardless of the network protocol (HTTP or HTTPS). Using the `--ignition-hash` is required when the Ignition config file is obtained through an HTTP URL to validate its authenticity.
+- **Validate using HTTPS TLS/CA Trust (without explicit hash):** If the Ignition configuration files are provided through an HTTPS server that uses TLS, the certificate authority (CA) can be added to the system trust store before running `coreos-installer`, ensuring integrity and confidentiality during transfer.
 
 **Implications**
 
-- **Standard Kubernetes Secrets with OCP/etcd Encryption:** If an attacker gains sufficient privilege to read Kubernetes Secrets, the BMC credentials for all managed hosts are exposed. Requires stringent RBAC enforcement on the namespace containing the secrets.
-- **External Secret Management System Integration:** Increases Day 1 complexity by requiring deployment and highly available integration with the external secret system. Adds an external dependency that must be reachable and operational for BMO functions (like host remediation and provisioning) to succeed.
+- **Validate using SHA512 Hash over HTTP/S:** Requires the administrator to obtain the SHA512 digest for each Ignition config file and pass it using the `--ignition-hash` option to `coreos-installer`.
+- **Validate using HTTPS TLS/CA Trust (without explicit hash):** If using a custom CA, requires adding the internal certificate authority (CA) to the system trust store via `coreos-installer` before installation. This relies on a correctly managed certificate chain.
 
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: Security Expert
 - Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-BM-13
+
+**Title**
+RHCOS Day-1 Customization Method
+
+**Architectural Question**
+Which technique will be used to apply non-standard, Day-1 settings (like static networking, disk partitions, or console settings) during the UPI installation of RHCOS?
+
+**Issue or Problem**
+The default RHCOS installation setting is often insufficient for enterprise bare metal. We must apply custom configurations (e.g., static IP addresses, network bonds, custom disk partitions, or serial console settings) at installation time. The chosen method impacts automation, complexity, and maintainability.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- Kernel Arguments
+- `MachineConfig` via Ignition
+- ISO/PXE Customization (Embedded Keyfiles)
+- `coreos-installer` Live Shell
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Kernel Arguments:** This is a simple, direct method for passing basic boot settings. It is required for core parameters like static IP (`ip=...`) and the Ignition URL (`coreos.inst.ignition_url=`).
+- **`MachineConfig` via Ignition:** This is the standard, declarative method for all complex OS configurations. `MachineConfig` manifests are placed in the `manifests/` directory and automatically bundled into the final Ignition files, making it ideal for managing partitions , files, or services (like custom NTP) as code.
+- **ISO/PXE Customization (Embedded Keyfiles):** Uses the `coreos-installer iso customize` tool to embed NetworkManager keyfiles directly into the image. This is the preferred method for complex networking (like bonding) as it avoids unmanageable kernel argument strings and applies settings automatically to the live and installed system.
+- **`coreos-installer` Live Shell:** This is a manual, interactive method used for debugging or special cases. By booting the ISO or PXE image to a shell, an administrator can run `coreos-installer` with unique flags.
+
+**Implications**
+
+- **Kernel Arguments:** Works identically for both ISO and PXE. Becomes unmanageable and error-prone for complex bonding.
+- **`MachineConfig` via Ignition:** Most robust for OS-level config, but cannot configure the _initial_ network required to fetch the Ignition file itself.
+- **ISO/PXE Customization (Embedded Keyfiles):** Requires a pre-processing step to customize the media before booting. Excellent for "Day 0" networking that is too complex for kernel args.
+- **`coreos-installer` Live Shell:** Fully manual process, breaks automation.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
 - Person: #TODO#, Role: Infra Leader
 
 ---
 
-## OCP-BM-12
+## OCP-BM-14
+
+**Title**
+Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
+
+**Architectural Question**
+How will the hostnames for OpenShift cluster nodes (RHCOS) in a User-Provisioned Infrastructure (UPI) deployment be determined and maintained?
+
+**Issue or Problem**
+In UPI deployments, RHCOS nodes must obtain a hostname during boot. If this is not explicitly provided by DHCP, the system defaults to using reverse DNS lookup, which can be slow and result in critical system services detecting the hostname as "localhost". A stable and quickly resolved hostname is required for node readiness and CSR generation.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- DHCP-Provided Hostnames (Recommended)
+- Reverse DNS Lookup (Default Fallback)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **DHCP-Provided Hostnames (Recommended):** This approach minimizes operational risk by ensuring the hostname is obtained quickly and reliably during network initialization. It simplifies Day 1 setup and bypasses manual DNS record configuration errors in environments that use DNS split-horizon implementations.
+- **Reverse DNS Lookup (Default Fallback):** This requires minimal specific configuration on the DHCP server side, relying solely on the presence of accurate PTR records in the DNS infrastructure.
+
+**Implications**
+
+- **DHCP-Provided Hostnames (Recommended):** Requires ensuring the DHCP server is configured to provide persistent IP addresses, DNS server information, and hostnames to all cluster machines for long-term management.
+- **Reverse DNS Lookup (Default Fallback):** Node initialization can be delayed while the reverse DNS lookup occurs, potentially causing system services to incorrectly start with "localhost" as the hostname.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-15
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -507,167 +633,44 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-13
-
-**Title**
-BMO Provisioning Boot Mechanism
-
-**Architectural Question**
-Which boot mechanism (iPXE or Redfish Virtual Media) should be standardized for provisioning bare metal hosts managed by the Bare Metal Operator (BMO)?
-
-**Issue or Problem**
-Automated bare metal provisioning (as used by IPI, ABI, and AI) requires a reliable method for the BMO/Ironic service to boot the discovery ISO on the physical host. The choice of method is constrained by network infrastructure and BMC capabilities.
-
-**Assumption**
-Cluster installation method is IPI, Agent-based Installer (ABI), or Assisted Installer (AI).
-
-**Alternatives**
-
-- iPXE Booting (Network Boot)
-- Redfish Virtual Media Booting
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **iPXE Booting (Network Boot):** Provides fast, zero-touch provisioning typically favored in centralized data centers. It relies on robust PXE/DHCP/TFTP infrastructure.
-- **Redfish Virtual Media Booting:** Leverages the BMC's ability to mount a remote ISO image, ensuring reliability even if the host's primary network configuration is complex. This is a common requirement for edge or disconnected deployments using ABI/AI.
-
-**Implications**
-
-- **iPXE Booting (Network Boot):** Requires a provisioning network and adherence to network prerequisites like DHCP, TFTP, and Web servers.
-- **Redfish Virtual Media Booting:** This is the mandatory choice if Provisioning Network is not used. It requires that the BMC supports the Virtual Media feature via the chosen Redfish/IPMI protocol.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Infra Leader
-- Person: #TODO#, Role: Network Expert
-
----
-
-## OCP-BM-14
-
-**Title**
-RHCOS Installation Boot Device Selection
-
-**Architectural Question**
-Will Red Hat Enterprise Linux CoreOS (RHCOS) be installed and booted from local internal storage (e.g., NVMe, SATA SSD) or from network-attached iSCSI SAN storage?
-
-**Issue or Problem**
-The choice of boot device impacts storage management, failure domains, and the complexity of the installation process. Integrating with existing Storage Area Networks (SANs) requires specific installation steps (iSCSI target/initiator configuration) not needed for local disk deployment.
-
-**Assumption**
-N/A
-
-**Alternatives**
-
-- Local Disk Installation (Internal NVMe/SSD/HDD)
-- iSCSI Boot Device Installation (SAN Storage)
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Local Disk Installation (Internal NVMe/SSD/HDD):** This is the default, simpler installation path, requiring less complex networking and kernel configuration during the RHCOS installation boot process.
-- **iSCSI Boot Device Installation (SAN Storage):** This is required to leverage centralized, highly available, and potentially multi-pathed SAN infrastructure for the OS root disk. It supports fully diskless machines.
-
-**Implications**
-
-- **Local Disk Installation (Internal NVMe/SSD/HDD):** Resilience relies entirely on the local disk health (e.g., RAID, if configured). Storage capacity and performance are confined to the internal server limits.
-- **iSCSI Boot Device Installation (SAN Storage):** Significantly increases installation complexity, requiring configuration of the iSCSI target portal, IQN, and LUN, either manually or via firmware tables. Adds a hard dependency on the storage network and SAN availability during node boot and operation.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Storage Expert
-- Person: #TODO#, Role: Infra Leader
-
----
-
-## OCP-BM-15
-
-**Title**
-iSCSI Boot Configuration Method for RHCOS
-
-**Architectural Question**
-When using an iSCSI boot device for RHCOS, should the configuration be handled manually via the live installer shell/scripts and kernel arguments, or automatically via iBFT (iSCSI Boot Firmware Table)?
-
-**Issue or Problem**
-Installing RHCOS onto iSCSI requires the initiator and target information (IQN, LUN, etc.) to be passed to the kernel and the `coreos-installer`. A choice must be made between highly automated firmware integration (iBFT) and explicit manual configuration/scripting.
-
-**Assumption**
-iSCSI boot device is used
-
-**Alternatives**
-
-- Manual/Scripted iSCSI Configuration
-- iBFT/Firmware-Based iSCSI Configuration
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Manual/Scripted iSCSI Configuration:** Allows explicit control over the entire iSCSI mounting and unmounting process using scripts embedded in the live image (e.g., `--pre-install` / `--post-install` scripts) and explicit kernel arguments (e.g., `rd.iscsi.initiator=`).
-- **iBFT/Firmware-Based iSCSI Configuration:** Enables a more automated, cleaner configuration path for diskless machines by allowing the RHCOS installer to read the iSCSI parameters directly from the BIOS firmware during boot. This simplifies the kernel argument configuration during PXE/ISO boot.
-
-**Implications**
-
-- **Manual/Scripted iSCSI Configuration:** Higher setup complexity requiring maintenance of external scripts and detailed kernel parameter passing during boot, but offers maximum flexibility, especially if the firmware is older or iBFT support is unreliable.
-- **iBFT/Firmware-Based iSCSI Configuration:** Requires ensuring BIOS/UEFI firmware is correctly configured to expose the iSCSI parameters. If not properly configured, installation will fail without manual overrides.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: Storage Expert
-- Person: #TODO#, Role: Infra Leader
-
----
-
 ## OCP-BM-16
 
 **Title**
-RHCOS Multipathing Enablement Strategy
+Bare Metal Host Firmware Configuration Management
 
 **Architectural Question**
-Will multipathing be explicitly enabled for Red Hat Enterprise Linux CoreOS (RHCOS) disks (primary boot or secondary data disks) during installation to enhance resilience against hardware failure?
+How will host firmware settings (BIOS/UEFI) be applied, validated, and maintained to ensure consistency and compliance across the bare metal fleet?
 
 **Issue or Problem**
-Multipathing is essential for highly available storage backends (especially iSCSI/Fibre Channel), providing redundant data paths. Failure to enable it at installation time in certain configurations (e.g., IBM Z) prevents its use later, or can lead to I/O system errors if not optimized initially.
+Managing firmware settings manually across a fleet of physical servers leads to configuration drift, inconsistent node behavior, and increased troubleshooting time. A standardized method is required to ensure that every host is provisioned with the exact same BIOS/UEFI configuration defined by the platform standards.
 
 **Assumption**
-Boot devices or secondary devices are SAN storage.
+Provisioning workflow is GitOps ZTP.
 
 **Alternatives**
 
-- Enable Multipathing at Installation Time
-- Rely on Default Single-Path Configuration
+- Manual/Out-of-Band Configuration
+- Automated Configuration via GitOps ZTP/ClusterInstance
 
 **Decision**
 #TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Enable Multipathing at Installation Time:** This is the recommended approach for providing stronger resilience and achieving higher host availability, especially for primary boot disks. This is done via kernel arguments (`rd.multipath=default`) for the primary disk or by using Butane/Ignition configuration for secondary disks.
-- **Rely on Default Single-Path Configuration:** This avoids the complexity of installing Multipathd and configuring the device mapper during the Day 1 installation process. Suitable if the underlying storage only provides a single path, or if redundancy is handled exclusively at the storage array level.
+- **Manual/Out-of-Band Configuration:** Relies on server administrators manually configuring BIOS settings via vendor consoles (e.g., iDRAC, iLO) or ad-hoc scripts. This is prone to human error and makes auditing the actual state of the fleet difficult.
+- **Automated Configuration via GitOps ZTP/ClusterInstance:** Uses the **Infrastructure-as-Code** model. Firmware settings are defined in a `HardwareProfile` file stored in Git and referenced by the `ClusterInstance` (`biosConfigRef`). The underlying automation (BMO) applies these settings during provisioning, ensuring every node matches the definition in Git.
 
 **Implications**
 
-- **Enable Multipathing at Installation Time:** Mandatory in setups where non-optimized paths result in I/O system errors. For secondary disks, requires careful use of Ignition configuration via Butane config and systemd units.
-- **Rely on Default Single-Path Configuration:** Increases the vulnerability of the node to a Single Point of Failure (SPoF) if a network path, cable, or HBA connected to the storage array fails. Not recommended for production environments requiring high availability.
+- **Manual/Out-of-Band Configuration:** High operational overhead. No automated way to detect or remediate if a server's settings drift from the standard.
+- **Automated Configuration via GitOps ZTP/ClusterInstance:** Requires creating and maintaining hardware profile files (e.g., `.profile`) in the Git repository. Provides a single source of truth for hardware configuration, simplifying audits and disaster recovery.
 
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Operations Expert
 
 ---
 
@@ -714,6 +717,129 @@ N/A
 ## OCP-BM-18
 
 **Title**
+RHCOS Installation Boot Device Selection
+
+**Architectural Question**
+Will Red Hat Enterprise Linux CoreOS (RHCOS) be installed and booted from local internal storage (e.g., NVMe, SATA SSD) or from network-attached iSCSI SAN storage?
+
+**Issue or Problem**
+The choice of boot device impacts storage management, failure domains, and the complexity of the installation process. Integrating with existing Storage Area Networks (SANs) requires specific installation steps (iSCSI target/initiator configuration) not needed for local disk deployment.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Local Disk Installation (Internal NVMe/SSD/HDD)
+- iSCSI Boot Device Installation (SAN Storage)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Local Disk Installation (Internal NVMe/SSD/HDD):** This is the default, simpler installation path, requiring less complex networking and kernel configuration during the RHCOS installation boot process.
+- **iSCSI Boot Device Installation (SAN Storage):** This is required to leverage centralized, highly available, and potentially multi-pathed SAN infrastructure for the OS root disk. It supports fully diskless machines.
+
+**Implications**
+
+- **Local Disk Installation (Internal NVMe/SSD/HDD):** Resilience relies entirely on the local disk health (e.g., RAID, if configured). Storage capacity and performance are confined to the internal server limits.
+- **iSCSI Boot Device Installation (SAN Storage):** Significantly increases installation complexity, requiring configuration of the iSCSI target portal, IQN, and LUN, either manually or via firmware tables. Adds a hard dependency on the storage network and SAN availability during node boot and operation.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-19
+
+**Title**
+iSCSI Boot Configuration Method for RHCOS
+
+**Architectural Question**
+When using an iSCSI boot device for RHCOS, should the configuration be handled manually via the live installer shell/scripts and kernel arguments, or automatically via iBFT (iSCSI Boot Firmware Table)?
+
+**Issue or Problem**
+Installing RHCOS onto iSCSI requires the initiator and target information (IQN, LUN, etc.) to be passed to the kernel and the `coreos-installer`. A choice must be made between highly automated firmware integration (iBFT) and explicit manual configuration/scripting.
+
+**Assumption**
+iSCSI boot device is used
+
+**Alternatives**
+
+- Manual/Scripted iSCSI Configuration
+- iBFT/Firmware-Based iSCSI Configuration
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Manual/Scripted iSCSI Configuration:** Allows explicit control over the entire iSCSI mounting and unmounting process using scripts embedded in the live image (e.g., `--pre-install` / `--post-install` scripts) and explicit kernel arguments (e.g., `rd.iscsi.initiator=`).
+- **iBFT/Firmware-Based iSCSI Configuration:** Enables a more automated, cleaner configuration path for diskless machines by allowing the RHCOS installer to read the iSCSI parameters directly from the BIOS firmware during boot. This simplifies the kernel argument configuration during PXE/ISO boot.
+
+**Implications**
+
+- **Manual/Scripted iSCSI Configuration:** Higher setup complexity requiring maintenance of external scripts and detailed kernel parameter passing during boot, but offers maximum flexibility, especially if the firmware is older or iBFT support is unreliable.
+- **iBFT/Firmware-Based iSCSI Configuration:** Requires ensuring BIOS/UEFI firmware is correctly configured to expose the iSCSI parameters. If not properly configured, installation will fail without manual overrides.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-20
+
+**Title**
+RHCOS Multipathing Enablement Strategy
+
+**Architectural Question**
+Will multipathing be explicitly enabled for Red Hat Enterprise Linux CoreOS (RHCOS) disks (primary boot or secondary data disks) during installation to enhance resilience against hardware failure?
+
+**Issue or Problem**
+Multipathing is essential for highly available storage backends (especially iSCSI/Fibre Channel), providing redundant data paths. Failure to enable it at installation time in certain configurations (e.g., IBM Z) prevents its use later, or can lead to I/O system errors if not optimized initially.
+
+**Assumption**
+Boot devices or secondary devices are SAN storage.
+
+**Alternatives**
+
+- Enable Multipathing at Installation Time
+- Rely on Default Single-Path Configuration
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Enable Multipathing at Installation Time:** This is the recommended approach for providing stronger resilience and achieving higher host availability, especially for primary boot disks. This is done via kernel arguments (`rd.multipath=default`) for the primary disk or by using Butane/Ignition configuration for secondary disks.
+- **Rely on Default Single-Path Configuration:** This avoids the complexity of installing Multipathd and configuring the device mapper during the Day 1 installation process. Suitable if the underlying storage only provides a single path, or if redundancy is handled exclusively at the storage array level.
+
+**Implications**
+
+- **Enable Multipathing at Installation Time:** Mandatory in setups where non-optimized paths result in I/O system errors. For secondary disks, requires careful use of Ignition configuration via Butane config and systemd units.
+- **Rely on Default Single-Path Configuration:** Increases the vulnerability of the node to a Single Point of Failure (SPoF) if a network path, cable, or HBA connected to the storage array fails. Not recommended for production environments requiring high availability.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-21
+
+**Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
 
 **Architectural Question**
@@ -751,7 +877,7 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 
 ---
 
-## OCP-BM-19
+## OCP-BM-22
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -791,7 +917,47 @@ N/A
 
 ---
 
-## OCP-BM-20
+## OCP-BM-23
+
+**Title**
+RHCOS Partition Retention Strategy during Reinstallation (UPI)
+
+**Architectural Question**
+When reinstalling Red Hat Enterprise Linux CoreOS (RHCOS) on User-Provisioned Infrastructure (UPI) nodes, should existing data partitions be automatically preserved or overwritten, and which mechanism should be used?
+
+**Issue or Problem**
+When performing an RHCOS reinstallation, particularly to recover a node or perform an OS upgrade, existing data partitions (e.g., separate `/var` partitions created during Day 1 configuration) must either be explicitly preserved or risk being overwritten by the `coreos-installer`. A strategy is needed to ensure continuity of data or configuration residing on these preserved partitions.
+
+**Assumption**
+Nodes running RHCOS may contain valuable data or configuration on partitions separate from the root filesystem that must survive an OS reinstallation.
+
+**Alternatives**
+
+- Retain Existing Partitions (By Label or Index)
+- Overwrite All Partitions (Clean Slate Installation)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Retain Existing Partitions (By Label or Index):** This allows for preservation of non-OS data (e.g., application logs, `/var/lib/containers` contents) during a reinstall or upgrade, accelerating recovery by preventing the need for massive container pulls post-reinstall. This is achieved using `coreos-installer` arguments like `--save-partlabel` or `--save-partindex`.
+- **Overwrite All Partitions (Clean Slate Installation):** This is the default or simplified approach where all existing data is wiped clean, ensuring no remnants of old partitions interfere with the new installation. This is simpler operationally but results in data loss if external backups are not used.
+
+**Implications**
+
+- **Retain Existing Partitions (By Label or Index):** Requires meticulous use of specific kernel arguments (e.g., `coreos.inst.save_partlabel=data*` or `coreos.inst.save_partindex=5-`) during the PXE/ISO boot process. Increases complexity during the OS installation phase.
+- **Overwrite All Partitions (Clean Slate Installation):** Requires applications and storage layers to handle the recreation and re-synchronization of all data post-installation.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Storage Expert
+
+---
+
+## OCP-BM-24
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -834,7 +1000,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-21
+## OCP-BM-25
 
 **Title**
 Storage Architecture for the Internal Image Registry (PVC vs. Object Storage)
@@ -879,256 +1045,7 @@ The cluster is installed on bare metal infrastructure and requires persistent im
 
 ---
 
-## OCP-BM-22
-
-**Title**
-Bare Metal Operator Namespace Scope
-
-**Architectural Question**
-Should the Bare Metal Operator (BMO) be configured to manage BareMetalHost resources across all namespaces in the cluster?
-
-**Issue or Problem**
-To enable features like Bare Metal as a Service (BMaaS) or GitOps ZTP, the BMO must be configured to find and manage BareMetalHost resources created outside its default namespace. Deciding this scope is a fundamental configuration for the BMO.
-
-**Assumption**
-
-- The Bare Metal Operator (BMO) is enabled on the cluster.
-- The cluster fulfills a management role: It is either an ACM Hub Cluster managing a ZTP fleet OR a centralized BMaaS provider allocating physical nodes to various namespaces.
-
-**Alternatives**
-
-- BMO Watches All Namespaces (Watch-All)
-- BMO Watches Specific/Limited Namespaces (Default)
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **BMO Watches All Namespaces (Watch-All):** This is **required for BMaaS and GitOps ZTP**. It allows the BMO on the **Hub Cluster** to discover `BareMetalHost` CRs created in any namespace (e.g., a spoke cluster namespace) and provision them.
-- **BMO Watches Specific/Limited Namespaces (Default):** This is the default behavior. BMO will only discover and provision hosts defined in its own `openshift-machine-api` namespace. All other `BareMetalHost` CRs in the cluster are ignored.
-
-**Implications**
-
-- **BMO Watches All Namespaces (Watch-All):** The BMO `Provisioning` CR must be patched to set `watchAllNamespaces: true`, enabling advanced, cluster-wide provisioning workflows.
-- **BMO Watches Specific/Limited Namespaces (Default):** The cluster is isolated, and advanced, multi-namespace provisioning workflows like BMaaS and GitOps ZTP are not possible.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Infra Leader
-
----
-
-## OCP-BM-23
-
-**Title**
-Bare Metal Node Remediation
-
-**Architectural Question**
-What is the strategy for automatically remediating unhealthy Bare Metal nodes?
-
-**Issue or Problem**
-A strategy is needed to automatically detect and recover failed physical nodes. This is critical for maintaining cluster health and HA for workloads, especially for stateful services that run directly on the nodes.
-
-**Assumption**
-N/A.
-
-**Alternatives**
-
-- No Automated Remediation
-- Node Health Check (NHC) with Self Node Remediation
-- Node Health Check (NHC) with BareMetal Operator (BMO) Remediation
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **No Automated Remediation:** To rely on manual detection (via monitoring) and manual intervention by an operator to troubleshoot and reboot physical nodes.
-- **Node Health Check (NHC) with Self Node Remediation:** To deploy the Node Health Check operator, which monitors node health. When a node fails, the `SelfNodeRemediation` agent on other nodes will fence the unhealthy node and restart its workloads elsewhere.
-- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** To use the NHC in combination with the BareMetal Operator (enabled by an IPI install). When NHC detects a failure, it triggers the BMO to power-cycle the node via its BMC, attempting a full hardware reboot.
-
-**Implications**
-
-- **No Automated Remediation:** High operational burden and slow recovery times. Not recommended for a production cluster.
-- **Node Health Check (NHC) with Self Node Remediation:** Provides software-level remediation. It ensures workloads are moved but does not fix the underlying node, which will remain unavailable until manually repaired.
-- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** This is the most robust, fully automated solution. It attempts to recover the node by "turning it off and on again" via its BMC. This requires a reliable IPI installation and stable Redfish/IPMI connectivity. Furthermore, the BMO facilitates the **Cluster API management of compute nodes (TP)** for dynamic lifecycle management. Advanced operational features, such as performing **live updates to HostFirmwareSettings (TP)** or **HostFirmwareComponents (TP)**, are available through BMO, but utilizing live updates requires setting the **HostUpdatePolicy (TP)** resource to `onReboot`. **We do not recommend that you perform live updates to the BMC for test purposes, especially on earlier generation hardware**
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-
----
-
-## OCP-BM-24
-
-**Title**
-Bare Metal Node Firmware Management
-
-**Architectural Question**
-How will ongoing firmware updates (BIOS, BMC, NIC) for bare metal nodes be managed and automated post-installation?
-
-**Issue or Problem**
-Managing firmware updates manually (BIOS, BMC, NICs) across a bare metal fleet is complex, time-consuming, and prone to error, posing maintenance and compliance risks. A standardized, automatable process is required, especially when leveraging the Bare Metal Operator (BMO) for node lifecycle management, utilizing resources like `HostFirmwareComponents` and `HostUpdatePolicy`.
-
-**Assumption**
-Cluster installation method is IPI / Assisted Installer / Agent-based installer / IBI or UPI with Bare Metal Operator enabled.
-
-**Alternatives**
-
-- Automated Management via HostFirmware/HostUpdate CRs
-- External/Vendor Management Tools
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Automated Management via HostFirmware/HostUpdate CRs:** Leverages native BMO capabilities (`HostFirmwareComponents`, `HostUpdatePolicy`) to apply, track, and manage firmware versions for components like BIOS, BMC, and NICs directly through Kubernetes Custom Resources, supporting automated updates and inspection.
-- **External/Vendor Management Tools:** Relies on existing organizational tools (e.g., vendor-specific console or infrastructure automation) to perform firmware updates. This allows separation of concerns if the platform team is not responsible for hardware maintenance.
-
-**Implications**
-
-- **Automated Management via HostFirmware/HostUpdate CRs:** Requires defining, testing, and maintaining `HostFirmwareComponents` and `HostUpdatePolicy` CRs. The process may cause node disruption and require coordination (e.g., node draining).
-- **External/Vendor Management Tools:** Updates are decoupled from the OpenShift workflow, potentially simplifying BMO configuration, but resulting in a manual process that requires coordinating external maintenance windows with cluster availability (e.g., node draining, cluster remediation).
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-
----
-
-## OCP-BM-25
-
-**Title**
-Bare Metal Fleet Cluster Upgrade Strategy
-
-**Architectural Question**
-How will large-scale, distributed bare metal cluster updates (OCP version upgrades) be managed and orchestrated from the central hub cluster?
-
-**Issue or Problem**
-Managing simultaneous upgrades across a large fleet of bare metal clusters, particularly Single Node OpenShift (SNO) clusters at the edge, requires a robust orchestration mechanism that can handle sequencing, image consistency, and minimal disruption. A choice must be made between the currently supported policy-driven approach and the image-based method designed for rapid edge updates.
-
-**Assumption**
-
-- Cluster topology is Single-Node (SNO)
-- Provisioning workflow is GitOps ZTP.
-
-**Alternatives**
-
-- Policy-Driven Rollout using TALM and PolicyGenerator CRs
-- Image-Based Group Upgrade (IBGU) (TP)
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Policy-Driven Rollout using TALM and PolicyGenerator CRs:** This is the standard, generally available approach for managing configurations and upgrades via policies, enabling granular control over rollout sequencing, customization, and remediation actions.
-- **Image-Based Group Upgrade (IBGU) (TP):** This methodology is designed to reduce deployment time significantly, especially for SNO clusters. It leverages the Lifecycle Agent (LCA) to deploy new operating system images (stateroots), making it suitable for rapid, consistent rollouts in edge environments.
-
-**Implications**
-
-- **Policy-Driven Rollout using TALM and PolicyGenerator CRs:** Upgrades rely on ensuring policy compliance across the fleet, which may involve individual cluster reboots initiated by configuration changes (e.g., Node Tuning Operator). This approach requires meticulous policy management but is fully supported.
-- **Image-Based Group Upgrade (IBGU) (TP):** Is a Technology Preview feature only and is not supported with Red Hat production SLAs. While offering faster, image-based upgrades, reliance on this method for production clusters introduces support risk.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: Infra Leader
-
----
-
 ## OCP-BM-26
-
-**Title**
-Kernel Module and Device Plugin Management on Bare Metal using KMM
-
-**Architectural Question**
-What standard mechanism will be used to build, deploy, and manage out-of-tree kernel modules (like specialized GPU or NIC drivers) and their corresponding device plugins across bare metal cluster nodes?
-
-**Issue or Problem**
-Specialized hardware acceleration or networking components often require kernel modules and device plugins not included in the default Red Hat Enterprise Linux CoreOS (RHCOS) images. Deploying these manually leads to version misalignment and complex lifecycle management whenever kernel updates occur.
-
-**Assumption**
-The bare metal cluster will utilize specialized hardware requiring out-of-tree kernel drivers (e.g., GPUs or high-performance network adapters).
-
-**Alternatives**
-
-- Kernel Module Management (KMM) Operator
-- Manual build and DaemonSet deployment (Driver Toolkit approach)
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Kernel Module Management (KMM) Operator:** KMM is designed to simplify the lifecycle management of kernel modules by automating the build process, tracking kernel versions, and optionally signing the resulting kernel objects.
-- **Manual build and DaemonSet deployment (Driver Toolkit approach):** This method requires manually fetching the Driver Toolkit image, building the module outside the cluster, and creating DaemonSets for deployment and pre/post-start hooks. This is highly complex and error-prone during RHCOS updates.
-
-**Implications**
-
-- **Kernel Module Management (KMM) Operator:** Requires installing and maintaining the KMM Operator and associated secrets/config maps. Provides high operational stability by ensuring modules match the current running kernel version automatically.
-- **Manual build and DaemonSet deployment (Driver Toolkit approach):** High maintenance burden, as module compatibility must be manually verified and re-deployed on every kernel update or cluster upgrade.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: AI/ML Platform Owner
-
----
-
-## OCP-BM-27
-
-**Title**
-Bare Metal Host Firmware Configuration Management
-
-**Architectural Question**
-How will host firmware settings (BIOS/UEFI) be applied, validated, and maintained to ensure consistency and compliance across the bare metal fleet?
-
-**Issue or Problem**
-Managing firmware settings manually across a fleet of physical servers leads to configuration drift, inconsistent node behavior, and increased troubleshooting time. A standardized method is required to ensure that every host is provisioned with the exact same BIOS/UEFI configuration defined by the platform standards.
-
-**Assumption**
-Provisioning workflow is GitOps ZTP.
-
-**Alternatives**
-
-- Manual/Out-of-Band Configuration
-- Automated Configuration via GitOps ZTP/ClusterInstance
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Manual/Out-of-Band Configuration:** Relies on server administrators manually configuring BIOS settings via vendor consoles (e.g., iDRAC, iLO) or ad-hoc scripts. This is prone to human error and makes auditing the actual state of the fleet difficult.
-- **Automated Configuration via GitOps ZTP/ClusterInstance:** Uses the **Infrastructure-as-Code** model. Firmware settings are defined in a `HardwareProfile` file stored in Git and referenced by the `ClusterInstance` (`biosConfigRef`). The underlying automation (BMO) applies these settings during provisioning, ensuring every node matches the definition in Git.
-
-**Implications**
-
-- **Manual/Out-of-Band Configuration:** High operational overhead. No automated way to detect or remediate if a server's settings drift from the standard.
-- **Automated Configuration via GitOps ZTP/ClusterInstance:** Requires creating and maintaining hardware profile files (e.g., `.profile`) in the Git repository. Provides a single source of truth for hardware configuration, simplifying audits and disaster recovery.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Infra Leader
-- Person: #TODO#, Role: Operations Expert
-
----
-
-## OCP-BM-28
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1169,7 +1086,7 @@ Workloads require strict low-latency guarantees, typically falling into the CNF/
 
 ---
 
-## OCP-BM-29
+## OCP-BM-27
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1210,7 +1127,7 @@ Low-latency or high-performance application workloads (like vDUs) must be isolat
 
 ---
 
-## OCP-BM-30
+## OCP-BM-28
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1251,7 +1168,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-31
+## OCP-BM-29
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1293,7 +1210,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-32
+## OCP-BM-30
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1331,3 +1248,128 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Network Expert
 - Person: #TODO#, Role: Infra Leader
+
+--
+
+## OCP-BM-31
+
+**Title**
+Kernel Module and Device Plugin Management on Bare Metal using KMM
+
+**Architectural Question**
+What standard mechanism will be used to build, deploy, and manage out-of-tree kernel modules (like specialized GPU or NIC drivers) and their corresponding device plugins across bare metal cluster nodes?
+
+**Issue or Problem**
+Specialized hardware acceleration or networking components often require kernel modules and device plugins not included in the default Red Hat Enterprise Linux CoreOS (RHCOS) images. Deploying these manually leads to version misalignment and complex lifecycle management whenever kernel updates occur.
+
+**Assumption**
+The bare metal cluster will utilize specialized hardware requiring out-of-tree kernel drivers (e.g., GPUs or high-performance network adapters).
+
+**Alternatives**
+
+- Kernel Module Management (KMM) Operator
+- Manual build and DaemonSet deployment (Driver Toolkit approach)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Kernel Module Management (KMM) Operator:** KMM is designed to simplify the lifecycle management of kernel modules by automating the build process, tracking kernel versions, and optionally signing the resulting kernel objects.
+- **Manual build and DaemonSet deployment (Driver Toolkit approach):** This method requires manually fetching the Driver Toolkit image, building the module outside the cluster, and creating DaemonSets for deployment and pre/post-start hooks. This is highly complex and error-prone during RHCOS updates.
+
+**Implications**
+
+- **Kernel Module Management (KMM) Operator:** Requires installing and maintaining the KMM Operator and associated secrets/config maps. Provides high operational stability by ensuring modules match the current running kernel version automatically.
+- **Manual build and DaemonSet deployment (Driver Toolkit approach):** High maintenance burden, as module compatibility must be manually verified and re-deployed on every kernel update or cluster upgrade.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: AI/ML Platform Owner
+
+---
+
+## OCP-BM-32
+
+**Title**
+Bare Metal Node Firmware Management
+
+**Architectural Question**
+How will ongoing firmware updates (BIOS, BMC, NIC) for bare metal nodes be managed and automated post-installation?
+
+**Issue or Problem**
+Managing firmware updates manually (BIOS, BMC, NICs) across a bare metal fleet is complex, time-consuming, and prone to error, posing maintenance and compliance risks. A standardized, automatable process is required, especially when leveraging the Bare Metal Operator (BMO) for node lifecycle management, utilizing resources like `HostFirmwareComponents` and `HostUpdatePolicy`.
+
+**Assumption**
+Cluster installation method is IPI / Assisted Installer / Agent-based installer / IBI or UPI with Bare Metal Operator enabled.
+
+**Alternatives**
+
+- Automated Management via HostFirmware/HostUpdate CRs
+- External/Vendor Management Tools
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Automated Management via HostFirmware/HostUpdate CRs:** Leverages native BMO capabilities (`HostFirmwareComponents`, `HostUpdatePolicy`) to apply, track, and manage firmware versions for components like BIOS, BMC, and NICs directly through Kubernetes Custom Resources, supporting automated updates and inspection.
+- **External/Vendor Management Tools:** Relies on existing organizational tools (e.g., vendor-specific console or infrastructure automation) to perform firmware updates. This allows separation of concerns if the platform team is not responsible for hardware maintenance.
+
+**Implications**
+
+- **Automated Management via HostFirmware/HostUpdate CRs:** Requires defining, testing, and maintaining `HostFirmwareComponents` and `HostUpdatePolicy` CRs. The process may cause node disruption and require coordination (e.g., node draining).
+- **External/Vendor Management Tools:** Updates are decoupled from the OpenShift workflow, potentially simplifying BMO configuration, but resulting in a manual process that requires coordinating external maintenance windows with cluster availability (e.g., node draining, cluster remediation).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-33
+
+**Title**
+Bare Metal Node Remediation
+
+**Architectural Question**
+What is the strategy for automatically remediating unhealthy Bare Metal nodes?
+
+**Issue or Problem**
+A strategy is needed to automatically detect and recover failed physical nodes. This is critical for maintaining cluster health and HA for workloads, especially for stateful services that run directly on the nodes.
+
+**Assumption**
+N/A.
+
+**Alternatives**
+
+- No Automated Remediation
+- Node Health Check (NHC) with Self Node Remediation
+- Node Health Check (NHC) with BareMetal Operator (BMO) Remediation
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **No Automated Remediation:** To rely on manual detection (via monitoring) and manual intervention by an operator to troubleshoot and reboot physical nodes.
+- **Node Health Check (NHC) with Self Node Remediation:** To deploy the Node Health Check operator, which monitors node health. When a node fails, the `SelfNodeRemediation` agent on other nodes will fence the unhealthy node and restart its workloads elsewhere.
+- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** To use the NHC in combination with the BareMetal Operator (enabled by an IPI install). When NHC detects a failure, it triggers the BMO to power-cycle the node via its BMC, attempting a full hardware reboot.
+
+**Implications**
+
+- **No Automated Remediation:** High operational burden and slow recovery times. Not recommended for a production cluster.
+- **Node Health Check (NHC) with Self Node Remediation:** Provides software-level remediation. It ensures workloads are moved but does not fix the underlying node, which will remain unavailable until manually repaired.
+- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** This is the most robust, fully automated solution. It attempts to recover the node by "turning it off and on again" via its BMC. This requires a reliable IPI installation and stable Redfish/IPMI connectivity. Furthermore, the BMO facilitates the **Cluster API management of compute nodes (TP)** for dynamic lifecycle management. Advanced operational features, such as performing **live updates to HostFirmwareSettings (TP)** or **HostFirmwareComponents (TP)**, are available through BMO, but utilizing live updates requires setting the **HostUpdatePolicy (TP)** resource to `onReboot`. **We do not recommend that you perform live updates to the BMC for test purposes, especially on earlier generation hardware**
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---

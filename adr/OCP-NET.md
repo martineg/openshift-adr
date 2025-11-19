@@ -82,34 +82,34 @@ N/A
 ## OCP-NET-03
 
 **Title**
-Pod Network CIDR Selection
+DNS Forwarding Configuration
 
 **Architectural Question**
-Which internal IP address range will be used for Pod networking?
+How will the cluster's internal DNS resolve external hostnames?
 
 **Issue or Problem**
-The Pod network CIDR provides IPs for pods within the cluster's SDN. It must not overlap with any existing network reachable from the cluster (including Machine and Service networks) to avoid routing failures.
+Cluster-internal DNS (CoreDNS) forwards requests for external domains to upstream resolvers. This behavior might need overriding to use specific enterprise DNS servers.
 
 **Assumption**
 N/A
 
 **Alternatives**
 
-- Default Pod Network CIDR (e.g., 10.128.0.0/14)
-- Custom Pod Network CIDR
+- Default DNS Forwarding (Use Node's Upstream Resolvers)
+- Override DNS Forwarding (Specify Upstream Corporate DNS Servers)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Default Pod Network CIDR:** Use defaults for simplicity when confirmed not to overlap.
-- **Custom Pod Network CIDR:** Specify a custom range when the default overlaps with existing networks, ensuring correct pod routing to/from external services.
+- **Default Forwarding:** Standard behavior, sufficient if node-level DNS resolvers (from DHCP or static config) correctly reach all required internal/external domains.
+- **Override Forwarding:** Explicitly directs cluster DNS queries to specific corporate DNS servers. Necessary when node resolvers are unsuitable or fine-grained control is required (e.g., split DNS).
 
 **Implications**
 
-- **Default:** Simplifies installation but requires enterprise-wide network validation to prevent conflicts.
-- **Custom:** Requires pre-planning and coordination with network admins to select an appropriate unused IP range.
+- **Default:** Relies on correct underlying infrastructure network config (DHCP options, node setup).
+- **Override:** Cluster external name resolution depends on availability/correctness of specified upstream DNS servers. Managed via `dns.operator.openshift.io` CR.
 
 **Agreeing Parties**
 
@@ -120,127 +120,6 @@ N/A
 ---
 
 ## OCP-NET-04
-
-**Title**
-Service Network CIDR Selection
-
-**Architectural Question**
-Which IP address range will be used for the Cluster Service network?
-
-**Issue or Problem**
-A dedicated, non-overlapping IP range is needed for ClusterIP Services. Conflicts with existing networks will make cluster services unreachable.
-
-**Assumption**
-N/A
-
-**Alternatives**
-
-- Default Service Network CIDR (e.g., 172.30.0.0/16)
-- Custom Service Network CIDR
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Default Service Network CIDR:** Use defaults for simplicity when confirmed not to overlap.
-- **Custom Service Network CIDR:** Specify a custom range when the default overlaps, preventing routing conflicts and ensuring service reachability.
-
-**Implications**
-
-- **Default:** Simplifies installation. Failure to verify non-overlap leads to service connectivity issues.
-- **Custom:** Requires coordination with the network team to select and reserve a suitable IP range provided during installation.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Network Expert
-
----
-
-## OCP-NET-05
-
-**Title**
-CNI Plugin Selection (Platform Specific)
-
-**Architectural Question**
-Which Container Network Interface (CNI) plugin will manage Pod networking?
-
-**Issue or Problem**
-The CNI plugin choice impacts network features, performance, and integration with the underlying infrastructure (especially relevant for OpenStack).
-
-**Assumption**
-N/A
-**Alternatives**
-
-- **Default:** OVN-Kubernetes CNI (Platform Agnostic)
-- **OpenStack Specific:** Kuryr-Kubernetes CNI
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **OVN-Kubernetes CNI:** Standard, platform-agnostic OCP networking stack. Creates a virtual overlay network independent of underlying infrastructure. Generally recommended for simplicity and consistency.
-- **Kuryr-Kubernetes CNI (OpenStack Only):** Achieves higher network performance on OpenStack by eliminating "double overlay". Creates Neutron ports for pods and uses Octavia LBs for services. Makes pods first-class OpenStack network citizens.
-
-**Implications**
-
-- **OVN-Kubernetes:** Simplest, standard, universally supported. Performance usually sufficient. Traffic traverses OCP SDN overlay.
-- **Kuryr (OpenStack Only):** Significant performance benefits, simplified network tracing (pod IPs visible on OSP network). Consumes Neutron ports rapidly, risking quota exhaustion. More complex configuration, specialized CNI.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: Infra Leader (Especially for OpenStack decision)
-
----
-
-## OCP-NET-06
-
-**Title**
-OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
-
-**Architectural Question**
-Should the cluster nodes function as generic IP routers for non-Kubernetes traffic, or should IP forwarding be restricted to enhance security?
-
-**Issue or Problem**
-The `ipForwarding` specification in the Network resource controls whether OVN-Kubernetes managed interfaces drop or forward traffic not explicitly related to Kubernetes. This decision impacts security (least privilege) versus flexibility (supporting existing host/legacy routing).
-
-**Assumption**
-The cluster uses the OVN-Kubernetes CNI plugin.
-
-**Alternatives**
-
-- Restricted IP Forwarding (New Install Default)
-- Global IP Forwarding (Upgrade Default)
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Restricted IP Forwarding (New Install Default):** Enhances the security posture of new installations by setting IP forwarding to drop all non-Kubernetes related traffic on OVN-Kubernetes managed interfaces. This aligns with the Principle of Least Privilege.
-- **Global IP Forwarding (Upgrade Default):** Allows forwarding of all IP traffic. This may be required for compatibility with legacy services or external components relying on broader host-level routing rules.
-
-**Implications**
-
-- **Restricted IP Forwarding (New Install Default):** Requires careful planning to ensure that specialized host traffic that needs IP forwarding is correctly handled outside of OVN-Kubernetes managed interfaces.
-- **Global IP Forwarding (Upgrade Default):** Reduces security isolation compared to the restricted setting.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Security Expert
-- Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: OCP Platform Owner
-
----
-
-## OCP-NET-07
 
 **Title**
 Outbound Connectivity (External Firewall/Proxy)
@@ -280,7 +159,7 @@ Cluster is in a connected environment.
 
 ---
 
-## OCP-NET-08
+## OCP-NET-05
 
 **Title**
 External Firewall Rule Granularity (Connected Environments)
@@ -321,47 +200,7 @@ Cluster is in a connected environment.
 
 ---
 
-## OCP-NET-09
-
-**Title**
-DNS Forwarding Configuration
-
-**Architectural Question**
-How will the cluster's internal DNS resolve external hostnames?
-
-**Issue or Problem**
-Cluster-internal DNS (CoreDNS) forwards requests for external domains to upstream resolvers. This behavior might need overriding to use specific enterprise DNS servers.
-
-**Assumption**
-N/A
-
-**Alternatives**
-
-- Default DNS Forwarding (Use Node's Upstream Resolvers)
-- Override DNS Forwarding (Specify Upstream Corporate DNS Servers)
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Default Forwarding:** Standard behavior, sufficient if node-level DNS resolvers (from DHCP or static config) correctly reach all required internal/external domains.
-- **Override Forwarding:** Explicitly directs cluster DNS queries to specific corporate DNS servers. Necessary when node resolvers are unsuitable or fine-grained control is required (e.g., split DNS).
-
-**Implications**
-
-- **Default:** Relies on correct underlying infrastructure network config (DHCP options, node setup).
-- **Override:** Cluster external name resolution depends on availability/correctness of specified upstream DNS servers. Managed via `dns.operator.openshift.io` CR.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Network Expert
-
----
-
-## OCP-NET-10
+## OCP-NET-06
 
 **Title**
 Load Balancer Strategy (API & Ingress)
@@ -401,7 +240,290 @@ N/A
 
 ---
 
+## OCP-NET-07
+
+**Title**
+CNI Plugin Selection (Platform Specific)
+
+**Architectural Question**
+Which Container Network Interface (CNI) plugin will manage Pod networking?
+
+**Issue or Problem**
+The CNI plugin choice impacts network features, performance, and integration with the underlying infrastructure (especially relevant for OpenStack).
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Default:** OVN-Kubernetes CNI (Platform Agnostic)
+- **OpenStack Specific:** Kuryr-Kubernetes CNI
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **OVN-Kubernetes CNI:** Standard, platform-agnostic OCP networking stack. Creates a virtual overlay network independent of underlying infrastructure. Generally recommended for simplicity and consistency.
+- **Kuryr-Kubernetes CNI (OpenStack Only):** Achieves higher network performance on OpenStack by eliminating "double overlay". Creates Neutron ports for pods and uses Octavia LBs for services. Makes pods first-class OpenStack network citizens.
+
+**Implications**
+
+- **OVN-Kubernetes:** Simplest, standard, universally supported. Performance usually sufficient. Traffic traverses OCP SDN overlay.
+- **Kuryr (OpenStack Only):** Significant performance benefits, simplified network tracing (pod IPs visible on OSP network). Consumes Neutron ports rapidly, risking quota exhaustion. More complex configuration, specialized CNI.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader (Especially for OpenStack decision)
+
+---
+
+## OCP-NET-08
+
+**Title**
+Pod Network CIDR Selection
+
+**Architectural Question**
+Which internal IP address range will be used for Pod networking?
+
+**Issue or Problem**
+The Pod network CIDR provides IPs for pods within the cluster's SDN. It must not overlap with any existing network reachable from the cluster (including Machine and Service networks) to avoid routing failures.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Default Pod Network CIDR (e.g., 10.128.0.0/14)
+- Custom Pod Network CIDR
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Default Pod Network CIDR:** Use defaults for simplicity when confirmed not to overlap.
+- **Custom Pod Network CIDR:** Specify a custom range when the default overlaps with existing networks, ensuring correct pod routing to/from external services.
+
+**Implications**
+
+- **Default:** Simplifies installation but requires enterprise-wide network validation to prevent conflicts.
+- **Custom:** Requires pre-planning and coordination with network admins to select an appropriate unused IP range.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-NET-09
+
+**Title**
+Service Network CIDR Selection
+
+**Architectural Question**
+Which IP address range will be used for the Cluster Service network?
+
+**Issue or Problem**
+A dedicated, non-overlapping IP range is needed for ClusterIP Services. Conflicts with existing networks will make cluster services unreachable.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Default Service Network CIDR (e.g., 172.30.0.0/16)
+- Custom Service Network CIDR
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Default Service Network CIDR:** Use defaults for simplicity when confirmed not to overlap.
+- **Custom Service Network CIDR:** Specify a custom range when the default overlaps, preventing routing conflicts and ensuring service reachability.
+
+**Implications**
+
+- **Default:** Simplifies installation. Failure to verify non-overlap leads to service connectivity issues.
+- **Custom:** Requires coordination with the network team to select and reserve a suitable IP range provided during installation.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-NET-10
+
+**Title**
+OVN-Kubernetes Internal Subnet Configuration Strategy
+
+**Architectural Question**
+Will the OVN-Kubernetes CNI plugin use its default internal CIDR ranges for the Transit and Join subnets, or will custom CIDRs be configured to prevent overlap with existing corporate networks?
+
+**Issue or Problem**
+OVN-Kubernetes uses specific default IPv4 and IPv6 subnets internally for the distributed transit switch (`internalTransitSwitchSubnet`) and cluster joins (`internalJoinSubnet`). If these default ranges overlap with the organization's existing network infrastructure, routing failures can occur, requiring customization before installation.
+
+**Assumption**
+The cluster uses the OVN-Kubernetes CNI plugin.
+
+**Alternatives**
+
+- Use Default OVN-Kubernetes Internal Subnets
+- Specify Custom OVN-Kubernetes Internal Subnets
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Use Default OVN-Kubernetes Internal Subnets:** Simplifies configuration and relies on standard, tested defaults when no conflicts are known.
+- **Specify Custom OVN-Kubernetes Internal Subnets:** Required if the default internal subnets overlap with existing network ranges, ensuring correct operation and avoiding routing conflicts between the cluster and external services.
+
+**Implications**
+
+- **Use Default OVN-Kubernetes Internal Subnets:** Requires upfront validation to ensure the default CIDR ranges (e.g., `100.88.0.0/16`) do not conflict with the host network.
+- **Specify Custom OVN-Kubernetes Internal Subnets:** Adds complexity during installation by requiring configuration of the `ovnKubernetesConfig` object. The chosen custom range must be large enough (e.g., Transit switch subnet needs one IP per node) and must not overlap with other cluster or host subnets.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
 ## OCP-NET-11
+
+**Title**
+OVN-Kubernetes Egress Traffic Routing Via Host Network Stack
+
+**Architectural Question**
+Should OVN-Kubernetes egress traffic be processed through the host networking stack to allow utilization of kernel routing tables, or should it exit directly via the OVN network model for optimized performance?
+
+**Issue or Problem**
+By default, OVN processes egress traffic directly. However, highly specialized installations (e.g., those relying on specific routes in the kernel routing table) may require sending egress traffic through the host networking stack via the `routingViaHost: true` setting in `gatewayConfig`. This choice impacts hardware offloading capabilities.
+
+**Assumption**
+The cluster uses the OVN-Kubernetes CNI plugin.
+
+**Alternatives**
+
+- Egress Traffic Processed by OVN (Default)
+- Egress Traffic Routed via Host Networking Stack
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Egress Traffic Processed by OVN (Default):** This method maintains processing within the OVN overlay, maximizing performance benefits and utilizing hardware offloading features where available. Recommended for general use.
+- **Egress Traffic Routed via Host Networking Stack:** Required for specialized applications that rely on manually configured routes in the host's kernel routing table, ensuring that egress traffic is subject to host routing rules.
+
+**Implications**
+
+- **Egress Traffic Processed by OVN (Default):** Specialized host routes defined outside of OVN will not affect pod egress traffic.
+- **Egress Traffic Routed via Host Networking Stack:** If this field is set to `true`, the performance benefits of Open vSwitch hardware offloading are lost because the egress traffic is processed by the host networking stack.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-NET-12
+
+**Title**
+OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
+
+**Architectural Question**
+Should the cluster nodes function as generic IP routers for non-Kubernetes traffic, or should IP forwarding be restricted to enhance security?
+
+**Issue or Problem**
+The `ipForwarding` specification in the Network resource controls whether OVN-Kubernetes managed interfaces drop or forward traffic not explicitly related to Kubernetes. This decision impacts security (least privilege) versus flexibility (supporting existing host/legacy routing).
+
+**Assumption**
+The cluster uses the OVN-Kubernetes CNI plugin.
+
+**Alternatives**
+
+- Restricted IP Forwarding (New Install Default)
+- Global IP Forwarding (Upgrade Default)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Restricted IP Forwarding (New Install Default):** Enhances the security posture of new installations by setting IP forwarding to drop all non-Kubernetes related traffic on OVN-Kubernetes managed interfaces. This aligns with the Principle of Least Privilege.
+- **Global IP Forwarding (Upgrade Default):** Allows forwarding of all IP traffic. This may be required for compatibility with legacy services or external components relying on broader host-level routing rules.
+
+**Implications**
+
+- **Restricted IP Forwarding (New Install Default):** Requires careful planning to ensure that specialized host traffic that needs IP forwarding is correctly handled outside of OVN-Kubernetes managed interfaces.
+- **Global IP Forwarding (Upgrade Default):** Reduces security isolation compared to the restricted setting.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-13
+
+**Title**
+Network Diagnostics Operator Deployment Strategy
+
+**Architectural Question**
+Should the cluster intentionally disable the core OpenShift Network Diagnostics functionality to conserve resources or reduce the management footprint?
+
+**Issue or Problem**
+For highly optimized, resource-constrained environments (like Edge or vDU workloads), reducing platform overhead is critical. The default configuration includes network components that consume resources but are deemed non-essential if comprehensive external monitoring is already in place.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Default Network Diagnostics (Enabled)
+- Disabled Network Diagnostics
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Default Network Diagnostics (Enabled):** Provides valuable built-in troubleshooting tools for validating networking health, simplifying Day 2 operations and identifying connectivity issues proactively.
+- **Disabled Network Diagnostics:** **Setting `disableNetworkDiagnostics: true` in the Network CR** explicitly removes this feature, reducing the overall platform footprint and conserving CPU/memory resources.
+
+**Implications**
+
+- **Default Network Diagnostics (Enabled):** Consumes node resources (CPU/memory) via associated diagnostic pods and daemon sets.
+- **Disabled Network Diagnostics:** Removes a built-in diagnostic safety net. Troubleshooting complex network failures must rely solely on external tools or manual inspection.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-14
 
 **Title**
 Ingress Controller Strategy
@@ -445,7 +567,7 @@ N/A
 
 ---
 
-## OCP-NET-12
+## OCP-NET-15
 
 **Title**
 Ingress Controller Replica Count
@@ -485,7 +607,7 @@ N/A
 
 ---
 
-## OCP-NET-13
+## OCP-NET-16
 
 **Title**
 SSL/TLS Termination Strategy
@@ -528,7 +650,7 @@ N/A
 
 ---
 
-## OCP-NET-14
+## OCP-NET-17
 
 **Title**
 Access Control for Cluster Metrics Port (TCP 1936)
@@ -569,7 +691,7 @@ N/A
 
 ---
 
-## OCP-NET-15
+## OCP-NET-18
 
 **Title**
 Default Network Policy (Pod Isolation)
@@ -613,7 +735,7 @@ N/A
 
 ---
 
-## OCP-NET-16
+## OCP-NET-19
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -656,7 +778,7 @@ Cluster uses OVN-Kubernetes CNI.
 
 ---
 
-## OCP-NET-17
+## OCP-NET-20
 
 **Title**
 Egress IP Address Strategy
@@ -700,48 +822,7 @@ N/A
 
 ---
 
-## OCP-NET-18
-
-**Title**
-Network Diagnostics Operator Deployment Strategy
-
-**Architectural Question**
-Should the cluster intentionally disable the core OpenShift Network Diagnostics functionality to conserve resources or reduce the management footprint?
-
-**Issue or Problem**
-For highly optimized, resource-constrained environments (like Edge or vDU workloads), reducing platform overhead is critical. The default configuration includes network components that consume resources but are deemed non-essential if comprehensive external monitoring is already in place.
-
-**Assumption**
-N/A
-
-**Alternatives**
-
-- Default Network Diagnostics (Enabled)
-- Disabled Network Diagnostics
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Default Network Diagnostics (Enabled):** Provides valuable built-in troubleshooting tools for validating networking health, simplifying Day 2 operations and identifying connectivity issues proactively.
-- **Disabled Network Diagnostics:** **Setting `disableNetworkDiagnostics: true` in the Network CR** explicitly removes this feature, reducing the overall platform footprint and conserving CPU/memory resources.
-
-**Implications**
-
-- **Default Network Diagnostics (Enabled):** Consumes node resources (CPU/memory) via associated diagnostic pods and daemon sets.
-- **Disabled Network Diagnostics:** Removes a built-in diagnostic safety net. Troubleshooting complex network failures must rely solely on external tools or manual inspection.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: OCP Platform Owner
-
----
-
-## OCP-NET-19
+## OCP-NET-21
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -786,7 +867,7 @@ N/A
 
 ---
 
-## OCP-NET-20
+## OCP-NET-22
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection
@@ -827,7 +908,7 @@ SR-IOV is enabled.
 
 ---
 
-## OCP-NET-21
+## OCP-NET-23
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy
