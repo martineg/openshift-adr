@@ -544,12 +544,53 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Rol
 
 ---
 
 ## OCP-BM-14
+
+**Title**
+Bare Metal Network Bridge Configuration Tooling Strategy
+
+**Architectural Question**
+Which method will be standardized for configuring the Open vSwitch (OVS) br-ex bridge network on bare metal nodes, balancing simplicity for single-NIC setups against flexibility for advanced and multi-NIC post-installation changes?
+
+**Issue or Problem**
+The choice of tooling (shell script vs. MachineConfig/NMState) determines whether post-installation network changes are supported and limits the ability to define advanced network configurations (e.g., specific interfaces or complex topologies) for the br-ex bridge.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Configure br-ex using the configure-ovs.sh Shell Script (Single NIC/Simple Default)
+- Configure br-ex using NMState Configuration embedded in a MachineConfig
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Configure br-ex using the configure-ovs.sh Shell Script (Single NIC/Simple Default):** This approach is simpler and should be used if the environment requires a single Network Interface Controller (NIC) and default network settings. It minimizes initial complexity.
+- **Configure br-ex using NMState Configuration embedded in a MachineConfig:** This method is recommended when advanced configurations are required, such as deploying the bridge on a different interface, supporting post-installation changes to the bridge network, or implementing configurations not possible with the shell script (e.g., complex multi-interface setups).
+
+**Implications**
+
+- **Configure br-ex using the configure-ovs.sh Shell Script (Single NIC/Simple Default):** This script does not support making post-installation changes to the bridge. Using the script for advanced configurations may result in the bridge failing to connect multiple network interfaces.
+- **Configure br-ex using NMState Configuration embedded in a MachineConfig:** Requires defining and managing an NMState configuration file and corresponding MachineConfig object. This process involves base64 encoding the configuration and embedding it in the manifest.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Operations Experte: Network Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-15
 
 **Title**
 Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
@@ -590,7 +631,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-15
+## OCP-BM-16
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -633,7 +674,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-16
+## OCP-BM-17
 
 **Title**
 Bare Metal Host Firmware Configuration Management
@@ -674,7 +715,7 @@ Provisioning workflow is GitOps ZTP.
 
 ---
 
-## OCP-BM-17
+## OCP-BM-18
 
 **Title**
 RHCOS Node Console Access Strategy
@@ -714,7 +755,7 @@ N/A
 
 ---
 
-## OCP-BM-18
+## OCP-BM-19
 
 **Title**
 RHCOS Installation Boot Device Selection
@@ -755,7 +796,7 @@ N/A
 
 ---
 
-## OCP-BM-19
+## OCP-BM-20
 
 **Title**
 iSCSI Boot Configuration Method for RHCOS
@@ -796,7 +837,7 @@ iSCSI boot device is used
 
 ---
 
-## OCP-BM-20
+## OCP-BM-21
 
 **Title**
 RHCOS Multipathing Enablement Strategy
@@ -837,7 +878,7 @@ Boot devices or secondary devices are SAN storage.
 
 ---
 
-## OCP-BM-21
+## OCP-BM-22
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -877,7 +918,7 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 
 ---
 
-## OCP-BM-22
+## OCP-BM-23
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -917,7 +958,7 @@ N/A
 
 ---
 
-## OCP-BM-23
+## OCP-BM-24
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -957,7 +998,7 @@ Nodes running RHCOS may contain valuable data or configuration on partitions sep
 
 ---
 
-## OCP-BM-24
+## OCP-BM-25
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1000,7 +1041,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-25
+## OCP-BM-26
 
 **Title**
 Storage Architecture for the Internal Image Registry (PVC vs. Object Storage)
@@ -1045,7 +1086,7 @@ The cluster is installed on bare metal infrastructure and requires persistent im
 
 ---
 
-## OCP-BM-26
+## OCP-BM-27
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1086,7 +1127,7 @@ Workloads require strict low-latency guarantees, typically falling into the CNF/
 
 ---
 
-## OCP-BM-27
+## OCP-BM-28
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1127,7 +1168,7 @@ N/A
 
 ---
 
-## OCP-BM-28
+## OCP-BM-29
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1168,7 +1209,7 @@ Low-latency or high-performance application workloads (like vDUs) must be isolat
 
 ---
 
-## OCP-BM-29
+## OCP-BM-30
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1209,7 +1250,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-30
+## OCP-BM-31
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1251,7 +1292,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-31
+## OCP-BM-32
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1292,7 +1333,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-32
+## OCP-BM-33
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -1332,7 +1373,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-33
+## OCP-BM-34
 
 **Title**
 Bare Metal Node Firmware Management
@@ -1372,7 +1413,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-34
+## OCP-BM-35
 
 **Title**
 Bare Metal Node Remediation

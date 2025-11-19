@@ -172,6 +172,7 @@ Corporate security requires controlling outbound connections. This impacts clust
 
 **Assumption**
 Cluster is in a connected environment.
+
 **Alternatives**
 
 - Direct Outbound (Potentially behind Firewall Rules)
@@ -253,6 +254,7 @@ A load balancer is needed for external access to the cluster API and application
 
 **Assumption**
 N/A
+
 **Alternatives**
 
 - Default Platform Load Balancer (Cloud Provider LBaaS / On-Prem Keepalived/HAProxy)
@@ -281,6 +283,47 @@ N/A
 ---
 
 ## OCP-NET-08
+
+**Title**
+API and Application Ingress Load Balancer Topology Strategy
+
+**Architectural Question**
+Should the Kubernetes API and Application Ingress endpoints be exposed via a single, consolidated load balancer instance, or should they utilize separate, dedicated load balancer infrastructure?
+
+**Issue or Problem**
+Consolidating Kubernetes API (TCP 6443) and application ingress traffic (TCP 80/443) onto a single load balancer instance complicates scaling and isolation, risking performance degradation if application traffic impacts critical cluster API availability.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- Consolidated Load Balancer Model
+- Separate Load Balancer Model (Recommended for Production)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Consolidated Load Balancer Model:** Simplifies the load balancing infrastructure by utilizing a single instance to handle both the Kubernetes API and application Ingress traffic.
+- **Separate Load Balancer Model (Recommended for Production):** This approach provides the ability to scale the load balancer infrastructure for the API and application ingress traffic in isolation. This separation is recommended for production scenarios.
+
+**Implications**
+
+- **Consolidated Load Balancer Model:** If session persistence is configured for the API load balancer, it might cause performance issues from excess application traffic. Deploying both on the same infrastructure increases the risk of application traffic impacting the Kubernetes API availability.
+- **Separate Load Balancer Model (Recommended for Production):** Requires provisioning and managing at least two distinct load balancer instances (or pools of instances), increasing infrastructure complexity and cost.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-NET-09
 
 **Title**
 CNI Plugin Selection (Platform Specific)
@@ -321,7 +364,7 @@ N/A
 
 ---
 
-## OCP-NET-09
+## OCP-NET-10
 
 **Title**
 Pod Network CIDR Selection
@@ -361,7 +404,7 @@ N/A
 
 ---
 
-## OCP-NET-10
+## OCP-NET-11
 
 **Title**
 Service Network CIDR Selection
@@ -401,7 +444,7 @@ N/A
 
 ---
 
-## OCP-NET-11
+## OCP-NET-12
 
 **Title**
 OVN-Kubernetes Internal Subnet Configuration Strategy
@@ -441,7 +484,7 @@ The cluster uses the OVN-Kubernetes CNI plugin.
 
 ---
 
-## OCP-NET-12
+## OCP-NET-13
 
 **Title**
 OVN-Kubernetes Egress Traffic Routing Via Host Network Stack
@@ -481,7 +524,7 @@ The cluster uses the OVN-Kubernetes CNI plugin.
 
 ---
 
-## OCP-NET-13
+## OCP-NET-14
 
 **Title**
 OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
@@ -522,7 +565,7 @@ The cluster uses the OVN-Kubernetes CNI plugin.
 
 ---
 
-## OCP-NET-14
+## OCP-NET-15
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
@@ -563,7 +606,7 @@ N/A
 
 ---
 
-## OCP-NET-15
+## OCP-NET-16
 
 **Title**
 Ingress Controller Strategy
@@ -607,7 +650,7 @@ N/A
 
 ---
 
-## OCP-NET-16
+## OCP-NET-17
 
 **Title**
 Ingress Controller Replica Count
@@ -647,7 +690,7 @@ N/A
 
 ---
 
-## OCP-NET-17
+## OCP-NET-18
 
 **Title**
 SSL/TLS Termination Strategy
@@ -690,7 +733,7 @@ N/A
 
 ---
 
-## OCP-NET-18
+## OCP-NET-19
 
 **Title**
 Access Control for Cluster Metrics Port (TCP 1936)
@@ -731,7 +774,7 @@ N/A
 
 ---
 
-## OCP-NET-19
+## OCP-NET-20
 
 **Title**
 Default Network Policy (Pod Isolation)
@@ -775,7 +818,7 @@ N/A
 
 ---
 
-## OCP-NET-20
+## OCP-NET-21
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -818,7 +861,7 @@ Cluster uses OVN-Kubernetes CNI.
 
 ---
 
-## OCP-NET-21
+## OCP-NET-22
 
 **Title**
 Egress IP Address Strategy
@@ -862,7 +905,7 @@ N/A
 
 ---
 
-## OCP-NET-22
+## OCP-NET-23
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -907,7 +950,7 @@ N/A
 
 ---
 
-## OCP-NET-23
+## OCP-NET-24
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection
@@ -948,7 +991,7 @@ SR-IOV is enabled.
 
 ---
 
-## OCP-NET-24
+## OCP-NET-25
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy
