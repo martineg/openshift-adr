@@ -221,6 +221,46 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 ## OCP-BM-06
 
 **Title**
+Ignition Configuration Integrity Validation Strategy
+
+**Architectural Question**
+How will the authenticity and integrity of the fetched Ignition Configuration files be validated during Red Hat Enterprise Linux CoreOS (RHCOS) node installation?
+
+**Issue or Problem**
+During manual RHCOS installation (ISO/PXE), the Ignition config files are downloaded from an HTTP/S server. Without verification, the system is vulnerable to fetching tampered configurations. If relying on HTTP, a hash is required for integrity validation. If relying on HTTPS, the Certificate Authority (CA) might need to be explicitly trusted.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- Validate using SHA512 Hash over HTTP/S
+- Validate using HTTPS TLS/CA Trust (without explicit hash)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Validate using SHA512 Hash over HTTP/S:** This approach provides a strong integrity check regardless of the network protocol (HTTP or HTTPS). Using the `--ignition-hash` is required when the Ignition config file is obtained through an HTTP URL to validate its authenticity.
+- **Validate using HTTPS TLS/CA Trust (without explicit hash):** If the Ignition configuration files are provided through an HTTPS server that uses TLS, the certificate authority (CA) can be added to the system trust store before running `coreos-installer`, ensuring integrity and confidentiality during transfer.
+
+**Implications**
+
+- **Validate using SHA512 Hash over HTTP/S:** Requires the administrator to obtain the SHA512 digest for each Ignition config file and pass it using the `--ignition-hash` option to `coreos-installer`.
+- **Validate using HTTPS TLS/CA Trust (without explicit hash):** If using a custom CA, requires adding the internal certificate authority (CA) to the system trust store via `coreos-installer` before installation. This relies on a correctly managed certificate chain.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-BM-07
+
+**Title**
 Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
 
 **Architectural Question**
@@ -259,7 +299,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-07
+## OCP-BM-08
 
 **Title**
 Provisioning Network Strategy for Installer-Provisioned Bare Metal
@@ -299,7 +339,7 @@ Cluster installation method is Installer-Provisioned Infrastructure (IPI).
 
 ---
 
-## OCP-BM-08
+## OCP-BM-09
 
 **Title**
 Network Controller Sideband Interface (NC-SI) Support Enforcement
@@ -339,7 +379,7 @@ Bare Metal Operator is enabled.
 
 ---
 
-## OCP-BM-09
+## OCP-BM-10
 
 **Title**
 BMC protocol
@@ -383,7 +423,7 @@ Bare Metal Operator is enabled.
 
 ---
 
-## OCP-BM-10
+## OCP-BM-11
 
 **Title**
 BMC Credential Security and Storage Strategy
@@ -424,7 +464,7 @@ Bare Metal Operator is enabled.
 
 ---
 
-## OCP-BM-11
+## OCP-BM-12
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -467,7 +507,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-12
+## OCP-BM-13
 
 **Title**
 BMO Provisioning Boot Mechanism
@@ -508,7 +548,7 @@ Cluster installation method is IPI, Agent-based Installer (ABI), or Assisted Ins
 
 ---
 
-## OCP-BM-13
+## OCP-BM-14
 
 **Title**
 RHCOS Installation Boot Device Selection
@@ -549,7 +589,7 @@ N/A
 
 ---
 
-## OCP-BM-14
+## OCP-BM-15
 
 **Title**
 iSCSI Boot Configuration Method for RHCOS
@@ -590,7 +630,7 @@ iSCSI boot device is used
 
 ---
 
-## OCP-BM-15
+## OCP-BM-16
 
 **Title**
 RHCOS Multipathing Enablement Strategy
@@ -631,7 +671,47 @@ Boot devices or secondary devices are SAN storage.
 
 ---
 
-## OCP-BM-16
+## OCP-BM-17
+
+**Title**
+RHCOS Node Console Access Strategy
+
+**Architectural Question**
+Which console mechanism (Graphical, Serial, or both) will be configured as the primary interface for OpenShift Container Platform nodes installed on bare metal to facilitate troubleshooting and out-of-band access?
+
+**Issue or Problem**
+Bare metal RHCOS nodes installed from a boot image use default kernel settings, which typically results in the graphical console being primary and the serial console being disabled. This may conflict with operational requirements, such as accessing the emergency shell for debugging or if the underlying infrastructure only provides serial console access.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Default Console Configuration (Graphical Primary, Serial Disabled)
+- Serial Console Configuration (Serial Primary, Graphical Secondary)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Default Console Configuration (Graphical Primary, Serial Disabled):** This setting is inherited from the boot image. It uses kernel default settings, which is standard but may prevent remote interactive access if the platform does not easily expose the graphical console.
+- **Serial Console Configuration (Serial Primary, Graphical Secondary):** Explicitly configures the serial console (e.g., `console=ttyS0,<options>`). This is necessary for environments where console access is crucial for management or when the cloud platform does not provide interactive access to the graphical console.
+
+**Implications**
+
+- **Default Console Configuration (Graphical Primary, Serial Disabled):** Requires careful evaluation to ensure troubleshooting capabilities meet disaster recovery requirements if the graphical console is not easily accessible.
+- **Serial Console Configuration (Serial Primary, Graphical Secondary):** Requires adding one or more `console=` arguments (e.g., `console=tty0 console=ttyS0`) to the APPEND line during PXE installation, or using the `--console` option with `coreos-installer` during ISO installation to set the serial port as the primary console.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-18
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -671,7 +751,7 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 
 ---
 
-## OCP-BM-17
+## OCP-BM-19
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -711,7 +791,7 @@ N/A
 
 ---
 
-## OCP-BM-18
+## OCP-BM-20
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -754,7 +834,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-19
+## OCP-BM-21
 
 **Title**
 Storage Architecture for the Internal Image Registry (PVC vs. Object Storage)
@@ -799,7 +879,7 @@ The cluster is installed on bare metal infrastructure and requires persistent im
 
 ---
 
-## OCP-BM-20
+## OCP-BM-22
 
 **Title**
 Bare Metal Operator Namespace Scope
@@ -841,7 +921,7 @@ To enable features like Bare Metal as a Service (BMaaS) or GitOps ZTP, the BMO m
 
 ---
 
-## OCP-BM-21
+## OCP-BM-23
 
 **Title**
 Bare Metal Node Remediation
@@ -884,7 +964,7 @@ N/A.
 
 ---
 
-## OCP-BM-22
+## OCP-BM-24
 
 **Title**
 Bare Metal Node Firmware Management
@@ -924,7 +1004,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-23
+## OCP-BM-25
 
 **Title**
 Bare Metal Fleet Cluster Upgrade Strategy
@@ -967,7 +1047,7 @@ Managing simultaneous upgrades across a large fleet of bare metal clusters, part
 
 ---
 
-## OCP-BM-24
+## OCP-BM-26
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -1007,7 +1087,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-25
+## OCP-BM-27
 
 **Title**
 Bare Metal Host Firmware Configuration Management
@@ -1048,7 +1128,7 @@ Provisioning workflow is GitOps ZTP.
 
 ---
 
-## OCP-BM-26
+## OCP-BM-28
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1089,7 +1169,7 @@ Workloads require strict low-latency guarantees, typically falling into the CNF/
 
 ---
 
-## OCP-BM-27
+## OCP-BM-29
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1130,7 +1210,7 @@ Low-latency or high-performance application workloads (like vDUs) must be isolat
 
 ---
 
-## OCP-BM-28
+## OCP-BM-30
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1171,7 +1251,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-29
+## OCP-BM-31
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1213,7 +1293,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-30
+## OCP-BM-32
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
