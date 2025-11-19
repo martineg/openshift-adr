@@ -1089,6 +1089,47 @@ Workloads require strict low-latency guarantees, typically falling into the CNF/
 ## OCP-BM-27
 
 **Title**
+Simultaneous Multithreading (SMT) Configuration Strategy
+
+**Architectural Question**
+Should Simultaneous Multithreading (SMT), often referred to as hyperthreading, be globally enabled or disabled on cluster nodes via the installation configuration?
+
+**Issue or Problem**
+SMT is enabled by default to increase core performance and maximize resource efficiency. However, disabling SMT is sometimes required for strict security profiles (to mitigate side-channel attacks) or specific performance-critical workloads (like vDU or high-frequency trading) that require dedicated physical cores to eliminate "noisy neighbor" interference on the pipeline.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- SMT Enabled (Default)
+- SMT Disabled (Security/Performance Optimized)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **SMT Enabled (Default):** This maximizes the total thread count and overall throughput of the machine. It is the standard setting for general-purpose container workloads.
+- **SMT Disabled (Security/Performance Optimized):** Disabling SMT provides stronger CPU isolation. This is often mandatory for Real-Time/vDU workloads to guarantee deterministic latency, or for environments requiring mitigation of specific processor side-channel vulnerabilities (e.g., L1TF/Foreshadow) where software mitigation is insufficient.
+
+**Implications**
+
+- **SMT Enabled (Default):** May leave the cluster vulnerable to specific side-channel security threats inherent to hyperthreading architectures. Latency-sensitive applications may experience jitter due to thread contention on the same physical core.
+- **SMT Disabled (Security/Performance Optimized):** Dramatically decreases the total vCPU capacity of the cluster (typically by 50%). This requires careful capacity planning and potentially increases the hardware footprint/subscriptions required. This setting is applied via the `install-config.yaml` (compute/controlPlane hyperthreading) or Day 2 MachineConfigs.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-28
+
+**Title**
 Workload Partitioning (CPU Isolation)
 
 **Architectural Question**
@@ -1127,7 +1168,7 @@ Low-latency or high-performance application workloads (like vDUs) must be isolat
 
 ---
 
-## OCP-BM-28
+## OCP-BM-29
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1168,7 +1209,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-29
+## OCP-BM-30
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1210,7 +1251,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-30
+## OCP-BM-31
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1251,7 +1292,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-31
+## OCP-BM-32
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -1291,7 +1332,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-32
+## OCP-BM-33
 
 **Title**
 Bare Metal Node Firmware Management
@@ -1331,7 +1372,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-33
+## OCP-BM-34
 
 **Title**
 Bare Metal Node Remediation

@@ -122,6 +122,46 @@ N/A
 ## OCP-NET-04
 
 **Title**
+Cluster Core Time Synchronization Source
+
+**Architectural Question**
+What specific time synchronization source (Public vs. Internal/Enterprise NTP) will be configured for OpenShift Container Platform nodes by default to maintain chrony stability?
+
+**Issue or Problem**
+Accurate time synchronization is critical for cluster operation (etcd stability, certificate validity, logging consistency). By default, OpenShift clusters use a public NTP server, which must be overridden if the deployment is disconnected or requires synchronization with a highly accurate internal enterprise time service for compliance.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Rely on Public NTP Server (Default)
+- Configure Internal Enterprise NTP Server (Custom)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Rely on Public NTP Server (Default):** Simplifies deployment when direct internet access is available, leveraging widely used and reliable time sources.
+- **Configure Internal Enterprise NTP Server (Custom):** Essential for disconnected environments or environments requiring time synchronization only from internal, authenticated, or compliant enterprise sources.
+
+**Implications**
+
+- **Rely on Public NTP Server (Default):** Requires open firewall egress rules to external NTP sources (UDP port 123) for all nodes, which may conflict with network security policies.
+- **Configure Internal Enterprise NTP Server (Custom):** Requires defining and managing the internal time servers (via chrony service configuration) in the cluster setup, often necessary if the cluster is deployed in a disconnected network.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-NET-05
+
+**Title**
 Outbound Connectivity (External Firewall/Proxy)
 
 **Architectural Question**
@@ -159,7 +199,7 @@ Cluster is in a connected environment.
 
 ---
 
-## OCP-NET-05
+## OCP-NET-06
 
 **Title**
 External Firewall Rule Granularity (Connected Environments)
@@ -200,7 +240,7 @@ Cluster is in a connected environment.
 
 ---
 
-## OCP-NET-06
+## OCP-NET-07
 
 **Title**
 Load Balancer Strategy (API & Ingress)
@@ -240,7 +280,7 @@ N/A
 
 ---
 
-## OCP-NET-07
+## OCP-NET-08
 
 **Title**
 CNI Plugin Selection (Platform Specific)
@@ -281,7 +321,7 @@ N/A
 
 ---
 
-## OCP-NET-08
+## OCP-NET-09
 
 **Title**
 Pod Network CIDR Selection
@@ -321,7 +361,7 @@ N/A
 
 ---
 
-## OCP-NET-09
+## OCP-NET-10
 
 **Title**
 Service Network CIDR Selection
@@ -361,7 +401,7 @@ N/A
 
 ---
 
-## OCP-NET-10
+## OCP-NET-11
 
 **Title**
 OVN-Kubernetes Internal Subnet Configuration Strategy
@@ -401,7 +441,7 @@ The cluster uses the OVN-Kubernetes CNI plugin.
 
 ---
 
-## OCP-NET-11
+## OCP-NET-12
 
 **Title**
 OVN-Kubernetes Egress Traffic Routing Via Host Network Stack
@@ -441,7 +481,7 @@ The cluster uses the OVN-Kubernetes CNI plugin.
 
 ---
 
-## OCP-NET-12
+## OCP-NET-13
 
 **Title**
 OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
@@ -482,7 +522,7 @@ The cluster uses the OVN-Kubernetes CNI plugin.
 
 ---
 
-## OCP-NET-13
+## OCP-NET-14
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
@@ -523,7 +563,7 @@ N/A
 
 ---
 
-## OCP-NET-14
+## OCP-NET-15
 
 **Title**
 Ingress Controller Strategy
@@ -567,7 +607,7 @@ N/A
 
 ---
 
-## OCP-NET-15
+## OCP-NET-16
 
 **Title**
 Ingress Controller Replica Count
@@ -607,7 +647,7 @@ N/A
 
 ---
 
-## OCP-NET-16
+## OCP-NET-17
 
 **Title**
 SSL/TLS Termination Strategy
@@ -650,7 +690,7 @@ N/A
 
 ---
 
-## OCP-NET-17
+## OCP-NET-18
 
 **Title**
 Access Control for Cluster Metrics Port (TCP 1936)
@@ -691,7 +731,7 @@ N/A
 
 ---
 
-## OCP-NET-18
+## OCP-NET-19
 
 **Title**
 Default Network Policy (Pod Isolation)
@@ -735,7 +775,7 @@ N/A
 
 ---
 
-## OCP-NET-19
+## OCP-NET-20
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -778,7 +818,7 @@ Cluster uses OVN-Kubernetes CNI.
 
 ---
 
-## OCP-NET-20
+## OCP-NET-21
 
 **Title**
 Egress IP Address Strategy
@@ -822,7 +862,7 @@ N/A
 
 ---
 
-## OCP-NET-21
+## OCP-NET-22
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -867,7 +907,7 @@ N/A
 
 ---
 
-## OCP-NET-22
+## OCP-NET-23
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection
@@ -908,7 +948,7 @@ SR-IOV is enabled.
 
 ---
 
-## OCP-NET-23
+## OCP-NET-24
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy
