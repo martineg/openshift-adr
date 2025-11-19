@@ -28,7 +28,7 @@ Format:
 [Problem]
 
 **Assumption**
-[N/A or context]
+[N/A or dependency on previous ADR]
 
 **Alternatives**
 
@@ -59,6 +59,6 @@ Format:
 - **Quality:** Alternatives must be **architectural strategies**, NOT simple **configuration instructions** or "Right vs Wrong" settings. Choices must be **viable** (GA vs GA/TP).
 - **Format:** Alts=titles. Justification/Implications=`**[Title]:** [Text]`.
 - **Parties:** Use `Person: #TODO#, Role: [Role Name]` from `adr_parties_role_dictionnary.md`.
-- **Semantics:** Justification=why choose. Implication=consequence.
+- **Semantics:** Assumption=Dependency on previous ADR (else N/A). Justification=why choose. Implication=consequence.
 - **Flags:** Mark Tech-Preview `(TP)`.
 - **Versions:** No specific OCP versions.
