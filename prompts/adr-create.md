@@ -38,8 +38,8 @@ Format:
 
 **Justification**
 
-- **[Alt 1 Title]:** [Justification (*why choose it*)]
-- **[Alt 2 Title]:** [Justification (*why choose it*)]
+- **[Alt 1 Title]:** [Justification (*why choose it?*)]
+- **[Alt 2 Title]:** [Justification (*why choose it?*)]
 
 **Implications**
 
@@ -53,7 +53,7 @@ Format:
 **Rules:**
 
 - **ID:** All new ADRs MUST use the prefix **[PREFIX]-** and continue from the sequential ID **[STARTING_ID]**. IDs must be **two digits** (e.g., 08, 09, 13).
-- **Quality:** Do NOT suggest an ADR where one of the main alternatives is already **deprecated**. Must be a choice between _valid_ options (GA vs. GA, or GA vs. TP).
+- **Quality:** Do NOT suggest ADRs for **mandatory requirements** or where alternatives are **misconfigurations** (e.g., "Right vs Wrong"). Must be a choice between **viable** options (GA vs. GA, or GA vs. TP).
 - **ADR Format:** Alts = titles only. Justification/Implications = `**[Title]:** [Text]`.
 - **Parties:** Use `Person: #TODO#, Role: [Role Name]` format. Pull roles from `ad_parties_role_dictionnary.md`.
 - **Semantics:** Justification = _why choose_. Implication = _consequence_.
