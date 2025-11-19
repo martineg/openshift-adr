@@ -61,7 +61,7 @@ Report your findings using this exact format:
 
 - **Completeness:** If updating, you must output _all_ the 'Updated' fields.
 - **Format:** Alts=titles only. Justification/Implications=`**[Title]:** [Text]`.
-- **Parties:** Roles _must_ come from `ad_parties_role_dictionnary.md`.
+- **Parties:** Roles _must_ come from `adr_parties_role_dictionnary.md`.
 - **Brevity:** Be concise and accurate. No filler.
 - **Flags:** Mark all Tech-Preview as `(TP)`.
 - **Citation:** Do **NOT** cite the text just read.

@@ -8,11 +8,12 @@ from pathlib import Path
 ADR_DIRECTORY = "adr"
 PROMPT_DIRECTORY = "prompts"
 CREATE_TEMPLATE_FILENAME = "adr-create.md"
-CHAR_LIMIT = 1950
+CHAR_LIMIT = 1950  # A safe buffer below 2000
+
+# --- Prompt "Wrapper" Text (Internalized) ---
 WRAPPER_ESTIMATE = 150 
 SAFE_CHUNK_LIMIT = CHAR_LIMIT - WRAPPER_ESTIMATE
 
-# --- "LOAD" Prompt Wrappers (for UPDATE) ---
 PROMPT_SINGLE = """
 Please read and remember the following Architecture Decision Record text.
 **Respond ONLY with "Confirmed. ADR loaded."**
@@ -20,6 +21,7 @@ Please read and remember the following Architecture Decision Record text.
 {ADR_FULL_TEXT}
 ---
 """
+
 PROMPT_MULTI_START = """
 Please read and remember the following text. It is **Part 1/{total}** of a single Architecture Decision.
 **Respond ONLY with "Confirmed. Ready for Part 2."**
@@ -27,6 +29,7 @@ Please read and remember the following text. It is **Part 1/{total}** of a singl
 {ADR_FULL_TEXT}
 ---
 """
+
 PROMPT_MULTI_PART = """
 Here is **Part {part_num}/{total}** of the Architecture Decision. Please read it.
 **Respond ONLY with "Confirmed. Ready for Part {next_part}."**
@@ -34,6 +37,7 @@ Here is **Part {part_num}/{total}** of the Architecture Decision. Please read it
 {ADR_FULL_TEXT}
 ---
 """
+
 PROMPT_MULTI_END = """
 Here is the **final Part {part_num}/{total}** of the Architecture Decision. Please read it.
 **Respond ONLY with "Confirmed. ADR loaded."**
@@ -46,8 +50,9 @@ def split_text_into_chunks(text, max_length):
     chunks = []
     current_chunk_lines = []
     current_chunk_char_count = 0
+    
     for line in text.split('\n'):
-        line_len = len(line) + 1
+        line_len = len(line) + 1 
         if (current_chunk_char_count + line_len > max_length) and current_chunk_lines:
             chunks.append('\n'.join(current_chunk_lines))
             current_chunk_lines = [line]
@@ -55,6 +60,7 @@ def split_text_into_chunks(text, max_length):
         else:
             current_chunk_lines.append(line)
             current_chunk_char_count += line_len
+            
     if current_chunk_lines:
         chunks.append('\n'.join(current_chunk_lines))
     return chunks
@@ -76,53 +82,22 @@ def read_file(file_path: Path) -> str:
         print(f"Error: Could not read file {file_path}: {e}", file=sys.stderr)
         sys.exit(1)
 
-def get_next_adr_id(adr_file_content: str, prefix_with_dash: str) -> str:
-    """Finds the highest existing ADR ID and returns the next one."""
-    pattern = re.compile(r"^\#\#\s*{prefix}(\d+)".format(prefix=re.escape(prefix_with_dash)),
-                         re.MULTILINE | re.IGNORECASE)
-    ids = [int(match.group(1)) for match in pattern.finditer(adr_file_content)]
-    if not ids:
-        return "01"
-    next_id = max(ids) + 1
-    return f"{next_id:02d}" # Format as two digits, e.g., "08"
-
-# --- NEW SIMPLIFIED 'CREATE' FUNCTION ---
-def handle_create_prompt(project_root: Path, prefix_base: str):
-    """Generates the 'CREATE' prompt (v36)."""
-    
+def handle_create_prompt(project_root: Path):
+    """Generates the generic 'CREATE' prompt."""
     prompt_template_path = project_root / PROMPT_DIRECTORY / CREATE_TEMPLATE_FILENAME
-    adr_file_path = project_root / ADR_DIRECTORY / f"{prefix_base}.md"
-
-    prompt_template_content = read_file(prompt_template_path)
+    prompt_content = read_file(prompt_template_path)
     
-    adr_file_content = ""
-    if adr_file_path.exists():
-        adr_file_content = adr_file_path.read_text()
-    else:
-        print(f"Info: ADR file '{adr_file_path.name}' not found. Assuming next ID is '01'.", file=sys.stderr)
-
-    prefix_with_dash = f"{prefix_base}-"
-    
-    # 1. Get the next ADR ID
-    next_id = get_next_adr_id(adr_file_content, prefix_with_dash)
-    
-    # 2. Inject into the prompt template
-    final_prompt = prompt_template_content.replace("[PREFIX]", prefix_base)
-    final_prompt = final_prompt.replace("[STARTING_ID]", next_id)
-    
-    # 3. Check length (should be fine, but good practice)
-    prompt_len = len(final_prompt)
-    if prompt_len > CHAR_LIMIT:
-         print(f"# !!!!!!!!! WARNING: 'CREATE' PROMPT IS {prompt_len} CHARS. MIGHT BE TOO LONG. !!!!!!!!!", file=sys.stderr)
-
-    print(f"# --- START OF 'CREATE' PROMPT FOR {prefix_base} (Next ID: {next_id}) ---")
-    print(final_prompt.strip())
+    print(f"# --- START OF 'CREATE' PROMPT (Auto-Discovery) ---")
+    print(prompt_content.strip())
     print(f"# --- END OF 'CREATE' PROMPT ---")
 
-# --- THIS FUNCTION (handle_review_update_prompts) IS UNCHANGED ---
 def handle_review_update_prompts(project_root: Path, target: str):
     """Generates one or more 'LOAD' prompts for the 'REVIEW/UPDATE' workflow."""
     
+    if not target:
+        print("Error: --review-update requires a target prefix (e.g., OCP-BM).", file=sys.stderr)
+        sys.exit(1)
+
     id_pattern = re.compile(r'^(.+)-(\d+)$')
     id_match = id_pattern.match(target)
     
@@ -210,8 +185,8 @@ def main_parser():
         epilog="""
 Example usage (run from project root '~/workspace/adr'):
 
-  To CREATE new ADRs for OCP-BM:
-  ./scripts/prepare_prompt.py --create OCP-BM
+  To CREATE new ADRs (Auto-Discovery):
+  ./scripts/prepare_prompt.py --create
 
   To REVIEW all ADRs for OCP-BM:
   ./scripts/prepare_prompt.py --review-update OCP-BM
@@ -225,7 +200,7 @@ Example usage (run from project root '~/workspace/adr'):
     action_group.add_argument(
         "--create",
         action="store_true",
-        help="Generate the 'CREATE' prompt for a given prefix."
+        help="Generate the generic 'CREATE' prompt (no prefix needed)."
     )
     action_group.add_argument(
         "--review-update",
@@ -233,22 +208,21 @@ Example usage (run from project root '~/workspace/adr'):
         help="Generate the 'LOAD' prompt(s) for the 'REVIEW/UPDATE' workflow."
     )
     
+    # Make target optional because --create doesn't need it
     parser.add_argument(
         "target",
         type=str,
-        help="The base prefix (e.g., OCP-BM) or a specific ADR ID (e.g., OCP-BM-01)"
+        nargs='?',
+        help="The base prefix (e.g., OCP-BM) or ID. Required for --review-update."
     )
     
     args = parser.parse_args()
     project_root = get_project_root()
     
     if args.create:
-        if re.match(r'^(.+)-(\d+)$', args.target):
-            print(f"Error: --create requires a base prefix (e.g., GITOPS), not a specific ID (e.g., GITOPS-01).", file=sys.stderr)
-            sys.exit(1)
-        handle_create_prompt(project_root, args.target)
+        handle_create_prompt(project_root)
         
-    elif args.review-update:
+    elif args.review_update:
         handle_review_update_prompts(project_root, args.target)
 
 if __name__ == "__main__":
