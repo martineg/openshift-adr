@@ -190,6 +190,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 - Kernel Arguments
 - `MachineConfig` via Ignition
+- ISO/PXE Customization (Embedded Keyfiles)
 - `coreos-installer` Live Shell
 
 **Decision**
@@ -199,13 +200,15 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 - **Kernel Arguments:** This is a simple, direct method for passing basic boot settings. It is required for core parameters like static IP (`ip=...`) and the Ignition URL (`coreos.inst.ignition_url=`).
 - **`MachineConfig` via Ignition:** This is the standard, declarative method for all complex OS configurations. `MachineConfig` manifests are placed in the `manifests/` directory and automatically bundled into the final Ignition files, making it ideal for managing partitions , files, or services (like custom NTP) as code.
-- **`coreos-installer` Live Shell:** This is a manual, interactive method used for debugging or special cases. By booting the ISO or PXE image to a shell (by omitting `coreos.inst.install_dev`), an administrator can run coreos-installer with unique flags like `--copy-network` or `--save-part` label.
+- **ISO/PXE Customization (Embedded Keyfiles):** Uses the `coreos-installer iso customize` tool to embed NetworkManager keyfiles directly into the image. This is the preferred method for complex networking (like bonding) as it avoids unmanageable kernel argument strings and applies settings automatically to the live and installed system.
+- **`coreos-installer` Live Shell:** This is a manual, interactive method used for debugging or special cases. By booting the ISO or PXE image to a shell, an administrator can run `coreos-installer` with unique flags.
 
 **Implications**
 
-- **Kernel Arguments:** Works identically for both ISO and PXE. Becomes unmanageable, unreadable, and error-prone for anything beyond basic settings (e.g., complex bonding). Cannot be used for settings that lack a kernel argument (e.g., custom disk partitions).
-- **`MachineConfig` via Ignition:** This is the most robust, scalable, and maintainable solution for UPI. It is idempotent and supports all configuration types. The configuration is version-controlled with the other install manifests. Adds one layer of abstraction (Manifest -> Ignition file) which requires understanding the installer workflow.
-- **`coreos-installer` Live Shell:** Provides the only path for special flags like `--copy-network`. This is a **fully manual** process that breaks "zero-touch" automation. Scales very poorly and is only suitable for troubleshooting or provisioning single, non-standard nodes.
+- **Kernel Arguments:** Works identically for both ISO and PXE. Becomes unmanageable and error-prone for complex bonding.
+- **`MachineConfig` via Ignition:** Most robust for OS-level config, but cannot configure the _initial_ network required to fetch the Ignition file itself.
+- **ISO/PXE Customization (Embedded Keyfiles):** Requires a pre-processing step to customize the media before booting. Excellent for "Day 0" networking that is too complex for kernel args.
+- **`coreos-installer` Live Shell:** Fully manual process, breaks automation.
 
   **Agreeing Parties**
 
@@ -216,6 +219,47 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 ---
 
 ## OCP-BM-06
+
+**Title**
+Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
+
+**Architectural Question**
+How will the hostnames for OpenShift cluster nodes (RHCOS) in a User-Provisioned Infrastructure (UPI) deployment be determined and maintained?
+
+**Issue or Problem**
+In UPI deployments, RHCOS nodes must obtain a hostname during boot. If this is not explicitly provided by DHCP, the system defaults to using reverse DNS lookup, which can be slow and result in critical system services detecting the hostname as "localhost". A stable and quickly resolved hostname is required for node readiness and CSR generation.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- DHCP-Provided Hostnames (Recommended)
+- Reverse DNS Lookup (Default Fallback)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **DHCP-Provided Hostnames (Recommended):** This approach minimizes operational risk by ensuring the hostname is obtained quickly and reliably during network initialization. It simplifies Day 1 setup and bypasses manual DNS record configuration errors in environments that use DNS split-horizon implementations.
+- **Reverse DNS Lookup (Default Fallback):** This requires minimal specific configuration on the DHCP server side, relying solely on the presence of accurate PTR records in the DNS infrastructure.
+
+**Implications**
+
+- **DHCP-Provided Hostnames (Recommended):** Requires ensuring the DHCP server is configured to provide persistent IP addresses, DNS server information, and hostnames to all cluster machines for long-term management.
+- **Reverse DNS Lookup (Default Fallback):** Node initialization can be delayed while the reverse DNS lookup occurs, potentially causing system services to incorrectly start with "localhost" as the hostname.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-07
 
 **Title**
 Provisioning Network Strategy for Installer-Provisioned Bare Metal
@@ -255,7 +299,7 @@ Cluster installation method is Installer-Provisioned Infrastructure (IPI).
 
 ---
 
-## OCP-BM-07
+## OCP-BM-08
 
 **Title**
 Network Controller Sideband Interface (NC-SI) Support Enforcement
@@ -295,7 +339,7 @@ Bare Metal Operator is enabled.
 
 ---
 
-## OCP-BM-08
+## OCP-BM-09
 
 **Title**
 BMC protocol
@@ -339,7 +383,7 @@ Bare Metal Operator is enabled.
 
 ---
 
-## OCP-BM-09
+## OCP-BM-10
 
 **Title**
 BMC Credential Security and Storage Strategy
@@ -380,7 +424,7 @@ Bare Metal Operator is enabled.
 
 ---
 
-## OCP-BM-10
+## OCP-BM-11
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -423,7 +467,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-11
+## OCP-BM-12
 
 **Title**
 BMO Provisioning Boot Mechanism
@@ -464,7 +508,7 @@ Cluster installation method is IPI, Agent-based Installer (ABI), or Assisted Ins
 
 ---
 
-## OCP-BM-12
+## OCP-BM-13
 
 **Title**
 RHCOS Installation Boot Device Selection
@@ -505,7 +549,7 @@ N/A
 
 ---
 
-## OCP-BM-13
+## OCP-BM-14
 
 **Title**
 iSCSI Boot Configuration Method for RHCOS
@@ -546,7 +590,7 @@ iSCSI boot device is used
 
 ---
 
-## OCP-BM-14
+## OCP-BM-15
 
 **Title**
 RHCOS Multipathing Enablement Strategy
@@ -587,7 +631,7 @@ Boot devices or secondary devices are SAN storage.
 
 ---
 
-## OCP-BM-15
+## OCP-BM-16
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -627,7 +671,7 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 
 ---
 
-## OCP-BM-16
+## OCP-BM-17
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -667,7 +711,7 @@ N/A
 
 ---
 
-## OCP-BM-17
+## OCP-BM-18
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -710,7 +754,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-18
+## OCP-BM-19
 
 **Title**
 Bare Metal Operator Namespace Scope
@@ -752,7 +796,7 @@ To enable features like Bare Metal as a Service (BMaaS) or GitOps ZTP, the BMO m
 
 ---
 
-## OCP-BM-19
+## OCP-BM-20
 
 **Title**
 Bare Metal Node Remediation
@@ -795,7 +839,7 @@ N/A.
 
 ---
 
-## OCP-BM-20
+## OCP-BM-21
 
 **Title**
 Bare Metal Node Firmware Management
@@ -835,7 +879,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-21
+## OCP-BM-22
 
 **Title**
 Bare Metal Fleet Cluster Upgrade Strategy
@@ -878,7 +922,7 @@ Managing simultaneous upgrades across a large fleet of bare metal clusters, part
 
 ---
 
-## OCP-BM-22
+## OCP-BM-23
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -918,7 +962,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-23
+## OCP-BM-24
 
 **Title**
 Bare Metal Host Firmware Configuration
@@ -959,7 +1003,7 @@ GitOps ZTP is used
 
 ---
 
-## OCP-BM-24
+## OCP-BM-25
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1000,7 +1044,7 @@ Workloads require strict low-latency guarantees, typically falling into the CNF/
 
 ---
 
-## OCP-BM-25
+## OCP-BM-26
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1041,7 +1085,7 @@ Low-latency or high-performance application workloads (like vDUs) must be isolat
 
 ---
 
-## OCP-BM-26
+## OCP-BM-27
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1082,7 +1126,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-27
+## OCP-BM-28
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1124,7 +1168,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-28
+## OCP-BM-29
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection for Performance Workloads
@@ -1166,7 +1210,7 @@ The cluster supports SR-IOV capable NICs.
 
 ---
 
-## OCP-BM-29
+## OCP-BM-30
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy for High Availability
@@ -1178,7 +1222,7 @@ How will multiple Single Root I/O Virtualization (SR-IOV) Virtual Functions (VFs
 For high-performance network components like SR-IOV VFs, a single virtual function presents a single failure path. Utilizing dual-port NICs to create a bond provides network high availability (HA) and load balancing capabilities, especially for critical workloads like OpenShift Virtualization or vDU.
 
 **Assumption**
-The bare metal cluster has SR-IOV capable NICs
+The cluster supports SR-IOV capable NICs.
 
 **Alternatives**
 
@@ -1207,7 +1251,48 @@ The bare metal cluster has SR-IOV capable NICs
 
 ---
 
-## OCP-BM-30
+## OCP-BM-31
+
+**Title**
+Host Network Bonding Mode for High Availability (OVS)
+
+**Architectural Question**
+When configuring high availability for bare metal node network interfaces, should the solution rely on standard kernel bonding methods or utilize the specialized OVS balance-slb mode?
+
+**Issue or Problem**
+When provisioning bare metal nodes for high-performance workloads (like OpenShift Virtualization), standard bonding modes (like active-backup or LACP) may not effectively distribute traffic for OVN-Kubernetes pods or VMs that share the same physical link characteristics (MAC/VLAN). A mode is needed to ensure true load balancing for this traffic.
+
+**Assumption**
+The cluster hosts performance-sensitive workloads (e.g., virtualization) that rely on OVS-based networking for High Availability.
+
+**Alternatives**
+
+- Standard NetworkManager/Kernel Bonding
+- Open vSwitch (OVS) balance-slb Mode
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Standard NetworkManager/Kernel Bonding:** Relies on the host OS/NetworkManager for bonding implementation (e.g., active-backup). While simpler to configure, it does not guarantee load distribution for OVN-Kubernetes traffic which uses consistent MAC/VLAN combinations.
+- **Open vSwitch (OVS) balance-slb Mode:** This mode is specifically designed and supported for virtualization workloads on bare metal. It natively supports source load balancing for OVN-Kubernetes CNI plugin traffic, ensuring that traffic from different VM ports is balanced over the physical interface links.
+
+**Implications**
+
+- **Standard NetworkManager/Kernel Bonding:** May lead to sub-optimal performance or lack of true load balancing for OVN-Kubernetes/VM traffic, impacting HA and resource utilization.
+- **Open vSwitch (OVS) balance-slb Mode:** Requires complex network configuration, potentially involving OVS bonding modes like `balance-slb`, managed via MachineConfig/NMState configuration during installation.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-32
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
