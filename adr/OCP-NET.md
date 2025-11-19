@@ -531,6 +531,47 @@ N/A
 ## OCP-NET-14
 
 **Title**
+Access Control for Cluster Metrics Port (TCP 1936)
+
+**Architectural Question**
+Should the Ingress load balancer be configured to expose TCP port 1936, or should access be restricted to prevent external exposure of internal host-level metrics and statistics?
+
+**Issue or Problem**
+TCP port 1936 is used for host level services (Metrics) and is accessible for an OpenShift Container Platform cluster because each control plane node needs access to this port. Avoid using the Ingress load balancer to expose this port, as doing so might result in the exposure of sensitive information related to Ingress Controllers.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Expose Port 1936 via Ingress Load Balancer
+- Restrict Port 1936 Access to Internal Nodes Only
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Expose Port 1936 via Ingress Load Balancer:** Allows external systems direct access to host-level metrics (e.g., node exporter) through the Ingress path. This is explicitly advised against due to the risk of exposing sensitive information.
+- **Restrict Port 1936 Access to Internal Nodes Only:** Recommended practice to ensure sensitive host-level statistics and metrics are not exposed externally via the Ingress load balancer.
+
+**Implications**
+
+- **Expose Port 1936 via Ingress Load Balancer:** Increased security risk due to the potential exposure of sensitive statistics and metrics.
+- **Restrict Port 1936 Access to Internal Nodes Only:** Requires maintaining firewall rules or load balancer configuration to explicitly block external traffic destined for port 1936.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-NET-15
+
+**Title**
 Default Network Policy (Pod Isolation)
 
 **Architectural Question**
@@ -541,6 +582,7 @@ Default policy sets the baseline security posture for pod network isolation, imp
 
 **Assumption**
 N/A
+
 **Alternatives**
 
 - **Default Open:** All pods can communicate freely across all namespaces.
@@ -571,7 +613,7 @@ N/A
 
 ---
 
-## OCP-NET-15
+## OCP-NET-16
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -614,7 +656,7 @@ Cluster uses OVN-Kubernetes CNI.
 
 ---
 
-## OCP-NET-16
+## OCP-NET-17
 
 **Title**
 Egress IP Address Strategy
@@ -627,6 +669,7 @@ External services (databases, legacy APIs) often use firewalls allowing access o
 
 **Assumption**
 N/A
+
 **Alternatives**
 
 - No Egress IP Configuration
@@ -657,7 +700,7 @@ N/A
 
 ---
 
-## OCP-NET-17
+## OCP-NET-18
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
@@ -698,7 +741,7 @@ N/A
 
 ---
 
-## OCP-NET-18
+## OCP-NET-19
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -711,6 +754,7 @@ Certain apps (Telco, HPC, AI/ML data ingest, legacy systems) require direct acce
 
 **Assumption**
 N/A
+
 **Alternatives**
 
 - No Secondary Networks
@@ -742,7 +786,7 @@ N/A
 
 ---
 
-## OCP-NET-19
+## OCP-NET-20
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection
@@ -783,7 +827,7 @@ SR-IOV is enabled.
 
 ---
 
-## OCP-NET-20
+## OCP-NET-21
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy
