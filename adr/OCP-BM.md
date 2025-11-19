@@ -426,6 +426,47 @@ Bare Metal Operator is enabled.
 ## OCP-BM-11
 
 **Title**
+UPI Worker Node Operating System Selection (RHCOS vs RHEL)
+
+**Architectural Question**
+Which operating system (RHCOS or RHEL) will be standardized for compute (worker) nodes in user-provisioned infrastructure (UPI) bare metal clusters?
+
+**Issue or Problem**
+The choice between RHCOS and RHEL for compute machines in UPI environments dictates the Day 2 operational model: RHEL provides flexibility but shifts OS lifecycle management entirely to the user, while RHCOS ensures consistency and uses the Machine Config Operator (MCO) for updates, supporting the standard immutable infrastructure model.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- Standardize on Red Hat Enterprise Linux CoreOS (RHCOS) workers
+- Standardize on Red Hat Enterprise Linux (RHEL) workers
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Standardize on Red Hat Enterprise Linux CoreOS (RHCOS) workers:** This ensures the standard immutable OS image is used and allows the Machine Config Operator to manage the OS lifecycle via cluster upgrades, simplifying ongoing maintenance and consistency.
+- **Standardize on Red Hat Enterprise Linux (RHEL) workers:** This allows the use of a traditional Linux OS (e.g., RHEL 8.6+ or RHEL 9 depending on OCP version), providing maximum customizability for specialized applications or legacy configurations, and leveraging existing enterprise RHEL operational toolchains.
+
+**Implications**
+
+- **Standardize on Red Hat Enterprise Linux CoreOS (RHCOS) workers:** Supports the default cluster operational model. All cluster changes are applied by Operators. SSH access is not recommended for routine use.
+- **Standardize on Red Hat Enterprise Linux (RHEL) workers:** The organization takes full responsibility for all operating system life cycle management and maintenance of the compute nodes, including updates, patching, and required tasks. The cluster upgrade process will not automatically update the OS on these nodes.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Security Expert
+
+---
+
+## OCP-BM-12
+
+**Title**
 RHCOS Provisioning Method for Bare Metal Nodes
 
 **Architectural Question**
@@ -463,7 +504,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-12
+## OCP-BM-13
 
 **Title**
 Ignition Configuration Integrity Validation Strategy
@@ -503,7 +544,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-13
+## OCP-BM-14
 
 **Title**
 RHCOS Day-1 Customization Method
@@ -548,7 +589,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-14
+## OCP-BM-15
 
 **Title**
 Bare Metal Network Bridge Configuration Tooling Strategy
@@ -590,7 +631,7 @@ N/A
 
 ---
 
-## OCP-BM-15
+## OCP-BM-16
 
 **Title**
 Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
@@ -631,7 +672,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-16
+## OCP-BM-17
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -674,7 +715,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-17
+## OCP-BM-18
 
 **Title**
 Bare Metal Host Firmware Configuration Management
@@ -715,7 +756,7 @@ Provisioning workflow is GitOps ZTP.
 
 ---
 
-## OCP-BM-18
+## OCP-BM-19
 
 **Title**
 RHCOS Node Console Access Strategy
@@ -755,7 +796,7 @@ N/A
 
 ---
 
-## OCP-BM-19
+## OCP-BM-20
 
 **Title**
 RHCOS Installation Boot Device Selection
@@ -796,7 +837,7 @@ N/A
 
 ---
 
-## OCP-BM-20
+## OCP-BM-21
 
 **Title**
 iSCSI Boot Configuration Method for RHCOS
@@ -837,7 +878,7 @@ iSCSI boot device is used
 
 ---
 
-## OCP-BM-21
+## OCP-BM-22
 
 **Title**
 RHCOS Multipathing Enablement Strategy
@@ -878,7 +919,7 @@ Boot devices or secondary devices are SAN storage.
 
 ---
 
-## OCP-BM-22
+## OCP-BM-23
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -918,7 +959,47 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 
 ---
 
-## OCP-BM-23
+## OCP-BM-24
+
+**Title**
+Control Plane Storage Performance Validation Strategy
+
+**Architectural Question**
+How will the storage performance for etcd (on control plane nodes) be validated to ensure cluster stability?
+
+**Issue or Problem**
+Etcd is extremely sensitive to disk write latency. If the storage cannot sustain a specific performance metric (fsync duration < 10ms at the 99th percentile), the cluster will experience instability, leader elections, and potential outages. A decision is needed on whether to enforce a strict pre-flight validation check or rely on hardware specifications.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Pre-flight Benchmark Validation (Strict)
+- Specification-Based Provisioning (Standard)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Pre-flight Benchmark Validation (Strict):** This treats performance as a hard prerequisite. It creates a "Go/No-Go" gate based on real-world metrics. For example, running the standard Red Hat etcd test: `fio --rw=write --ioengine=sync --fdatasync=1 --directory=/var/lib/etcd ...`. If the 99th percentile result is > 10ms, the hardware is rejected. This guarantees stability but adds time to the provisioning process.
+- **Specification-Based Provisioning (Standard):** This approach trusts the infrastructure provider's SLA. It significantly speeds up deployment by skipping manual testing. It is appropriate when using standardized, known-good SKUs (e.g., Enterprise NVMe or a specific Tier 1 SSD model) where performance variance is known to be low.
+
+**Implications**
+
+- **Pre-flight Benchmark Validation (Strict):** Requires a pre-install automation step to run the fio container (e.g., `quay.io/cloud-bulldozer/etcd-perf`) on bare metal. This catches "bad drives" or "noisy neighbor" issues early but increases deployment complexity.
+- **Specification-Based Provisioning (Standard):** Removes the validation overhead. However, it introduces the risk of "silent" performance degradation where a disk meets the throughput spec but fails the latency requirement (fsync), which may only be discovered during a production outage.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Storage Expert
+
+---
+
+## OCP-BM-25
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -958,7 +1039,7 @@ N/A
 
 ---
 
-## OCP-BM-24
+## OCP-BM-26
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -998,7 +1079,7 @@ Nodes running RHCOS may contain valuable data or configuration on partitions sep
 
 ---
 
-## OCP-BM-25
+## OCP-BM-27
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1041,7 +1122,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-26
+## OCP-BM-28
 
 **Title**
 Storage Architecture for the Internal Image Registry (PVC vs. Object Storage)
@@ -1086,7 +1167,7 @@ The cluster is installed on bare metal infrastructure and requires persistent im
 
 ---
 
-## OCP-BM-27
+## OCP-BM-29
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1127,7 +1208,7 @@ Workloads require strict low-latency guarantees, typically falling into the CNF/
 
 ---
 
-## OCP-BM-28
+## OCP-BM-30
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1168,7 +1249,7 @@ N/A
 
 ---
 
-## OCP-BM-29
+## OCP-BM-31
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1209,7 +1290,7 @@ Low-latency or high-performance application workloads (like vDUs) must be isolat
 
 ---
 
-## OCP-BM-30
+## OCP-BM-32
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1250,7 +1331,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-31
+## OCP-BM-33
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1292,7 +1373,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-32
+## OCP-BM-34
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1333,7 +1414,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-33
+## OCP-BM-35
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -1373,7 +1454,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-34
+## OCP-BM-36
 
 **Title**
 Bare Metal Node Firmware Management
@@ -1413,7 +1494,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-35
+## OCP-BM-37
 
 **Title**
 Bare Metal Node Remediation
