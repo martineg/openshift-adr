@@ -56,9 +56,8 @@ Format:
 
 - **ID:** Use correct Prefix from Dictionary + `XX` (e.g. `OCP-BM-XX`).
 - **Scope:** Strictly use Dictionary definitions.
-- **Quality:** Alternatives must be **valid architectural strategies**. Do NOT suggest ADRs where one alternative is **unsupported**, a **misconfiguration**, or leads to a broken state. Choices must be **viable** (GA vs GA/TP).
+- **Quality:** **CRITICAL:** Alternatives MUST be **valid architectural strategies** (GA or Tech-Preview). Do NOT suggest ADRs where options are **"Deprecated"**, **"Unsupported"** (unless TP), or **"Known to Fail"**. Discard "Requirement vs. Misconfiguration" topics.
 - **Format:** Alts=titles. Justification/Implications=`**[Title]:** [Text]`.
 - **Parties:** Use `Person: #TODO#, Role: [Role Name]` from `adr_parties_role_dictionnary.md`.
 - **Semantics:** Assumption=Dependency on previous ADR (else N/A). Justification=why choose. Implication=consequence.
-- **Flags:** Mark Tech-Preview `(TP)`.
 - **Versions:** No specific OCP versions.
