@@ -141,7 +141,7 @@ How will user groups from the external identity provider be synchronized with Op
 OpenShift needs awareness of external IdP groups to manage permissions effectively via RBAC. A synchronization strategy is needed.
 
 **Assumption**
-An external LDAP-compatible or OIDC IdP providing group claims is used (OCP-SEC-03).
+Identity Provider is configured.
 
 **Alternatives**
 

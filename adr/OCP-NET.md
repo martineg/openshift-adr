@@ -212,7 +212,7 @@ If using direct outbound connectivity (behind firewalls) in a connected environm
 Firewall rules for direct outbound access must balance security (least privilege) with operational feasibility (allowing necessary Red Hat and workload traffic).
 
 **Assumption**
-Cluster is in a connected environment.
+Cluster is in a connected environment and outbound connectivity is set to Direct Outbound.
 
 **Alternatives**
 
@@ -271,7 +271,7 @@ N/A
 **Implications**
 
 - **Default:** Functionality limited by the platform's default LB. Configuration managed automatically by OCP (simpler but less flexible). Cost typically included or based on cloud usage.
-- **User-Managed:** Requires manual configuration and integration for API and Ingress Operator Services. Operations team retains full control and responsibility (lifecycle, HA, features). Adds operational overhead but allows advanced customization.
+- **User-Managed:** Requires manual configuration and integration for API and Ingress Operator Services. Operations team retains full control and responsibility (lifecycle, HA, features). Adds operational overhead but allows advanced customization. The Load Balancer MUST be configured to use the /readyz endpoint (not a generic TCP check) for the Kubernetes API pool. The LB must probe every 5-10 seconds and remove the API server instance from the pool within 30 seconds of /readyz returning an error. Failure to configure this correctly will result in API instability and traffic blackholing during node updates.
 
 **Agreeing Parties**
 
@@ -456,7 +456,7 @@ Will the OVN-Kubernetes CNI plugin use its default internal CIDR ranges for the 
 OVN-Kubernetes uses specific default IPv4 and IPv6 subnets internally for the distributed transit switch (`internalTransitSwitchSubnet`) and cluster joins (`internalJoinSubnet`). If these default ranges overlap with the organization's existing network infrastructure, routing failures can occur, requiring customization before installation.
 
 **Assumption**
-The cluster uses the OVN-Kubernetes CNI plugin.
+CNI Plugin Selection is set to OVN-Kubernetes.
 
 **Alternatives**
 
@@ -496,7 +496,7 @@ Should OVN-Kubernetes egress traffic be processed through the host networking st
 By default, OVN processes egress traffic directly. However, highly specialized installations (e.g., those relying on specific routes in the kernel routing table) may require sending egress traffic through the host networking stack via the `routingViaHost: true` setting in `gatewayConfig`. This choice impacts hardware offloading capabilities.
 
 **Assumption**
-The cluster uses the OVN-Kubernetes CNI plugin.
+CNI Plugin Selection is set to OVN-Kubernetes.
 
 **Alternatives**
 
@@ -536,7 +536,7 @@ Should the cluster nodes function as generic IP routers for non-Kubernetes traff
 The `ipForwarding` specification in the Network resource controls whether OVN-Kubernetes managed interfaces drop or forward traffic not explicitly related to Kubernetes. This decision impacts security (least privilege) versus flexibility (supporting existing host/legacy routing).
 
 **Assumption**
-The cluster uses the OVN-Kubernetes CNI plugin.
+CNI Plugin Selection is set to OVN-Kubernetes.
 
 **Alternatives**
 
@@ -962,7 +962,7 @@ Which SR-IOV Virtual Function (VF) device type—`vfio-pci` or `netdevice`—wil
 When configuring SR-IOV devices, the choice of the VF device driver type dictates how the network resource is presented to the container. This impacts latency, performance characteristics, and the flexibility for applications.
 
 **Assumption**
-SR-IOV is enabled.
+Secondary Network Strategy includes SR-IOV.
 
 **Alternatives**
 
@@ -1003,7 +1003,7 @@ How will multiple Single Root I/O Virtualization (SR-IOV) Virtual Functions (VFs
 For high-performance network components like SR-IOV VFs, a single virtual function presents a single failure path. Utilizing dual-port NICs to create a bond provides network high availability (HA) and load balancing capabilities.
 
 **Assumption**
-SR-IOV is enabled.
+Secondary Network Strategy includes SR-IOV.
 
 **Alternatives**
 

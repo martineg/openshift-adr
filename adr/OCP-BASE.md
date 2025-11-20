@@ -280,7 +280,7 @@ On which specific infrastructure platform(s) will OpenShift Container Platform b
 The choice of underlying infrastructure platform directly impacts the available installation methods, supported features, operational complexity, performance characteristics, and required team skill sets. More than one platform can be selected.
 
 **Assumption**
-N/A
+Cloud model has been selected.
 
 **Alternatives**
 

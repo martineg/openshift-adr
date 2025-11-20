@@ -345,7 +345,7 @@ Cluster installation method is Installer-Provisioned Infrastructure (IPI).
 ## OCP-BM-09
 
 **Title**
-BMO Provisioning Boot Mechanism
+IPI/Assisted Provisioning Boot Mechanism
 
 **Architectural Question**
 Which boot mechanism (iPXE or Redfish Virtual Media) should be standardized for provisioning bare metal hosts managed by the Bare Metal Operator (BMO)?
@@ -467,7 +467,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 ## OCP-BM-12
 
 **Title**
-RHCOS Provisioning Method for Bare Metal Nodes
+UPI Provisioning Boot Mechanism
 
 **Architectural Question**
 How will Red Hat Enterprise Linux CoreOS (RHCOS) be provisioned onto the bare metal nodes when using UPI method deployment?
@@ -547,49 +547,85 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 ## OCP-BM-14
 
 **Title**
-RHCOS Day-1 Customization Method
+RHCOS Artifact Sourcing Strategy
 
 **Architectural Question**
-Which technique will be used to apply non-standard, Day-1 settings (like static networking, disk partitions, or console settings) during the UPI installation of RHCOS?
+How will the necessary Red Hat Enterprise Linux CoreOS (RHCOS) installation artifacts (kernel, initramfs, rootfs, or ISO image) be reliably sourced for the cluster deployment process?
 
 **Issue or Problem**
-The default RHCOS installation setting is often insufficient for enterprise bare metal. We must apply custom configurations (e.g., static IP addresses, network bonds, custom disk partitions, or serial console settings) at installation time. The chosen method impacts automation, complexity, and maintainability.
+Sourcing RHCOS installation files directly from the public image mirror might lead to version misalignment or compatibility issues, especially if the artifacts have changed since the last installer release. A robust method is required to guarantee the correct, compatible artifacts are used for installation.
 
 **Assumption**
-Cluster installation method is User-Provisioned Infrastructure (UPI).
+N/A
 
 **Alternatives**
 
-- Kernel Arguments
-- `MachineConfig` via Ignition
-- ISO/PXE Customization (Embedded Keyfiles)
-- `coreos-installer` Live Shell
+- Source artifacts via openshift-install coreos print-stream-json utility (Recommended)
+- Source artifacts directly from the RHCOS image mirror page
 
 **Decision**
 #TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Kernel Arguments:** This is a simple, direct method for passing basic boot settings. It is required for core parameters like static IP (`ip=...`) and the Ignition URL (`coreos.inst.ignition_url=`).
-- **`MachineConfig` via Ignition:** This is the standard, declarative method for all complex OS configurations. `MachineConfig` manifests are placed in the `manifests/` directory and automatically bundled into the final Ignition files, making it ideal for managing partitions , files, or services (like custom NTP) as code.
-- **ISO/PXE Customization (Embedded Keyfiles):** Uses the `coreos-installer iso customize` tool to embed NetworkManager keyfiles directly into the image. This is the preferred method for complex networking (like bonding) as it avoids unmanageable kernel argument strings and applies settings automatically to the live and installed system.
-- **`coreos-installer` Live Shell:** This is a manual, interactive method used for debugging or special cases. By booting the ISO or PXE image to a shell, an administrator can run `coreos-installer` with unique flags.
+- **Source artifacts via openshift-install coreos print-stream-json utility (Recommended):** The recommended way to obtain the correct version of RHCOS images is from the output of the `openshift-install` command. This ensures compatibility with the specific OpenShift Container Platform version being installed.
+- **Source artifacts directly from the RHCOS image mirror page:** While possible, this method requires manually verifying that the downloaded images are the highest version less than or equal to the OpenShift Container Platform version being installed.
 
 **Implications**
 
-- **Kernel Arguments:** Works identically for both ISO and PXE. Becomes unmanageable and error-prone for complex bonding.
-- **`MachineConfig` via Ignition:** Most robust for OS-level config, but cannot configure the _initial_ network required to fetch the Ignition file itself.
-- **ISO/PXE Customization (Embedded Keyfiles):** Requires a pre-processing step to customize the media before booting. Excellent for "Day 0" networking that is too complex for kernel args.
-- **`coreos-installer` Live Shell:** Fully manual process, breaks automation.
+- **Source artifacts via openshift-install coreos print-stream-json utility (Recommended):** Requires access to the `openshift-install` executable during the preparation phase.
+- **Source artifacts directly from the RHCOS image mirror page:** Increases the operational risk of using incompatible kernel/rootfs/initramfs files, potentially leading to installation failure.
 
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Rol
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Infra Leader
 
 ---
 
 ## OCP-BM-15
+
+**Title**
+RHCOS Day-1 Customization and Network Configuration Strategy
+
+**Architectural Question**
+Which mechanism will be used to apply Day-1 configurations—specifically complex network settings (bonding, VLANs) and disk partitions—to RHCOS nodes during UPI installation?
+
+**Issue or Problem**
+Standard kernel arguments (`ip=`, `bond=`) are often insufficient or error-prone for enterprise bare metal deployments requiring complex network topologies (LACP bonds, multiple VLANs) or static IPs. A standardized method is required to inject these configurations reliably into the installation media to ensure successful bootstrapping and fetching of the ignition configuration.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- Kernel Arguments (Standard/Simple)
+- ISO/PXE Customization with Embedded Keyfiles (Advanced/Complex)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Kernel Arguments (Standard/Simple):** Uses standard boot parameters (e.g., `ip=dhcp`, `coreos.inst.ignition_url=`) passed via the bootloader. This is sufficient for simple, single-interface DHCP environments but becomes unmanageable for complex bonding or static IP configurations due to character string complexity and lack of persistence features.
+- **ISO/PXE Customization with Embedded Keyfiles (Advanced/Complex):** Uses `coreos-installer iso/pxe customize` to embed **NetworkManager Keyfiles** (`.nmconnection`) and `MachineConfig` manifests directly into the initramfs of the installation media. This is the **preferred and most robust method** for enterprise deployments, as it supports complex LACP bonding, VLAN tagging, and static IPs natively without relying on fragile kernel argument strings.
+
+**Implications**
+
+- **Kernel Arguments (Standard/Simple):** Works identically for ISO and PXE. High risk of syntax errors for complex networking. Changes require editing boot menus or PXE config files. Cannot apply configurations that exceed the kernel command line length limit.
+- **ISO/PXE Customization with Embedded Keyfiles (Advanced/Complex):** Requires a pre-processing step to "stamp" the ISO or initramfs with the configuration before booting. Enables "Infrastructure as Code" for the network config but adds a build step to the provisioning workflow.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-16
 
 **Title**
 Bare Metal Network Bridge Configuration Tooling Strategy
@@ -631,7 +667,7 @@ N/A
 
 ---
 
-## OCP-BM-16
+## OCP-BM-17
 
 **Title**
 Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
@@ -672,7 +708,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-17
+## OCP-BM-18
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -715,7 +751,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-18
+## OCP-BM-19
 
 **Title**
 Bare Metal Host Firmware Configuration Management
@@ -756,7 +792,7 @@ Provisioning workflow is GitOps ZTP.
 
 ---
 
-## OCP-BM-19
+## OCP-BM-20
 
 **Title**
 RHCOS Node Console Access Strategy
@@ -796,16 +832,16 @@ N/A
 
 ---
 
-## OCP-BM-20
+## OCP-BM-21
 
 **Title**
 RHCOS Installation Boot Device Selection
 
 **Architectural Question**
-Will Red Hat Enterprise Linux CoreOS (RHCOS) be installed and booted from local internal storage (e.g., NVMe, SATA SSD) or from network-attached iSCSI SAN storage?
+Will Red Hat Enterprise Linux CoreOS (RHCOS) be installed and booted from local internal storage (e.g., NVMe, SATA SSD) or from network-attached SAN storage (iSCSI/Fibre Channel)?
 
 **Issue or Problem**
-The choice of boot device impacts storage management, failure domains, and the complexity of the installation process. Integrating with existing Storage Area Networks (SANs) requires specific installation steps (iSCSI target/initiator configuration) not needed for local disk deployment.
+The choice of boot device impacts storage management, failure domains, and the complexity of the installation process. Integrating with existing Storage Area Networks (SANs) requires specific installation steps (Zoning, LUN masking, WWN/IQN configuration) not needed for local disk deployment.
 
 **Assumption**
 N/A
@@ -813,7 +849,7 @@ N/A
 **Alternatives**
 
 - Local Disk Installation (Internal NVMe/SSD/HDD)
-- iSCSI Boot Device Installation (SAN Storage)
+- SAN Storage (iSCSI/Fibre Channel)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -821,12 +857,12 @@ N/A
 **Justification**
 
 - **Local Disk Installation (Internal NVMe/SSD/HDD):** This is the default, simpler installation path, requiring less complex networking and kernel configuration during the RHCOS installation boot process.
-- **iSCSI Boot Device Installation (SAN Storage):** This is required to leverage centralized, highly available, and potentially multi-pathed SAN infrastructure for the OS root disk. It supports fully diskless machines.
+- **SAN Storage (iSCSI/Fibre Channel):** This is required to leverage centralized, highly available, and potentially multi-pathed SAN infrastructure for the OS root disk. It supports fully diskless machines (Boot from SAN) and allows the OS disk to survive physical server chassis replacement.
 
 **Implications**
 
 - **Local Disk Installation (Internal NVMe/SSD/HDD):** Resilience relies entirely on the local disk health (e.g., RAID, if configured). Storage capacity and performance are confined to the internal server limits.
-- **iSCSI Boot Device Installation (SAN Storage):** Significantly increases installation complexity, requiring configuration of the iSCSI target portal, IQN, and LUN, either manually or via firmware tables. Adds a hard dependency on the storage network and SAN availability during node boot and operation.
+- **SAN Storage (iSCSI/Fibre Channel):** Significantly increases installation complexity. For iSCSI: Requires configuration of the target portal, IQN, and LUN, either manually or via iBFT. For Fibre Channel: Requires HBAs, correct fabric zoning, and LUN masking to the HBA's WWN. Both require the multipath configuration to be enabled during installation to prevent I/O errors.
 
 **Agreeing Parties**
 
@@ -837,7 +873,7 @@ N/A
 
 ---
 
-## OCP-BM-21
+## OCP-BM-22
 
 **Title**
 iSCSI Boot Configuration Method for RHCOS
@@ -878,7 +914,7 @@ iSCSI boot device is used
 
 ---
 
-## OCP-BM-22
+## OCP-BM-23
 
 **Title**
 RHCOS Multipathing Enablement Strategy
@@ -890,7 +926,7 @@ Will multipathing be explicitly enabled for Red Hat Enterprise Linux CoreOS (RHC
 Multipathing is essential for highly available storage backends (especially iSCSI/Fibre Channel), providing redundant data paths. Failure to enable it at installation time in certain configurations (e.g., IBM Z) prevents its use later, or can lead to I/O system errors if not optimized initially.
 
 **Assumption**
-Boot devices or secondary devices are SAN storage.
+Installation Boot Device is SAN device.
 
 **Alternatives**
 
@@ -919,7 +955,7 @@ Boot devices or secondary devices are SAN storage.
 
 ---
 
-## OCP-BM-23
+## OCP-BM-24
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -931,7 +967,7 @@ How should hardware RAID be configured for the OpenShift Container Platform inst
 OpenShift Container Platform documentation explicitly supports using hardware RAID on the installation drive for nodes managed by specific BMCs, such as Dell iDRAC (firmware version 6.10.30.20 or later, RAID levels 0, 1, and 5) and Fujitsu iRMC (RAID levels 0, 1, 5, 6, and 10). However, **software RAID is not supported** on the installation drive. A decision is required on whether to utilize supported hardware RAID features or configure nodes without hardware RAID for the installation drive.
 
 **Assumption**
-BMCs (Baseboard Management Controllers) support hardware RAID volumes for the root installation drive.
+Installation Boot Device is Local Device.
 
 **Alternatives**
 
@@ -959,7 +995,7 @@ BMCs (Baseboard Management Controllers) support hardware RAID volumes for the ro
 
 ---
 
-## OCP-BM-24
+## OCP-BM-25
 
 **Title**
 Control Plane Storage Performance Validation Strategy
@@ -999,7 +1035,7 @@ N/A
 
 ---
 
-## OCP-BM-25
+## OCP-BM-26
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -1039,7 +1075,7 @@ N/A
 
 ---
 
-## OCP-BM-26
+## OCP-BM-27
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -1079,7 +1115,7 @@ Nodes running RHCOS may contain valuable data or configuration on partitions sep
 
 ---
 
-## OCP-BM-27
+## OCP-BM-28
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1122,7 +1158,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-28
+## OCP-BM-29
 
 **Title**
 Storage Architecture for the Internal Image Registry (PVC vs. Object Storage)
@@ -1167,7 +1203,7 @@ The cluster is installed on bare metal infrastructure and requires persistent im
 
 ---
 
-## OCP-BM-29
+## OCP-BM-30
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1179,7 +1215,7 @@ Should the OpenShift Container Platform nodes leverage the Real-Time Kernel for 
 Bare metal deployments for demanding workloads, such as virtual Distributed Unit (vDU) applications in Telco environments, require guaranteed low latency and high performance. The standard RHCOS kernel may introduce unacceptable jitter or delay, necessitating the use of the Real-Time (RT) kernel.
 
 **Assumption**
-Workloads require strict low-latency guarantees, typically falling into the CNF/vDU/AI/ML categories.
+Low-latency workloads are required.
 
 **Alternatives**
 
@@ -1208,7 +1244,7 @@ Workloads require strict low-latency guarantees, typically falling into the CNF/
 
 ---
 
-## OCP-BM-30
+## OCP-BM-31
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1249,7 +1285,7 @@ N/A
 
 ---
 
-## OCP-BM-31
+## OCP-BM-32
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1261,7 +1297,7 @@ What strategy will be implemented for dedicating CPU resources (workload partiti
 For bare metal deployments hosting performance-critical or low-latency workloads (like RAN Distributed Units, or vDU applications), unpartitioned CPU usage leads to performance jitter due to contention between application pods and platform/kernel components. Defining isolated and reserved CPU sets is critical to meet required performance constraints.
 
 **Assumption**
-Low-latency or high-performance application workloads (like vDUs) must be isolated on dedicated CPU cores, likely requiring the real-time kernel.
+Low-latency workloads are required.
 
 **Alternatives**
 
@@ -1290,7 +1326,7 @@ Low-latency or high-performance application workloads (like vDUs) must be isolat
 
 ---
 
-## OCP-BM-32
+## OCP-BM-33
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1331,7 +1367,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-33
+## OCP-BM-34
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1373,7 +1409,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-34
+## OCP-BM-35
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1414,7 +1450,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-35
+## OCP-BM-36
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -1454,7 +1490,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-36
+## OCP-BM-37
 
 **Title**
 Bare Metal Node Firmware Management
@@ -1494,7 +1530,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-37
+## OCP-BM-38
 
 **Title**
 Bare Metal Node Remediation
