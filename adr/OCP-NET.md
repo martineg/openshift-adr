@@ -1029,3 +1029,45 @@ Secondary Network Strategy includes SR-IOV.
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Network Expert
 - Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-NET-26
+
+**Title**
+SR-IOV Virtual Function Bonding Mechanism
+
+**Architectural Question**
+Which mechanism will be implemented to establish the bond between multiple SR-IOV Virtual Functions (VFs) inside the application pods?
+
+**Issue or Problem**
+Once the decision to bond SR-IOV VFs for high availability is made, the implementation method depends on the driver type and where the bonding logic resides (Kernel vs. Userspace). This impacts how the network interface is presented to the containerized application.
+
+**Assumption**
+Secondary Network Strategy includes SR-IOV.
+SR-IOV Virtual Function Bonding Strategy is set to "Bond multiple VFs".
+
+**Alternatives**
+
+- **Pod-level Kernel Bonding via Bonding CNI Plugin**
+- **Application-level Userspace Bonding (DPDK)**
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Pod-level Kernel Bonding via Bonding CNI Plugin:** This utilizes the standard Kubernetes `bonding-cni` meta-plugin. It creates a standard Linux kernel bond interface (e.g., `bond0`) inside the pod's network namespace, aggregating the SR-IOV VFs. This is transparent to the application, which simply sees a highly available network interface with standard IP addressing.
+- **Application-level Userspace Bonding (DPDK):** This delegates the bonding logic entirely to the application (using Data Plane Development Kit - DPDK). The Pod receives two distinct VFs, and the application handles load balancing and failover logic in userspace. This is generally required if `vfio-pci` drivers are used but can also be used with `netdevice`.
+
+**Implications**
+
+- **Pod-level Kernel Bonding via Bonding CNI Plugin:** Requires the SR-IOV driver to be `netdevice`. Simplifies application development as standard socket networking works over the bond. Requires defining `NetworkAttachmentDefinition` resources that chain the SR-IOV plugin with the Bonding plugin.
+- **Application-level Userspace Bonding (DPDK):** Provides the absolute lowest latency and highest throughput by bypassing the kernel stack. However, it significantly increases application complexity; the application must be "network aware" and capable of initializing and managing the physical polling drivers (PMD) for the VFs.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: AI/ML Platform Owner

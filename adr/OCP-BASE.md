@@ -136,7 +136,7 @@ N/A
 Live Migration Strategy for OpenShift Virtualization
 
 **Architectural Question**
-Should the OpenShift cluster be configured to support Live Migration for virtual machines, necessitating a specific minimum node architecture?
+If using OpenShift Virtualization should the OpenShift cluster be configured to support Live Migration for virtual machines?
 
 **Issue or Problem**
 The capability to live-migrate VMs depends on the cluster-level High Availability (HA) status, which is determined **at installation time** based on the initial worker node count. This setting is immutable. Failing to identify this requirement early can lead to deploying a topology (like SNO) that permanently blocks VM mobility and maintenance without downtime.
