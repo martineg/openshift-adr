@@ -897,7 +897,7 @@ iSCSI boot device is used
 
 **Justification**
 
-- **Manual/Scripted iSCSI Configuration:** Allows explicit control over the entire iSCSI mounting and unmounting process using scripts embedded in the live image (e.g., `--pre-install` / `--post-install` scripts) and explicit kernel arguments (e.g., `rd.iscsi.initiator=`).
+- **Manual/Scripted iSCSI Configuration:** Allows explicit control over the entire iSCSI mounting and unmounting process utilizing **coreos-installer scripting hooks** (`--pre-install` / `--post-install`) to run `iscsiadm` commands manually. This is the standard method for implementing complex Day 1 storage logic that cannot be handled by firmware.
 - **iBFT/Firmware-Based iSCSI Configuration:** Enables a more automated, cleaner configuration path for diskless machines by allowing the RHCOS installer to read the iSCSI parameters directly from the BIOS firmware during boot. This simplifies the kernel argument configuration during PXE/ISO boot.
 
 **Implications**
