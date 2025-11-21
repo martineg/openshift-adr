@@ -608,6 +608,47 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 ## OCP-NET-16
 
 **Title**
+OVN-Kubernetes Cluster Route Advertisement Strategy
+
+**Architectural Question**
+Should OVN-Kubernetes be configured to advertise cluster network routes (Pod CIDRs) externally to surrounding network infrastructure?
+
+**Issue or Problem**
+External network components (like routers or security devices) require knowledge of the internal Pod Network CIDRs for successful routing. By default, these routes are internal to the SDN. Explicitly advertising them is necessary for deep network integration scenarios.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Route Advertisement Disabled (Default)
+- Route Advertisement Enabled
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Route Advertisement Disabled (Default):** Minimizes configuration complexity and relies on the standard OVN overlay network model where cluster network routes are not imported or advertised.
+- **Route Advertisement Enabled:** Allows external network devices to learn and route directly to Pod network CIDRs. This capability requires the deployment and configuration of the FRR routing capability provider.
+
+**Implications**
+
+- **Route Advertisement Disabled (Default):** External services cannot directly route to individual pod IP addresses without using mechanisms like Egress IPs or relying on NAT functionality.
+- **Route Advertisement Enabled:** Requires specifying the FRR provider within the `additionalRoutingCapabilities` field in the Network configuration object. Requires additional configuration via `RouteAdvertisements` custom resources.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Security Expert
+
+---
+
+## OCP-NET-17
+
+**Title**
 OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
 
 **Architectural Question**
@@ -646,7 +687,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-17
+## OCP-NET-18
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
@@ -687,7 +728,7 @@ N/A
 
 ---
 
-## OCP-NET-18
+## OCP-NET-19
 
 **Title**
 Ingress Controller Strategy
@@ -731,7 +772,7 @@ N/A
 
 ---
 
-## OCP-NET-19
+## OCP-NET-20
 
 **Title**
 Ingress Controller Replica Count
@@ -771,7 +812,7 @@ N/A
 
 ---
 
-## OCP-NET-20
+## OCP-NET-21
 
 **Title**
 SSL/TLS Termination Strategy
@@ -814,7 +855,7 @@ N/A
 
 ---
 
-## OCP-NET-21
+## OCP-NET-22
 
 **Title**
 Access Control for Cluster Metrics Port (TCP 1936)
@@ -855,7 +896,7 @@ N/A
 
 ---
 
-## OCP-NET-22
+## OCP-NET-23
 
 **Title**
 Default Network Policy (Pod Isolation)
@@ -899,7 +940,7 @@ N/A
 
 ---
 
-## OCP-NET-23
+## OCP-NET-24
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -942,7 +983,7 @@ Cluster uses OVN-Kubernetes CNI.
 
 ---
 
-## OCP-NET-24
+## OCP-NET-25
 
 **Title**
 OVN-Kubernetes Network Policy Audit Log Destination
@@ -986,7 +1027,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-25
+## OCP-NET-26
 
 **Title**
 Egress IP Address Strategy
@@ -1030,7 +1071,7 @@ N/A
 
 ---
 
-## OCP-NET-26
+## OCP-NET-27
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -1075,7 +1116,7 @@ N/A
 
 ---
 
-## OCP-NET-27
+## OCP-NET-28
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection
@@ -1116,7 +1157,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-28
+## OCP-NET-29
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy
@@ -1157,7 +1198,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-29
+## OCP-NET-30
 
 **Title**
 SR-IOV Virtual Function Bonding Mechanism

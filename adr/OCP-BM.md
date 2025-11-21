@@ -669,6 +669,48 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 ## OCP-BM-17
 
 **Title**
+RHCOS Node Day-1 DNS Resolver Redundancy Strategy
+
+**Architectural Question**
+When statically configuring RHCOS nodes during UPI deployment, should multiple DNS server addresses be provided to the installer to enhance Day-1 connectivity and resilience?
+
+**Issue or Problem**
+During manual installation (UPI) with static IP addresses, RHCOS relies on kernel arguments to define networking. If only a single DNS server is configured and that server is unreachable, the bootstrapping process will fail as the node cannot resolve endpoints like the Ignition configuration server URL.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+The cluster machines are configured with static IP addresses during RHCOS installation.
+
+**Alternatives**
+
+- Configure Multiple Redundant DNS Servers
+- Configure Only a Single Primary DNS Server
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Configure Multiple Redundant DNS Servers:** This method provides stronger resilience for the RHCOS nodes during the critical bootstrapping phase by listing multiple upstream DNS resolvers using multiple `nameserver=` kernel arguments. This is achieved by adding a `nameserver=` entry for each server.
+- **Configure Only a Single Primary DNS Server:** This simplifies the configuration required in the kernel argument string. It is only sufficient if the specified DNS server is guaranteed to be highly available during the installation phase.
+
+**Implications**
+
+- **Configure Multiple Redundant DNS Servers:** Requires meticulous coordination with the network team to identify and correctly configure all redundant enterprise DNS servers within the boot parameters.
+- **Configure Only a Single Primary DNS Server:** Introduces a Single Point of Failure (SPoF) for initial host-level name resolution, increasing the risk of installation failure.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Security Expert
+
+---
+
+## OCP-BM-18
+
+**Title**
 Bare Metal Network Bridge Configuration Tooling Strategy
 
 **Architectural Question**
@@ -708,7 +750,7 @@ N/A
 
 ---
 
-## OCP-BM-18
+## OCP-BM-19
 
 **Title**
 Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
@@ -749,7 +791,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-19
+## OCP-BM-20
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -792,7 +834,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-20
+## OCP-BM-21
 
 **Title**
 Bare Metal Host Firmware Configuration Management
@@ -833,7 +875,7 @@ Provisioning workflow is GitOps ZTP.
 
 ---
 
-## OCP-BM-21
+## OCP-BM-22
 
 **Title**
 RHCOS Node Console Access Strategy
@@ -873,7 +915,7 @@ N/A
 
 ---
 
-## OCP-BM-22
+## OCP-BM-23
 
 **Title**
 RHCOS Installation Boot Device Selection
@@ -914,7 +956,7 @@ N/A
 
 ---
 
-## OCP-BM-23
+## OCP-BM-24
 
 **Title**
 iSCSI Boot Configuration Method for RHCOS
@@ -955,7 +997,7 @@ iSCSI boot device is used
 
 ---
 
-## OCP-BM-24
+## OCP-BM-25
 
 **Title**
 RHCOS Multipathing Enablement Strategy
@@ -996,7 +1038,7 @@ Installation Boot Device is SAN device.
 
 ---
 
-## OCP-BM-25
+## OCP-BM-26
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -1036,7 +1078,7 @@ Installation Boot Device is Local Device.
 
 ---
 
-## OCP-BM-26
+## OCP-BM-27
 
 **Title**
 Control Plane Storage Performance Validation Strategy
@@ -1076,7 +1118,7 @@ N/A
 
 ---
 
-## OCP-BM-27
+## OCP-BM-28
 
 **Title**
 RHCOS /var Partitioning Strategy (General Data Isolation)
@@ -1116,7 +1158,7 @@ The cluster will utilize large disk sizes (e.g., > 100GB) and may host applicati
 
 ---
 
-## OCP-BM-28
+## OCP-BM-29
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -1156,7 +1198,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-29
+## OCP-BM-30
 
 **Title**
 Control Plane Etcd Storage Partitioning Strategy
@@ -1197,7 +1239,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-30
+## OCP-BM-31
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -1237,7 +1279,7 @@ N/A
 
 ---
 
-## OCP-BM-31
+## OCP-BM-32
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1280,25 +1322,26 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-32
+## OCP-BM-33
 
 **Title**
-Storage Architecture for the Internal Image Registry (PVC vs. Object Storage)
+Storage Architecture for the Internal Image Registry
 
 **Architectural Question**
-How should storage be architected for the OpenShift Internal Image Registry, balancing bare metal infrastructure limitations (RWO/RWX availability) with performance and enterprise object storage requirements?
+How should storage be architected for the OpenShift Internal Image Registry, balancing bare metal infrastructure limitations (RWO/RWX availability) with performance, enterprise object storage requirements, and non-production simplicity?
 
 **Issue or Problem**
-OpenShift Container Platform's internal image registry requires high-availability storage (supporting multiple replicas) for production clusters. On bare metal, achieving native ReadWriteMany (RWX) access is challenging, forcing a critical decision between deploying complex RWX solutions, utilizing dedicated Object Storage (S3 API), or settling for low-resilience ReadWriteOnce (RWO) storage.
+OpenShift Container Platform's internal image registry requires high-availability storage (supporting multiple replicas) for production clusters. On bare metal, achieving native ReadWriteMany (RWX) access is challenging. A decision must be made between deploying complex RWX solutions, utilizing dedicated Object Storage (S3 API), settling for low-resilience ReadWriteOnce (RWO) storage, or utilizing ephemeral storage for non-critical environments.
 
 **Assumption**
-The cluster is installed on bare metal infrastructure and requires persistent image storage for production workloads.
+N/A
 
 **Alternatives**
 
 - Dedicated Object Storage (S3 API Compatible)
-- ReadWriteMany (RWX) Access Mode
-- ReadWriteOnce (RWO) Access Mode
+- ReadWriteMany (RWX) Access Mode (PVC)
+- ReadWriteOnce (RWO) Access Mode (PVC)
+- Ephemeral Storage (EmptyDir)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -1306,14 +1349,16 @@ The cluster is installed on bare metal infrastructure and requires persistent im
 **Justification**
 
 - **Dedicated Object Storage (S3 API Compatible):** This approach leverages object storage (such as Red Hat OpenShift Data Foundation's Multicloud Gateway or an external S3 provider) for the image repository. Object storage is highly scalable and natively supports high availability (HA) required for image registries. ODF is the preferred option when Object (MCG) storage capabilities are necessary.
-- **ReadWriteMany (RWX) Access Mode:** This access mode is required to deploy an image registry that supports high availability with two or more replicas. It is typically implemented using shared file system storage.
-- **ReadWriteOnce (RWO) Access Mode:** This access mode is supported only when the image registry has one replica and explicitly requires the Recreate rollout strategy during upgrades.
+- **ReadWriteMany (RWX) Access Mode (PVC):** This access mode is required to deploy an image registry that supports high availability with two or more replicas. It is typically implemented using shared file system storage.
+- **ReadWriteOnce (RWO) Access Mode (PVC):** This access mode is supported only when the image registry has one replica and explicitly requires the `Recreate` rollout strategy during upgrades.
+- **Ephemeral Storage (EmptyDir):** This simplifies configuration and is available only for non-production clusters. It minimizes setup complexity as no underlying persistent storage solution is required.
 
 **Implications**
 
 - **Dedicated Object Storage (S3 API Compatible):** Requires the installation and maintenance of an Object Storage solution (e.g., ODF/MCG). This decouples image storage scalability from local block or file storage limitations.
-- **ReadWriteMany (RWX) Access Mode:** Requires coordination to provision storage that supports RWX access mode, which is necessary for HA scaled registries.
-- **ReadWriteOnce (RWO) Access Mode:** The cluster must accept reduced resiliency, as the registry cannot have more than one replica. Block storage volumes, which typically use RWO, are supported but explicitly not recommended for use with the image registry on production clusters.
+- **ReadWriteMany (RWX) Access Mode (PVC):** Requires coordination to provision storage that supports RWX access mode, which is necessary for HA scaled registries.
+- **ReadWriteOnce (RWO) Access Mode (PVC):** The cluster must accept reduced resiliency, as the registry cannot have more than one replica. Block storage volumes, which typically use RWO, are supported but explicitly not recommended for use with the image registry on production clusters.
+- **Ephemeral Storage (EmptyDir):** **All container images are lost** if the registry pod restarts or the node fails. This configuration must be used for only non-production clusters (e.g., Lab/Sandbox) where image rebuilds are acceptable.
 
 **Agreeing Parties**
 
@@ -1325,7 +1370,48 @@ The cluster is installed on bare metal infrastructure and requires persistent im
 
 ---
 
-## OCP-BM-33
+## OCP-BM-34
+
+**Title**
+Internal Image Registry Management State on Bare Metal UPI
+
+**Architectural Question**
+Should the built-in Image Registry Operator's default `Removed` state on bare metal User-Provisioned Infrastructure (UPI) clusters be explicitly switched to `Managed` post-installation, or should the platform rely exclusively on an external image registry?
+
+**Issue or Problem**
+On bare metal UPI environments that do not provide default shared storage, the OpenShift Image Registry Operator bootstraps itself in a `Removed` management state to allow installation to complete. If the registry remains `Removed`, image building and pushing of application images are disabled. A decision is required to determine the long-term image hosting strategy (internal or external) and mandate the necessary post-installation operational steps.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- Switch Internal Registry to Managed State Post-Install
+- Maintain Removed State (Rely Exclusively on External Registry)
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Switch Internal Registry to Managed State Post-Install:** This enables the use of the built-in, cluster-managed image registry. This simplifies integration with OpenShift builds and standard platform services once appropriate persistent storage is provisioned (as defined in OCP-BM-32).
+- **Maintain Removed State (Rely Exclusively on External Registry):** This approach minimizes the cluster footprint and ensures that all core OCP components and applications rely on an existing external corporate image registry (e.g., Quay, Artifactory, Nexus), leveraging existing security and management infrastructure.
+
+**Implications**
+
+- **Switch Internal Registry to Managed State Post-Install:** Requires manual intervention by the cluster administrator to edit the `configs.imageregistry/cluster` resource to change `managementState: Removed` to `Managed` after installation. Subsequently, persistent storage must be configured (RWX is required for high availability).
+- **Maintain Removed State (Rely Exclusively on External Registry):** Disables the ability to use the cluster’s internal image building capabilities, requiring all image dependencies (including custom RHOAI notebook images) to be pulled from the external registry. The cluster network must allow external pull access for all nodes and application namespaces must be configured with pull secrets.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Storage Expert
+
+---
+
+## OCP-BM-35
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1366,7 +1452,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-34
+## OCP-BM-36
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1407,7 +1493,7 @@ N/A
 
 ---
 
-## OCP-BM-35
+## OCP-BM-37
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1448,7 +1534,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-36
+## OCP-BM-38
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1489,7 +1575,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-37
+## OCP-BM-39
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1531,7 +1617,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-38
+## OCP-BM-40
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1572,7 +1658,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-39
+## OCP-BM-41
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -1612,7 +1698,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-40
+## OCP-BM-42
 
 **Title**
 Bare Metal Node Firmware Management
@@ -1652,7 +1738,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-41
+## OCP-BM-43
 
 **Title**
 Bare Metal Node Remediation

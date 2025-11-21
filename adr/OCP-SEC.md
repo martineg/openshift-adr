@@ -43,6 +43,47 @@ N/A
 ## OCP-SEC-02
 
 **Title**
+SSH Key Algorithm Selection for FIPS Mode Clusters
+
+**Architectural Question**
+If the OpenShift cluster is configured to operate in FIPS mode, which SSH key algorithm should be mandated for the administrative SSH public key included in the installation configuration?
+
+**Issue or Problem**
+The standard default SSH key algorithm (`ed25519`) is not FIPS-compliant, and its use is restricted when the cluster is configured to operate in FIPS mode. Using a non-compliant key will violate security mandates and potentially block remote access to RHCOS nodes for debugging or disaster recovery.
+
+**Assumption**
+FIPS mode is enabled for the cluster installation.
+
+**Alternatives**
+
+- RSA or ECDSA Algorithms
+- ED25519 Algorithm
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **RSA or ECDSA Algorithms:** These algorithms are FIPS-compliant and **must be used** to generate the SSH key if the cluster is installed with FIPS mode enabled. This ensures compliance and continuous operational access.
+- **ED25519 Algorithm:** This algorithm is specifically identified as **non-FIPS compliant** and should not be used if the cluster is configured for FIPS mode.
+
+**Implications**
+
+- **RSA or ECDSA Algorithms:** Requires an explicit administrative step to use `ssh-keygen -t rsa` or `ecdsa` during setup instead of relying on the system default (if the default is ED25519).
+- **ED25519 Algorithm:** If used in a FIPS cluster, it may prevent the core user from accessing the nodes via SSH due to the cryptographic libraries rejecting the non-compliant key.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-SEC-03
+
+**Title**
 Compliance Automation Strategy
 
 **Architectural Question**
@@ -83,7 +124,7 @@ N/A
 
 ---
 
-## OCP-SEC-03
+## OCP-SEC-04
 
 **Title**
 Identity Provider Selection
@@ -129,7 +170,7 @@ N/A
 
 ---
 
-## OCP-SEC-04
+## OCP-SEC-05
 
 **Title**
 Identity Provider Group Synchronization
@@ -175,7 +216,7 @@ Identity Provider is configured.
 
 ---
 
-## OCP-SEC-05
+## OCP-SEC-06
 
 **Title**
 Multi-Tenant Identity Provider Integration
@@ -215,7 +256,7 @@ Multiple, distinct IdPs are required.
 
 ---
 
-## OCP-SEC-06
+## OCP-SEC-07
 
 **Title**
 Security Context Constraint (SCC) / Pod Security Admission (PSA) Policy
@@ -258,7 +299,7 @@ N/A
 
 ---
 
-## OCP-SEC-07
+## OCP-SEC-08
 
 **Title**
 Admission Control Strategy (Custom Policies)
@@ -301,7 +342,7 @@ Need for custom policy enforcement exists.
 
 ---
 
-## OCP-SEC-08
+## OCP-SEC-09
 
 **Title**
 Container Image Trust and Signature Verification
@@ -344,7 +385,7 @@ Supply chain security is a requirement.
 
 ---
 
-## OCP-SEC-09
+## OCP-SEC-10
 
 **Title**
 Data Protection (etcd) Encryption
@@ -384,7 +425,7 @@ Protection of sensitive configuration data at rest is required.
 
 ---
 
-## OCP-SEC-10
+## OCP-SEC-11
 
 **Title**
 Centralized Secret Management Integration
@@ -424,7 +465,7 @@ Applications require secrets; GitOps might be used (GITOPS-01); storing secrets 
 
 ---
 
-## OCP-SEC-11
+## OCP-SEC-12
 
 **Title**
 Kubelet Serving Certificate Signing Request (CSR) Management Strategy for UPI
@@ -465,7 +506,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-SEC-12
+## OCP-SEC-13
 
 **Title**
 RHCOS Image Signature Verification Policy for UPI Installation
