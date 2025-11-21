@@ -3,9 +3,9 @@ Source: Uploaded **Red Hat production docs (PDFs)**.
 Baseline: **Uploaded ADRs** (`ARCHITECTURE DECISION RECORDS FOR...`).
 Dictionary: `adr_prefix_dictionary.md`.
 
-Task: Suggest NEW ADs from PDFs that are **not in Baseline**.
+Task: Suggest NEW ADs from PDFs not in Baseline.
 
-1. Analyze PDFs. 2. Classify Prefix via Dictionary. 3. Check Baseline.
+1. Analyze PDFs. 2. Classify via Dictionary. 3. Check Baseline.
 
 If no new topics, respond ONLY: "No new relevant ADRs found."
 
@@ -37,13 +37,13 @@ Format:
 
 **Justification**
 
-- **[Alt 1 Title]:** [Justification (*why choose it?*)]
-- **[Alt 2 Title]:** [Justification (*why choose it?*)]
+- **[Alt 1]:** [Why choose it?]
+- **[Alt 2]:** [Why choose it?]
 
 **Implications**
 
-- **[Alt 1 Title]:** [Implication (*consequence/risk?*)]
-- **[Alt 2 Title]:** [Implication (*consequence/risk?*)]
+- **[Alt 1]:** [Consequence/Risk?]
+- **[Alt 2]:** [Consequence/Risk?]
 
 **Agreeing Parties**
 
@@ -52,13 +52,13 @@ Format:
 **Rules:**
 
 - **ID:** Use Dictionary Prefix + `XX` (e.g. `OCP-BM-XX`).
-- **Scope:** Strictly use Dictionary definitions.
+- **Scope:** Use Dictionary definitions.
+- **Duplicate Check:** Aggressively check Baseline. If core concept/alternatives exist (even with different phrasing), DISCARD.
 - **Quality:** **CRITICAL:**
-  1. Alternatives must be **valid strategies** (GA/TP).
-  2. NO "Unsupported", "Deprecated", or "Misconfiguration" options.
-  3. **If only one valid option exists (due to constraints), DISCARD.**
+  1. Alternatives must be **explicitly documented** (GA/TP). NO "Invented", "Unsupported", "Deprecated", "Planned Deprecation".
+  2. **Mutually Exclusive:** Must be distinct **choices** (A vs B). NO "Mandatory" vs "Optional". If only one option exists, DISCARD.
+  3. **Architecture Level:** Suggest **Strategies** (e.g. IPI vs UPI), NOT low-level **parameters** or **implementation details**.
 - **Format:** Alts=titles. Justification/Implications=`**[Title]:** [Text]`.
 - **Parties:** Use `Person: #TODO#, Role: [Role]` from `adr_parties_role_dictionnary.md`.
 - **Semantics:** Assumption=Dependency. Justification=Why. Implication=Risk.
-- **Flags:** Mark `(TP)`.
 - **Versions:** No specific OCP versions.
