@@ -122,6 +122,46 @@ N/A
 ## OCP-NET-04
 
 **Title**
+Node Name Resolution Strategy (DNS Search Zone vs FQDN)
+
+**Architectural Question**
+How will OpenShift ensure the Kubernetes API server can reliably resolve node names when they are potentially distributed across different network zones?
+
+**Issue or Problem**
+If nodes reside in different zones, relying solely on short hostnames may cause resolution failure unless a default DNS search zone is correctly configured.
+
+**Assumption**
+Nodes might be distributed across different network zones/failure domains.
+
+**Alternatives**
+
+- Rely on Default DNS Search Zone Configuration
+- Enforce Full FQDN Resolution for all Node Objects and DNS Requests
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Rely on Default DNS Search Zone Configuration:** This allows the API server to successfully resolve hostnames based on short names by leveraging the configured search path.
+- **Enforce Full FQDN Resolution for all Node Objects and DNS Requests:** This supported approach ensures unambiguous reference to hosts by their fully-qualified domain names in all DNS requests and node objects, removing reliance on zone-specific DNS search paths.
+
+**Implications**
+
+- **Rely on Default DNS Search Zone Configuration:** This approach requires careful configuration of the default DNS search zone to allow the API server to correctly resolve node names across zones.
+- **Enforce Full FQDN Resolution for all Node Objects and DNS Requests:** This requires meticulous, consistent configuration to ensure FQDNs are used everywhere (node objects and DNS records).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-05
+
+**Title**
 Cluster Core Time Synchronization Source
 
 **Architectural Question**
@@ -159,7 +199,7 @@ N/A
 
 ---
 
-## OCP-NET-05
+## OCP-NET-06
 
 **Title**
 Outbound Connectivity (External Firewall/Proxy)
@@ -200,7 +240,7 @@ Cluster is in a connected environment.
 
 ---
 
-## OCP-NET-06
+## OCP-NET-07
 
 **Title**
 Outbound HTTPS Trust Management Strategy (Proxy/Custom CA)
@@ -241,7 +281,48 @@ Outbound Connectivity utilizes an HTTPS proxy or connects to external services r
 
 ---
 
-## OCP-NET-07
+## OCP-NET-08
+
+**Title**
+Custom CA Trust Bundle Application Policy
+
+**Architectural Question**
+When augmenting the cluster's default trust bundle with a custom Certificate Authority (CA) via `additionalTrustBundle`, should the resultant trusted CA ConfigMap be applied only when a cluster-wide proxy is configured, or should it be referenced universally?
+
+**Issue or Problem**
+The `additionalTrustBundlePolicy` configuration dictates whether the custom trust bundle ConfigMap (`user-ca-bundle`) is referenced in the cluster's Proxy object only (`Proxyonly`) or always (`Always`), impacting cluster connectivity assurance, especially if the proxy configuration changes post-installation.
+
+**Assumption**
+A trust bundle via additionalTrustBundle configuration is used to configure Certificate Authority (CA).
+
+**Alternatives**
+
+- Proxy-Only Policy (Default)
+- Always-Apply Policy
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Proxy-Only Policy (Default):** This leverages the default cluster setting where the custom CA trust bundle is referenced only when the HTTP/HTTPS proxy is configured. This simplifies configuration if the proxy is transient or optional.
+- **Always-Apply Policy:** This ensures the custom CA is always referenced by the Proxy object's trusted CA field. This is useful if critical external services, regardless of proxy usage, rely on the custom CA, guaranteeing consistency even if the cluster proxy configuration is removed or disabled.
+
+**Implications**
+
+- **Proxy-Only Policy (Default):** Requires setting `additionalTrustBundlePolicy` to `Proxyonly` or omitting the field, as `Proxyonly` is the default value. If the cluster proxy is disabled or removed, the custom CA may stop being referenced by the Proxy object's trusted CA field.
+- **Always-Apply Policy:** Requires explicitly setting the `additionalTrustBundlePolicy` parameter to `Always`. This establishes a hard dependency on the correct management of the CA certificate provided in the `additionalTrustBundle` field.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-09
 
 **Title**
 External Firewall Rule Granularity (Connected Environments)
@@ -282,7 +363,7 @@ Cluster is in a connected environment and outbound connectivity is set to Direct
 
 ---
 
-## OCP-NET-08
+## OCP-NET-10
 
 **Title**
 Load Balancer Strategy (API & Ingress)
@@ -323,7 +404,7 @@ N/A
 
 ---
 
-## OCP-NET-09
+## OCP-NET-11
 
 **Title**
 API and Application Ingress Load Balancer Topology Strategy
@@ -364,7 +445,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-NET-10
+## OCP-NET-12
 
 **Title**
 CNI Plugin Selection (Platform Specific)
@@ -405,7 +486,7 @@ N/A
 
 ---
 
-## OCP-NET-11
+## OCP-NET-13
 
 **Title**
 Pod Network CIDR Selection
@@ -445,7 +526,7 @@ N/A
 
 ---
 
-## OCP-NET-12
+## OCP-NET-14
 
 **Title**
 Service Network CIDR Selection
@@ -485,7 +566,7 @@ N/A
 
 ---
 
-## OCP-NET-13
+## OCP-NET-15
 
 **Title**
 OVN-Kubernetes Overlay Network Parameter Configuration
@@ -525,7 +606,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-14
+## OCP-NET-16
 
 **Title**
 OVN-Kubernetes Internal Subnet Configuration Strategy
@@ -565,7 +646,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-15
+## OCP-NET-17
 
 **Title**
 OVN-Kubernetes Internal Masquerade Subnet Configuration
@@ -605,7 +686,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-16
+## OCP-NET-18
 
 **Title**
 OVN-Kubernetes Egress Traffic Routing Via Host Network Stack
@@ -645,7 +726,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-17
+## OCP-NET-19
 
 **Title**
 OVN-Kubernetes IPsec Encryption Mode
@@ -689,7 +770,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-18
+## OCP-NET-20
 
 **Title**
 OVN-Kubernetes Cluster Route Advertisement Strategy
@@ -730,7 +811,7 @@ N/A
 
 ---
 
-## OCP-NET-19
+## OCP-NET-21
 
 **Title**
 OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
@@ -771,7 +852,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-20
+## OCP-NET-22
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
@@ -812,7 +893,7 @@ N/A
 
 ---
 
-## OCP-NET-21
+## OCP-NET-23
 
 **Title**
 Ingress Controller Strategy
@@ -856,7 +937,7 @@ N/A
 
 ---
 
-## OCP-NET-22
+## OCP-NET-24
 
 **Title**
 Ingress Controller Replica Count
@@ -896,7 +977,7 @@ N/A
 
 ---
 
-## OCP-NET-23
+## OCP-NET-25
 
 **Title**
 SSL/TLS Termination Strategy
@@ -939,7 +1020,7 @@ N/A
 
 ---
 
-## OCP-NET-24
+## OCP-NET-26
 
 **Title**
 Access Control for Cluster Metrics Port (TCP 1936)
@@ -980,7 +1061,7 @@ N/A
 
 ---
 
-## OCP-NET-25
+## OCP-NET-27
 
 **Title**
 Default Network Policy (Pod Isolation)
@@ -1024,7 +1105,7 @@ N/A
 
 ---
 
-## OCP-NET-26
+## OCP-NET-28
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -1067,7 +1148,7 @@ Cluster uses OVN-Kubernetes CNI.
 
 ---
 
-## OCP-NET-27
+## OCP-NET-29
 
 **Title**
 OVN-Kubernetes Network Policy Audit Log Destination
@@ -1111,7 +1192,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-28
+## OCP-NET-30
 
 **Title**
 Egress IP Address Strategy
@@ -1155,7 +1236,7 @@ N/A
 
 ---
 
-## OCP-NET-29
+## OCP-NET-31
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -1200,7 +1281,7 @@ N/A
 
 ---
 
-## OCP-NET-30
+## OCP-NET-32
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection
@@ -1241,7 +1322,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-31
+## OCP-NET-33
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy
@@ -1282,7 +1363,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-32
+## OCP-NET-34
 
 **Title**
 SR-IOV Virtual Function Bonding Mechanism

@@ -669,6 +669,88 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 ## OCP-BM-17
 
 **Title**
+RHCOS Customization Timing Strategy (Live vs Permanent Ignition)
+
+**Architectural Question**
+Should Day-0 configuration tasks (e.g., advanced disk partitioning) be performed using a temporary Live Install Ignition config, or incorporated into the standard, persistent Permanent Install Ignition config via wrapped manifests?
+
+**Issue or Problem**
+The Live Install Ignition config runs immediately on boot and is required for complex, one-time setup (like advanced disk partitioning) that cannot be managed by the Machine Config Operator (MCO). However, using this mechanism adds a pre-processing step to the provisioning workflow.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+Custom Day-0 tasks requiring non-MCO methods are needed (e.g., advanced partitioning).
+
+**Alternatives**
+
+- Utilize Permanent Install Ignition Config (Embedded Manifests)
+- Utilize Live Install Ignition Config (ignition.config.url)
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Utilize Permanent Install Ignition Config (Embedded Manifests):** This method is preferred for standard cluster components and configurations that are consistently managed by the Machine Config Operator (MCO) throughout the cluster lifecycle.
+- **Utilize Live Install Ignition Config (ignition.config.url):** This is intended specifically for performing configuration tasks that must occur once and cannot be applied again later, such as complex disk partitioning.
+
+**Implications**
+
+- **Utilize Permanent Install Ignition Config (Embedded Manifests):** This method cannot be used for highly specialized, one-time changes like complex custom disk partitioning.
+- **Utilize Live Install Ignition Config (ignition.config.url):** This requires appending specific kernel arguments (e.g., `ignition.config.url=`, `ignition.firstboot`, `ignition.platform.id=metal`) to the installation media, increasing setup complexity.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-18
+
+**Title**
+RHCOS Live Network Configuration Persistence Strategy (UPI)
+
+**Architectural Question**
+When performing a manual User-Provisioned Infrastructure (UPI) installation of RHCOS from a live environment, how will the network configuration detected or used by the live installer be persisted to the installed system?
+
+**Issue or Problem**
+During manual RHCOS installation (ISO/PXE), the temporary live environment successfully obtains network settings (IP, DNS). This configuration must be transferred robustly to the permanent OS installation for successful first boot and Ignition fetch, and this persistence can be handled either implicitly by copying the live environment's state or explicitly via declarative mechanisms.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- Explicit Configuration (NetworkManager Keyfiles/Kernel Arguments)
+- Implicit Configuration (Copy Network Flag)
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Explicit Configuration (NetworkManager Keyfiles/Kernel Arguments):** This approach utilizes declarative configuration (NetworkManager Keyfiles embedded via `coreos-installer customize` or kernel arguments) to ensure the target OS configuration is strictly deterministic. It maintains consistency and is independent of how the live system initially derived its network settings.
+- **Implicit Configuration (Copy Network Flag):** This method simplifies the installation process by transferring the existing, validated network configuration used by the running live system directly to the installed operating system using the `--copy-network` flag with `coreos-installer install`.
+
+**Implications**
+
+- **Explicit Configuration (NetworkManager Keyfiles/Kernel Arguments):** This requires a pre-processing step (like customizing the ISO/PXE image with `--network-keyfile`) or configuring kernel argument strings, adding complexity to the provisioning build step.
+- **Implicit Configuration (Copy Network Flag):** Achieved via the `--copy-network` option. This approach relies on the live environment successfully detecting or configuring the network correctly, making the persistence based on an implicit state transfer rather than a declared manifest.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-BM-19
+
+**Title**
 RHCOS Node Day-1 DNS Resolver Redundancy Strategy
 
 **Architectural Question**
@@ -708,7 +790,47 @@ The cluster machines are configured with static IP addresses during RHCOS instal
 
 ---
 
-## OCP-BM-18
+## OCP-BM-20
+
+**Title**
+Multi-NIC Strategy for RHCOS Core Network (UPI)
+
+**Architectural Question**
+Should the core cluster network connectivity for RHCOS nodes leverage a single interface/bond, or multiple distinct, non-aggregated physical network interfaces (NICs)?
+
+**Issue or Problem**
+Utilizing multiple discrete physical network interfaces allows for segmented IP addressing (e.g., combining DHCP and Static IP) directly on the node, but increases the complexity of network bootstrapping compared to a single aggregated interface.
+
+**Assumption**
+Cluster uses User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- Single Interface or Aggregated Interface (Bonding/Teaming)
+- Multiple Discrete Network Interfaces (Configured Separately)
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Single Interface or Aggregated Interface (Bonding/Teaming):** This approach simplifies initial configuration and reduces the number of kernel arguments required during installation.
+- **Multiple Discrete Network Interfaces (Configured Separately):** This allows fine-grained control over network addressing per NIC, permitting the configuration of mixed IP methods (DHCP and static) on the same host for different purposes.
+
+**Implications**
+
+- **Single Interface or Aggregated Interface (Bonding/Teaming):** May limit flexibility if specific network segmentation is required at the host OS level before the CNI takes over.
+- **Multiple Discrete Network Interfaces (Configured Separately):** Requires careful planning and configuration of multiple kernel arguments (e.g., multiple `ip=` entries) during the RHCOS installation process.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-21
 
 **Title**
 Bare Metal Network Bridge Configuration Tooling Strategy
@@ -750,7 +872,7 @@ N/A
 
 ---
 
-## OCP-BM-19
+## OCP-BM-22
 
 **Title**
 Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
@@ -791,7 +913,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-20
+## OCP-BM-23
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -834,7 +956,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-21
+## OCP-BM-24
 
 **Title**
 Bare Metal Host Firmware Configuration Management
@@ -875,7 +997,7 @@ Provisioning workflow is GitOps ZTP.
 
 ---
 
-## OCP-BM-22
+## OCP-BM-25
 
 **Title**
 RHCOS Node Console Access Strategy
@@ -915,7 +1037,7 @@ N/A
 
 ---
 
-## OCP-BM-23
+## OCP-BM-26
 
 **Title**
 RHCOS Installation Boot Device Selection
@@ -956,7 +1078,7 @@ N/A
 
 ---
 
-## OCP-BM-24
+## OCP-BM-27
 
 **Title**
 iSCSI Boot Configuration Method for RHCOS
@@ -997,19 +1119,19 @@ iSCSI boot device is used
 
 ---
 
-## OCP-BM-25
+## OCP-BM-28
 
 **Title**
-RHCOS Multipathing Enablement Strategy
+RHCOS Multipathing Enablement Strategy (Boot and Secondary Disks)
 
 **Architectural Question**
 Will multipathing be explicitly enabled for Red Hat Enterprise Linux CoreOS (RHCOS) disks (primary boot or secondary data disks) during installation to enhance resilience against hardware failure?
 
 **Issue or Problem**
-Multipathing is essential for highly available storage backends (especially iSCSI/Fibre Channel), providing redundant data paths. Failure to enable it at installation time in certain configurations (e.g., IBM Z) prevents its use later, or can lead to I/O system errors if not optimized initially.
+Multipathing is essential for highly available storage backends (especially iSCSI/Fibre Channel), providing redundant data paths. Failure to enable it at installation time prevents its use for the boot disk. Furthermore, secondary disks (like `/var/lib/containers`) require a different configuration mechanism (Ignition/Systemd) than the boot disk (Kernel Arguments).
 
 **Assumption**
-Installation Boot Device is SAN device.
+Installation Boot Device or Secondary Storage is a SAN device.
 
 **Alternatives**
 
@@ -1021,12 +1143,16 @@ Installation Boot Device is SAN device.
 
 **Justification**
 
-- **Enable Multipathing at Installation Time:** This is the recommended approach for providing stronger resilience and achieving higher host availability, especially for primary boot disks. This is done via kernel arguments (`rd.multipath=default`) for the primary disk or by using Butane/Ignition configuration for secondary disks.
-- **Rely on Default Single-Path Configuration:** This avoids the complexity of installing Multipathd and configuring the device mapper during the Day 1 installation process. Suitable if the underlying storage only provides a single path, or if redundancy is handled exclusively at the storage array level.
+- **Enable Multipathing at Installation Time:** This is the recommended approach for providing stronger resilience.
+  - **For Primary Boot Disks:** Configured via kernel arguments (`rd.multipath=default`) passed to the installer.
+  - **For Secondary Data Disks:** Configured using **Ignition/Butane manifests** to define the necessary `multipathd` systemd units and filesystem mounts, ensuring consistency from Day 1.
+- **Rely on Default Single-Path Configuration:** This avoids the complexity of installing Multipathd and configuring the device mapper during the Day 1 installation process. Suitable only if the underlying storage provides a single path or redundancy is handled at the array level.
 
 **Implications**
 
-- **Enable Multipathing at Installation Time:** Mandatory in setups where non-optimized paths result in I/O system errors. For secondary disks, requires careful use of Ignition configuration via Butane config and systemd units.
+- **Enable Multipathing at Installation Time:** Mandatory in setups where non-optimized paths result in I/O system errors.
+  - **Boot Disk:** Requires explicit kernel arguments.
+  - **Secondary Disk:** Requires maintaining custom Butane/Ignition manifests. Failure to configure the systemd units correctly via Ignition will result in secondary disks mounting as single paths, creating a hidden Single Point of Failure.
 - **Rely on Default Single-Path Configuration:** Increases the vulnerability of the node to a Single Point of Failure (SPoF) if a network path, cable, or HBA connected to the storage array fails. Not recommended for production environments requiring high availability.
 
 **Agreeing Parties**
@@ -1038,7 +1164,7 @@ Installation Boot Device is SAN device.
 
 ---
 
-## OCP-BM-26
+## OCP-BM-29
 
 **Title**
 RHCOS Multipath Installation Target Naming
@@ -1080,7 +1206,7 @@ Multipathing to be enabled.
 
 ---
 
-## OCP-BM-27
+## OCP-BM-30
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -1120,7 +1246,7 @@ Installation Boot Device is Local Device.
 
 ---
 
-## OCP-BM-28
+## OCP-BM-31
 
 **Title**
 Control Plane Storage Performance Validation Strategy
@@ -1160,7 +1286,7 @@ N/A
 
 ---
 
-## OCP-BM-29
+## OCP-BM-32
 
 **Title**
 RHCOS /var Partitioning Strategy (General Data Isolation)
@@ -1200,7 +1326,7 @@ The cluster will utilize large disk sizes (e.g., > 100GB) and may host applicati
 
 ---
 
-## OCP-BM-30
+## OCP-BM-33
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -1240,7 +1366,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-31
+## OCP-BM-34
 
 **Title**
 Control Plane Etcd Storage Partitioning Strategy
@@ -1281,7 +1407,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-32
+## OCP-BM-35
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -1321,7 +1447,7 @@ N/A
 
 ---
 
-## OCP-BM-33
+## OCP-BM-36
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1364,7 +1490,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-34
+## OCP-BM-37
 
 **Title**
 Storage Architecture for the Internal Image Registry
@@ -1412,7 +1538,7 @@ N/A
 
 ---
 
-## OCP-BM-35
+## OCP-BM-38
 
 **Title**
 Internal Image Registry Management State on Bare Metal UPI
@@ -1453,7 +1579,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-36
+## OCP-BM-39
 
 **Title**
 Internal Image Registry Persistent Volume Claim (PVC) Provisioning Strategy
@@ -1495,7 +1621,7 @@ The Internal Image Registry will be switched to the Managed management state pos
 
 ---
 
-## OCP-BM-37
+## OCP-BM-40
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1536,7 +1662,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-38
+## OCP-BM-41
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1577,7 +1703,7 @@ N/A
 
 ---
 
-## OCP-BM-39
+## OCP-BM-42
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1618,7 +1744,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-40
+## OCP-BM-43
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1659,7 +1785,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-41
+## OCP-BM-44
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1701,7 +1827,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-42
+## OCP-BM-45
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1742,7 +1868,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-43
+## OCP-BM-46
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -1782,7 +1908,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-44
+## OCP-BM-47
 
 **Title**
 Bare Metal Node Firmware Management
@@ -1822,7 +1948,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-45
+## OCP-BM-48
 
 **Title**
 Bare Metal Node Remediation

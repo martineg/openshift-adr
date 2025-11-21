@@ -227,6 +227,47 @@ N/A
 ## OCP-BASE-06
 
 **Title**
+Control Plane Schedulability Configuration
+
+**Architectural Question**
+Should control plane nodes be configured to accept application workloads (be schedulable) by setting the `mastersSchedulable` parameter to true?
+
+**Issue or Problem**
+Configuring control plane nodes to accept application workloads increases resource utilization and efficiency for smaller clusters but requires explicitly overriding the default Kubernetes manifest configuration, potentially leading to additional subscription costs.
+
+**Assumption**
+Cluster topology is standard.
+
+**Alternatives**
+
+- Configure Control Plane Nodes as Schedulable
+- Configure Control Plane Nodes as Unschedulable (Default)
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Configure Control Plane Nodes as Schedulable:** This configuration is required for 3-node/Compact HA clusters to efficiently run application workloads. It maximizes the resource utilization of the control plane nodes.
+- **Configure Control Plane Nodes as Unschedulable (Default):** This configuration ensures separation between critical platform components and user workloads, providing dedicated stability and resilience, which is typically recommended for large or Standard HA clusters. This relies on the default manifest setting of `mastersSchedulable: false`.
+
+**Implications**
+
+- **Configure Control Plane Nodes as Schedulable:** Additional subscriptions are required because configuring control plane nodes as schedulable causes them to be treated as compute nodes for licensing purposes. If the cluster has zero dedicated compute nodes, the application ingress load balancer must be configured to route HTTP/HTTPS traffic to the control plane nodes.
+- **Configure Control Plane Nodes as Unschedulable (Default):** Requires the deployment of separate worker nodes for hosting application workloads (Standard HA topology).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BASE-07
+
+**Title**
 Infrastructure nodes
 
 **Architectural Question**
@@ -266,7 +307,48 @@ Cluster has a standard HA topology.
 
 ---
 
-## OCP-BASE-07
+## OCP-BASE-08
+
+**Title**
+Dedicated Infrastructure Node Count for HA
+
+**Architectural Question**
+What is the minimum required size (replica count) for the dedicated infrastructure node pool to ensure high availability of critical platform services (e.g., Ingress, Registry, Monitoring)?
+
+**Issue or Problem**
+The decision to isolate infrastructure services onto dedicated nodes requires defining the node count necessary to meet site-level High Availability (HA) requirements, balancing operational costs against service resilience.
+
+**Assumption**
+Dedicated Infrastructure Nodes strategy has been selected.
+
+**Alternatives**
+
+- 2 Dedicated Infrastructure Nodes
+- 3 Dedicated Infrastructure Nodes
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **2 Dedicated Infrastructure Nodes:** Minimizes the additional infrastructure footprint and costs while still providing basic High Availability (HA) against a single node failure. This configuration requires at least two additional nodes for high availability.
+- **3 Dedicated Infrastructure Nodes:** This is the preferred practice for production and large-scale clusters, providing maximum redundancy and aligning with the recommended count for control plane resilience, ensuring platform services can survive a single domain failure and allow maintenance with zero platform service interruption.
+
+**Implications**
+
+- **2 Dedicated Infrastructure Nodes:** This configuration requires careful planning. While providing basic HA, the cluster may experience performance degradation or instability during node maintenance or failure events, as the remaining node(s) must handle the full load.
+- **3 Dedicated Infrastructure Nodes:** Highest infrastructure and operational overhead due to managing the additional machines, but offers strong resource isolation and fault tolerance.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BASE-09
 
 **Title**
 Platform infrastructure
@@ -310,7 +392,7 @@ Cloud model has been selected.
 
 ---
 
-## OCP-BASE-08
+## OCP-BASE-10
 
 **Title**
 Multiple site deployment mode.
@@ -360,7 +442,7 @@ N/A
 
 ---
 
-## OCP-BASE-09
+## OCP-BASE-11
 
 **Title**
 Intra-Site Availability Zone / Failure Domain Strategy
@@ -402,7 +484,7 @@ N/A
 
 ---
 
-## OCP-BASE-10
+## OCP-BASE-12
 
 **Title**
 Boot disks encryption
@@ -448,7 +530,7 @@ Platform infrastructure is vSphere or baremetal.
 
 ---
 
-## OCP-BASE-11
+## OCP-BASE-13
 
 **Title**
 Mirrored images registry (Disconnected Environments)
@@ -490,7 +572,7 @@ Environment is disconnected.
 
 ---
 
-## OCP-BASE-12
+## OCP-BASE-14
 
 **Title**
 Fleet Management
