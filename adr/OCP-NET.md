@@ -488,6 +488,46 @@ N/A
 ## OCP-NET-13
 
 **Title**
+OVN-Kubernetes Overlay Network Parameter Configuration
+
+**Architectural Question**
+Should the default network parameters for the OVN-Kubernetes Geneve overlay (MTU and Geneve Port) be accepted or explicitly configured during installation?
+
+**Issue or Problem**
+The OVN-Kubernetes Geneve overlay parameters, such as the maximum transmission unit (MTU) and Geneve Port, must be correctly configured to ensure efficient network performance. The default MTU detection might be inappropriate or inconsistent in certain network environments, and the Geneve Port (default 6081) cannot be changed after installation, requiring an early decision to prevent future conflicts.
+
+**Assumption**
+CNI Plugin Selection is OVN-Kubernetes.
+
+**Alternatives**
+
+- Rely on Automatic/Default Parameters
+- Explicitly Define Custom Parameters
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Rely on Automatic/Default Parameters:** The MTU is detected automatically based on the MTU of the primary network interface, which is normally sufficient and simplifies installation. Using the default Geneve Port (6081) minimizes configuration complexity.
+- **Explicitly Define Custom Parameters:** This is necessary if the underlying network topology mandates a specific MTU value (to avoid fragmentation) or if the default Geneve Port (6081) conflicts with existing network services, requiring a different port.
+
+**Implications**
+
+- **Rely on Automatic/Default Parameters:** Failure to correctly detect the MTU or a conflict with the default Geneve Port may lead to network failures. It is generally advised that you do not need to override the detected MTU.
+- **Explicitly Define Custom Parameters:** Requires setting the `mtu` and `genevePort` fields in the `ovnKubernetesConfig` object. Note that the `genevePort` value cannot be changed after cluster installation.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-14
+
+**Title**
 OVN-Kubernetes Internal Subnet Configuration Strategy
 
 **Architectural Question**
@@ -525,7 +565,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-14
+## OCP-NET-15
 
 **Title**
 OVN-Kubernetes Internal Masquerade Subnet Configuration
@@ -565,7 +605,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-15
+## OCP-NET-16
 
 **Title**
 OVN-Kubernetes Egress Traffic Routing Via Host Network Stack
@@ -605,7 +645,51 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-16
+## OCP-NET-17
+
+**Title**
+OVN-Kubernetes IPsec Encryption Mode
+
+**Architectural Question**
+Should OVN-Kubernetes be configured to encrypt traffic using IPsec, and if so, what scope of traffic (pod-to-pod only, or pod-to-external and pod-to-pod) will be encrypted?
+
+**Issue or Problem**
+A decision is needed to balance the security requirement of encrypted network traffic against potential performance overhead and the operational scope of encryption.
+
+**Assumption**
+CNI Plugin Selection is OVN-Kubernetes.
+
+**Alternatives**
+
+- Disabled (No IPsec)
+- Full IPsec Mode
+- External IPsec Mode
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Disabled (No IPsec):** This approach minimizes performance overhead and operational complexity associated with managing encrypted tunnels.
+- **Full IPsec Mode:** This option maximizes security by enabling IPsec for both pod traffic and network traffic with external hosts.
+- **External IPsec Mode:** This approach enables IPsec selectively for network traffic with external hosts only.
+
+**Implications**
+
+- **Disabled (No IPsec):** Network traffic between pods and to external hosts is unencrypted at the network layer.
+- **Full IPsec Mode:** This mode requires setting `ipsecConfig: mode: Full` and introduces cryptographic overhead to both internal and external traffic, potentially impacting latency and throughput.
+- **External IPsec Mode:** This mode adds cryptographic overhead only to external traffic, with internal pod-to-pod communication remaining unencrypted.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-18
 
 **Title**
 OVN-Kubernetes Cluster Route Advertisement Strategy
@@ -646,7 +730,7 @@ N/A
 
 ---
 
-## OCP-NET-17
+## OCP-NET-19
 
 **Title**
 OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
@@ -687,7 +771,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-18
+## OCP-NET-20
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
@@ -728,7 +812,7 @@ N/A
 
 ---
 
-## OCP-NET-19
+## OCP-NET-21
 
 **Title**
 Ingress Controller Strategy
@@ -772,7 +856,7 @@ N/A
 
 ---
 
-## OCP-NET-20
+## OCP-NET-22
 
 **Title**
 Ingress Controller Replica Count
@@ -812,7 +896,7 @@ N/A
 
 ---
 
-## OCP-NET-21
+## OCP-NET-23
 
 **Title**
 SSL/TLS Termination Strategy
@@ -855,7 +939,7 @@ N/A
 
 ---
 
-## OCP-NET-22
+## OCP-NET-24
 
 **Title**
 Access Control for Cluster Metrics Port (TCP 1936)
@@ -896,7 +980,7 @@ N/A
 
 ---
 
-## OCP-NET-23
+## OCP-NET-25
 
 **Title**
 Default Network Policy (Pod Isolation)
@@ -940,7 +1024,7 @@ N/A
 
 ---
 
-## OCP-NET-24
+## OCP-NET-26
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -983,7 +1067,7 @@ Cluster uses OVN-Kubernetes CNI.
 
 ---
 
-## OCP-NET-25
+## OCP-NET-27
 
 **Title**
 OVN-Kubernetes Network Policy Audit Log Destination
@@ -1027,7 +1111,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-26
+## OCP-NET-28
 
 **Title**
 Egress IP Address Strategy
@@ -1071,7 +1155,7 @@ N/A
 
 ---
 
-## OCP-NET-27
+## OCP-NET-29
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -1116,7 +1200,7 @@ N/A
 
 ---
 
-## OCP-NET-28
+## OCP-NET-30
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection
@@ -1157,7 +1241,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-29
+## OCP-NET-31
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy
@@ -1198,7 +1282,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-30
+## OCP-NET-32
 
 **Title**
 SR-IOV Virtual Function Bonding Mechanism
