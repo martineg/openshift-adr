@@ -6,7 +6,7 @@ import os
 def renumber_adrs(file_path, prefix, dry_run=False):
     """
     Reads a markdown file, finds headers matching '## PREFIX-xx',
-    and renumbers them sequentially starting from 01.
+    renumbers them sequentially, and overwrites the file inline.
     """
     
     # Regex to match lines starting with '## PREFIX-Digits'
@@ -24,8 +24,8 @@ def renumber_adrs(file_path, prefix, dry_run=False):
     counter = 1
     changed_count = 0
 
-    print(f"Processing: {file_path}")
-    print(f"Prefix:     {prefix}\n")
+    print(f"Target File: {file_path}")
+    print(f"Prefix:      {prefix}\n")
 
     for line in lines:
         match = pattern.match(line)
@@ -54,24 +54,22 @@ def renumber_adrs(file_path, prefix, dry_run=False):
     print(f"Total IDs modified:      {changed_count}")
 
     if not dry_run:
-        # Save to the same directory as the source file
-        source_dir = os.path.dirname(file_path)
-        source_filename = os.path.basename(file_path)
-        output_path = os.path.join(source_dir, f"renumbered_{source_filename}")
-        
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.writelines(new_lines)
-        print(f"\nSuccess! Output saved to: {output_path}")
-        print("Review the file, then rename it to overwrite original if correct.")
+        # INLINE MODIFICATION: Overwrite the original file
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.writelines(new_lines)
+            print(f"\nSuccess! File '{os.path.basename(file_path)}' has been updated inline.")
+        except IOError as e:
+            print(f"\nError writing to file: {e}")
     else:
-        print("\n[Dry Run] No files were written.")
+        print("\n[Dry Run] No changes were applied to the file.")
 
 def main():
-    parser = argparse.ArgumentParser(description="Renumber ADRs in the sibling 'adr' directory.")
+    parser = argparse.ArgumentParser(description="Renumber ADRs in the sibling 'adr' directory inline.")
     
     # Positional argument: Prefix only (e.g., OCP-BM)
-    parser.add_argument("prefix", help="The ADR prefix (e.g., OCP-BM). This assumes the filename is OCP-BM.md")
-    parser.add_argument("--dry-run", action="store_true", help="Print changes without writing to disk")
+    parser.add_argument("prefix", help="The ADR prefix (e.g., OCP-BM). Assumes filename is OCP-BM.md")
+    parser.add_argument("--dry-run", action="store_true", help="Print changes without overwriting the file")
 
     args = parser.parse_args()
 

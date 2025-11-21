@@ -3,7 +3,7 @@ Source: Uploaded **Red Hat production docs (PDFs)**.
 Baseline: **Uploaded ADRs** (`ARCHITECTURE DECISION RECORDS FOR...`).
 Dictionary: `adr_prefix_dictionary.md`.
 
-Task: Suggest NEW ADs from PDFs not in Baseline.
+Task: Suggest NEW ADRs from PDFs not in Baseline.
 
 1. Analyze PDFs. 2. Classify via Dictionary. 3. Check Baseline.
 
