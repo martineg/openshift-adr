@@ -1079,34 +1079,34 @@ N/A
 ## OCP-BM-27
 
 **Title**
-Bare Metal Node OS Disk Partitioning for Container Storage
+RHCOS /var Partitioning Strategy (General Data Isolation)
 
 **Architectural Question**
-How should the root disk be partitioned on bare metal nodes to accommodate container runtime storage (`/var/lib/containers`), specifically concerning separation from the operating system partition, and what filesystem options should be used?
+Should the core RHCOS boot disk be partitioned to include a separate, dedicated partition for the entire `/var` directory to manage system log/data growth and simplify subsequent node reinstallation?
 
 **Issue or Problem**
-If the container storage (`/var/lib/containers`) directory resides on the same partition as the root filesystem, aggressive application logging or large image pull caches can lead to the control plane nodes or worker nodes running out of disk space, potentially causing instability or failure. Defining a dedicated partition ensures predictable capacity management and allows for specific filesystem tuning.
+Allowing the potentially volatile contents of the `/var` directory (which holds data like logs and container images) to remain solely on the root partition risks system instability due to aggressive application logging or large data growth consuming the root filesystem space. Implementing a dedicated partition isolates this volatile data.
 
 **Assumption**
-N/A
+The cluster will utilize large disk sizes (e.g., > 100GB) and may host applications requiring logging or large caches that reside in `/var`.
 
 **Alternatives**
 
-- Dedicated partition for `/var/lib/containers`
-- Co-locate `/var/lib/containers` on the root partition
+- Dedicated Partition for /var
+- Co-locate /var on the Root Partition (Default)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Dedicated partition for `/var/lib/containers`:** This is the recommended approach for workload partitioning and robustness, explicitly setting up a separate partition, formatted with `xfs` and mounted using `prjquota` for appropriate resource handling. This practice isolates volatile container data storage from the core OS filesystems.
-- **Co-locate `/var/lib/containers` on the root partition:** Simplifies the initial installation process by relying on the default RHCOS partitioning scheme. However, this risks system instability if container images or ephemeral volumes consume excessive disk space, impacting the root filesystem.
+- **Dedicated Partition for /var:** This approach prevents data growth within `/var` (such as audit data or logs) from filling up the root file system. It is recommended for disk sizes larger than 100GB, and especially larger than 1TB. This method also supports reinstalling OpenShift Container Platform while keeping the `/var` data intact, accelerating recovery by preventing the need for massive container pulls post-reinstall.
+- **Co-locate /var on the Root Partition (Default):** This option relies on the default disk partitioning created during the RHCOS installation, which simplifies the initial configuration process.
 
 **Implications**
 
-- **Dedicated partition for `/var/lib/containers`:** Requires custom Ignition configuration overrides within the installation manifest (e.g., `ClusterInstance` or `BareMetalHost` definition). This adds complexity to the installation process.
-- **Co-locate `/var/lib/containers` on the root partition:** Higher risk of disk exhaustion affecting system stability if container usage is heavy or unpredictable. Management of disk quotas becomes less granular.
+- **Dedicated Partition for /var:** This configuration increases complexity during the installation process, as it requires setting up a custom MachineConfig manifest (e.g., using a Butane config). Additionally, when a separate `/var` partition is created, mixing different instance types for compute nodes is not supported if those instance types do not have the same storage device name.
+- **Co-locate /var on the Root Partition (Default):** This configuration carries a high risk of disk exhaustion affecting system stability if container usage, logs, or other system data within `/var` is heavy or unpredictable.
 
 **Agreeing Parties**
 
@@ -1119,34 +1119,74 @@ N/A
 ## OCP-BM-28
 
 **Title**
-Control Plane Etcd Storage Partitioning Strategy
+Bare Metal Node OS Disk Partitioning for Container Storage
 
 **Architectural Question**
-Should etcd data storage (`/var/lib/etcd`) on control plane nodes be isolated onto a dedicated partition separate from the root filesystem to ensure performance and prevent resource conflicts?
+How should the root disk be partitioned on bare metal nodes to accommodate container runtime storage (`/var/lib/containers`), specifically concerning separation from the operating system partition, and what filesystem options should be used?
 
 **Issue or Problem**
-Etcd is extremely sensitive to disk performance, requiring a 10 ms p99 fsync duration. If etcd data is co-located on the root filesystem, aggressive logging or system maintenance operations may introduce contention and jitter, risking cluster instability and leader elections.
+If the container storage (`/var/lib/containers`) directory resides on the same partition as its parent filesystem (Root or `/var`), aggressive application logging or large image pull caches can lead to the node running out of disk space. This potentially causes instability by starving the OS or critical logging services.
 
 **Assumption**
-N/A
+General /var Partitioning Strategy is defined.
 
 **Alternatives**
 
-- Dedicated partition for /var/lib/etcd
-- Co-locate /var/lib/etcd on the root partition
+- Dedicated partition for `/var/lib/containers`
+- Co-locate `/var/lib/containers` on the parent partition (Root or `/var`)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Dedicated partition for /var/lib/etcd:** This separates the critical etcd workload from the operating system and other volatile system data (like logs), mitigating the risk of data growth in the root partition affecting etcd performance.
-- **Co-locate /var/lib/etcd on the root partition:** This is the default RHCOS partitioning scheme, simplifying the initial installation process by avoiding custom Ignition configurations.
+- **Dedicated partition for `/var/lib/containers`:** This is the recommended approach for workload partitioning and robustness, explicitly setting up a separate partition, formatted with `xfs` and mounted using `prjquota` for appropriate resource handling. This practice isolates volatile container data storage from the core OS filesystems.
+- **Co-locate `/var/lib/containers` on the parent partition (Root or `/var`):** Simplifies the initial installation process by relying on the default partitioning scheme. However, this risks system instability if container images or ephemeral volumes consume excessive disk space, impacting the underlying filesystem.
 
 **Implications**
 
-- **Dedicated partition for /var/lib/etcd:** Requires custom MachineConfig or Butane manifest configurations during the installation phase to define and mount the separate partition.
-- **Co-locate /var/lib/etcd on the root partition:** Increases the risk of disk exhaustion or I/O contention affecting etcd, potentially leading to performance instability or cluster outages if the underlying storage does not meet the strict latency requirements.
+- **Dedicated partition for `/var/lib/containers`:** Requires custom Ignition configuration overrides within the installation manifest (e.g., `ClusterInstance` or `BareMetalHost` definition). This adds complexity to the installation process.
+- **Co-locate `/var/lib/containers` on the parent partition (Root or `/var`):** Higher risk of disk exhaustion affecting system stability if container usage is heavy or unpredictable. Management of disk quotas becomes less granular.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-29
+
+**Title**
+Control Plane Etcd Storage Partitioning Strategy
+
+**Architectural Question**
+Should etcd data storage (`/var/lib/etcd`) on control plane nodes be isolated onto a dedicated partition separate from the root (or `/var`) filesystem to ensure performance and prevent resource conflicts?
+
+**Issue or Problem**
+Etcd is extremely sensitive to disk performance, requiring a 10 ms p99 fsync duration. If etcd data is co-located with other volatile system data (logs, container images), aggressive writing or system maintenance operations may introduce contention and jitter, risking cluster instability and leader elections.
+
+**Assumption**
+General /var Partitioning Strategy is defined.
+
+**Alternatives**
+
+- Dedicated partition for `/var/lib/etcd`
+- Co-locate `/var/lib/etcd` on the parent partition
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Dedicated partition for `/var/lib/etcd`:** This separates the critical etcd workload from the operating system and other volatile system data (like logs in `/var/log`), mitigating the risk of data growth or I/O contention affecting etcd performance.
+- **Co-locate `/var/lib/etcd` on the parent partition:** This is the default RHCOS partitioning scheme, simplifying the initial installation process by avoiding custom Ignition configurations.
+
+**Implications**
+
+- **Dedicated partition for `/var/lib/etcd`:** Requires custom MachineConfig or Butane manifest configurations during the installation phase to define and mount the separate partition.
+- **Co-locate `/var/lib/etcd` on the parent partition:** Increases the risk of disk exhaustion or I/O contention affecting etcd, potentially leading to performance instability or cluster outages if the underlying storage does not meet the strict latency requirements.
 
 **Agreeing Parties**
 
@@ -1157,7 +1197,7 @@ N/A
 
 ---
 
-## OCP-BM-29
+## OCP-BM-30
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -1197,7 +1237,7 @@ N/A
 
 ---
 
-## OCP-BM-30
+## OCP-BM-31
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1240,7 +1280,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-31
+## OCP-BM-32
 
 **Title**
 Storage Architecture for the Internal Image Registry (PVC vs. Object Storage)
@@ -1285,7 +1325,7 @@ The cluster is installed on bare metal infrastructure and requires persistent im
 
 ---
 
-## OCP-BM-32
+## OCP-BM-33
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1326,7 +1366,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-33
+## OCP-BM-34
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1367,7 +1407,7 @@ N/A
 
 ---
 
-## OCP-BM-34
+## OCP-BM-35
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1408,7 +1448,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-35
+## OCP-BM-36
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1449,7 +1489,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-36
+## OCP-BM-37
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1491,7 +1531,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-37
+## OCP-BM-38
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1532,7 +1572,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-38
+## OCP-BM-39
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -1572,7 +1612,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-39
+## OCP-BM-40
 
 **Title**
 Bare Metal Node Firmware Management
@@ -1612,7 +1652,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-40
+## OCP-BM-41
 
 **Title**
 Bare Metal Node Remediation
