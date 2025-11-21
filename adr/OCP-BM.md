@@ -1078,6 +1078,47 @@ N/A
 ## OCP-BM-27
 
 **Title**
+Control Plane Etcd Storage Partitioning Strategy
+
+**Architectural Question**
+Should etcd data storage (`/var/lib/etcd`) on control plane nodes be isolated onto a dedicated partition separate from the root filesystem to ensure performance and prevent resource conflicts?
+
+**Issue or Problem**
+Etcd is extremely sensitive to disk performance, requiring a 10 ms p99 fsync duration. If etcd data is co-located on the root filesystem, aggressive logging or system maintenance operations may introduce contention and jitter, risking cluster instability and leader elections.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Dedicated partition for /var/lib/etcd
+- Co-locate /var/lib/etcd on the root partition
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Dedicated partition for /var/lib/etcd:** This separates the critical etcd workload from the operating system and other volatile system data (like logs), mitigating the risk of data growth in the root partition affecting etcd performance.
+- **Co-locate /var/lib/etcd on the root partition:** This is the default RHCOS partitioning scheme, simplifying the initial installation process by avoiding custom Ignition configurations.
+
+**Implications**
+
+- **Dedicated partition for /var/lib/etcd:** Requires custom MachineConfig or Butane manifest configurations during the installation phase to define and mount the separate partition.
+- **Co-locate /var/lib/etcd on the root partition:** Increases the risk of disk exhaustion or I/O contention affecting etcd, potentially leading to performance instability or cluster outages if the underlying storage does not meet the strict latency requirements.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-28
+
+**Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
 
 **Architectural Question**
@@ -1087,7 +1128,7 @@ When reinstalling Red Hat Enterprise Linux CoreOS (RHCOS) on User-Provisioned In
 When performing an RHCOS reinstallation, particularly to recover a node or perform an OS upgrade, existing data partitions (e.g., separate `/var` partitions created during Day 1 configuration) must either be explicitly preserved or risk being overwritten by the `coreos-installer`. A strategy is needed to ensure continuity of data or configuration residing on these preserved partitions.
 
 **Assumption**
-Nodes running RHCOS may contain valuable data or configuration on partitions separate from the root filesystem that must survive an OS reinstallation.
+N/A
 
 **Alternatives**
 
@@ -1115,7 +1156,7 @@ Nodes running RHCOS may contain valuable data or configuration on partitions sep
 
 ---
 
-## OCP-BM-28
+## OCP-BM-29
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1158,7 +1199,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-29
+## OCP-BM-30
 
 **Title**
 Storage Architecture for the Internal Image Registry (PVC vs. Object Storage)
@@ -1203,7 +1244,7 @@ The cluster is installed on bare metal infrastructure and requires persistent im
 
 ---
 
-## OCP-BM-30
+## OCP-BM-31
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1244,7 +1285,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-31
+## OCP-BM-32
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1285,7 +1326,7 @@ N/A
 
 ---
 
-## OCP-BM-32
+## OCP-BM-33
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1326,7 +1367,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-33
+## OCP-BM-34
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1367,7 +1408,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-34
+## OCP-BM-35
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1409,7 +1450,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-35
+## OCP-BM-36
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1450,7 +1491,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-36
+## OCP-BM-37
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -1490,7 +1531,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-37
+## OCP-BM-38
 
 **Title**
 Bare Metal Node Firmware Management
@@ -1530,7 +1571,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-38
+## OCP-BM-39
 
 **Title**
 Bare Metal Node Remediation

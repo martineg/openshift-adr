@@ -203,6 +203,47 @@ Cluster is in a connected environment.
 ## OCP-NET-06
 
 **Title**
+Outbound HTTPS Trust Management Strategy (Proxy/Custom CA)
+
+**Architectural Question**
+When utilizing an HTTPS proxy or connecting to external services signed by a corporate Certificate Authority (CA), how will the cluster ensure that the custom CA is trusted by RHCOS nodes and core components?
+
+**Issue or Problem**
+If a cluster uses an HTTPS proxy whose identity certificate is signed by an authority not present in the default Red Hat Enterprise Linux CoreOS (RHCOS) trust bundle, core cluster functionality (updates, OperatorHub access, provisioning) will fail unless the custom CA is added to the system trust store.
+
+**Assumption**
+Outbound Connectivity utilizes an HTTPS proxy or connects to external services requiring a custom trust chain.
+
+**Alternatives**
+
+- Rely Solely on Default RHCOS Trust Bundle (No Custom CA)
+- Augment Trust Bundle via additionalTrustBundle Configuration
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Rely Solely on Default RHCOS Trust Bundle (No Custom CA):** This simplifies installation as no additional configuration or external CA management is required, relying entirely on the CAs provided by the RHCOS system trust bundle.
+- **Augment Trust Bundle via additionalTrustBundle Configuration:** This is required if the proxy's identity certificate is signed by an authority outside the RHCOS trust bundle, allowing the installation program to generate a Config Map (`user-ca-bundle`) that merges the custom CA with the RHCOS trust bundle.
+
+**Implications**
+
+- **Rely Solely on Default RHCOS Trust Bundle (No Custom CA):** Connection to corporate proxy servers or external services that rely on internal CAs will fail, leading to cluster functional failures (e.g., updates, image pulls) if the proxy is mandatory.
+- **Augment Trust Bundle via additionalTrustBundle Configuration:** Requires the administrator to obtain and correctly configure the CA certificate in the `install-config.yaml` file, creating a dependency on the correct management of this custom trust store.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-07
+
+**Title**
 External Firewall Rule Granularity (Connected Environments)
 
 **Architectural Question**
@@ -241,7 +282,7 @@ Cluster is in a connected environment and outbound connectivity is set to Direct
 
 ---
 
-## OCP-NET-07
+## OCP-NET-08
 
 **Title**
 Load Balancer Strategy (API & Ingress)
@@ -282,7 +323,7 @@ N/A
 
 ---
 
-## OCP-NET-08
+## OCP-NET-09
 
 **Title**
 API and Application Ingress Load Balancer Topology Strategy
@@ -323,7 +364,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-NET-09
+## OCP-NET-10
 
 **Title**
 CNI Plugin Selection (Platform Specific)
@@ -364,7 +405,7 @@ N/A
 
 ---
 
-## OCP-NET-10
+## OCP-NET-11
 
 **Title**
 Pod Network CIDR Selection
@@ -404,7 +445,7 @@ N/A
 
 ---
 
-## OCP-NET-11
+## OCP-NET-12
 
 **Title**
 Service Network CIDR Selection
@@ -444,7 +485,7 @@ N/A
 
 ---
 
-## OCP-NET-12
+## OCP-NET-13
 
 **Title**
 OVN-Kubernetes Internal Subnet Configuration Strategy
@@ -484,7 +525,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-13
+## OCP-NET-14
 
 **Title**
 OVN-Kubernetes Egress Traffic Routing Via Host Network Stack
@@ -524,7 +565,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-14
+## OCP-NET-15
 
 **Title**
 OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
@@ -565,7 +606,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-15
+## OCP-NET-16
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
@@ -606,7 +647,7 @@ N/A
 
 ---
 
-## OCP-NET-16
+## OCP-NET-17
 
 **Title**
 Ingress Controller Strategy
@@ -650,7 +691,7 @@ N/A
 
 ---
 
-## OCP-NET-17
+## OCP-NET-18
 
 **Title**
 Ingress Controller Replica Count
@@ -690,7 +731,7 @@ N/A
 
 ---
 
-## OCP-NET-18
+## OCP-NET-19
 
 **Title**
 SSL/TLS Termination Strategy
@@ -733,7 +774,7 @@ N/A
 
 ---
 
-## OCP-NET-19
+## OCP-NET-20
 
 **Title**
 Access Control for Cluster Metrics Port (TCP 1936)
@@ -774,7 +815,7 @@ N/A
 
 ---
 
-## OCP-NET-20
+## OCP-NET-21
 
 **Title**
 Default Network Policy (Pod Isolation)
@@ -818,7 +859,7 @@ N/A
 
 ---
 
-## OCP-NET-21
+## OCP-NET-22
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -861,7 +902,7 @@ Cluster uses OVN-Kubernetes CNI.
 
 ---
 
-## OCP-NET-22
+## OCP-NET-23
 
 **Title**
 Egress IP Address Strategy
@@ -905,7 +946,7 @@ N/A
 
 ---
 
-## OCP-NET-23
+## OCP-NET-24
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -950,7 +991,7 @@ N/A
 
 ---
 
-## OCP-NET-24
+## OCP-NET-25
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection
@@ -991,7 +1032,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-25
+## OCP-NET-26
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy
@@ -1032,7 +1073,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-26
+## OCP-NET-27
 
 **Title**
 SR-IOV Virtual Function Bonding Mechanism
