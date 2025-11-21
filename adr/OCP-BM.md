@@ -547,6 +547,47 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 ## OCP-BM-14
 
 **Title**
+RHCOS Live Installer Custom CA Trust Strategy
+
+**Architectural Question**
+How will a custom Certificate Authority (CA) required to access secure installation artifacts (like the Ignition Config over HTTPS) be trusted by the Red Hat Enterprise Linux CoreOS (RHCOS) live installer environment during User-Provisioned Infrastructure (UPI) boot?
+
+**Issue or Problem**
+If the Ignition configuration files are served over HTTPS secured by a non-standard or corporate Certificate Authority (CA), the minimal live RHCOS installer environment (booted from ISO/PXE) will fail to download the configurations unless the custom CA is explicitly trusted. The standard mechanism for augmenting the cluster's trust bundle applies only after the node installs and boots.
+
+**Assumption**
+The cluster installation method is User-Provisioned Infrastructure (UPI) or PXE/ISO installation. The Ignition Configuration file URL uses HTTPS secured by a custom CA.
+
+**Alternatives**
+
+- Customize Live Media with Embedded CA (--ignition-ca)
+- Rely on Default RHCOS Trust Bundle (Use HTTP or Public CA)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Customize Live Media with Embedded CA (--ignition-ca):** This method provides the required trust for network-based installations that rely on a custom Certificate Authority (CA) during the minimal boot phase. It is achieved by using the `coreos-installer iso customize` or `coreos-installer pxe customize` subcommands with the `--ignition-ca cert.pem` flag.
+- **Rely on Default RHCOS Trust Bundle (Use HTTP or Public CA):** This approach simplifies the installation process by avoiding the media customization step. If relying on the default RHCOS trust bundle, the Ignition config must either be obtained over plain HTTP, requiring the SHA512 hash validation (via `--ignition-hash`), or accessed via HTTPS signed by a CA already present in the RHCOS trust bundle.
+
+**Implications**
+
+- **Customize Live Media with Embedded CA (--ignition-ca):** Requires a pre-processing step to customize ("stamp") the ISO or initramfs file with the CA certificate before booting the media. This process ensures that the live environment can securely fetch the Ignition configuration files over HTTPS.
+- **Rely on Default RHCOS Trust Bundle (Use HTTP or Public CA):** If HTTPS with a custom CA is required for the Ignition URL, this option will result in the live installer failing to establish a secure connection, leading to installation failure. If the Ignition configuration is obtained via HTTP, the administrator must supply the SHA512 digest to `coreos-installer` using the `--ignition-hash` option to validate the content's integrity.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-BM-15
+
+**Title**
 RHCOS Artifact Sourcing Strategy
 
 **Architectural Question**
@@ -585,7 +626,7 @@ N/A
 
 ---
 
-## OCP-BM-15
+## OCP-BM-16
 
 **Title**
 RHCOS Day-1 Customization and Network Configuration Strategy
@@ -625,7 +666,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-16
+## OCP-BM-17
 
 **Title**
 Bare Metal Network Bridge Configuration Tooling Strategy
@@ -667,7 +708,7 @@ N/A
 
 ---
 
-## OCP-BM-17
+## OCP-BM-18
 
 **Title**
 Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
@@ -708,7 +749,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-18
+## OCP-BM-19
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -751,7 +792,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-19
+## OCP-BM-20
 
 **Title**
 Bare Metal Host Firmware Configuration Management
@@ -792,7 +833,7 @@ Provisioning workflow is GitOps ZTP.
 
 ---
 
-## OCP-BM-20
+## OCP-BM-21
 
 **Title**
 RHCOS Node Console Access Strategy
@@ -832,7 +873,7 @@ N/A
 
 ---
 
-## OCP-BM-21
+## OCP-BM-22
 
 **Title**
 RHCOS Installation Boot Device Selection
@@ -873,7 +914,7 @@ N/A
 
 ---
 
-## OCP-BM-22
+## OCP-BM-23
 
 **Title**
 iSCSI Boot Configuration Method for RHCOS
@@ -914,7 +955,7 @@ iSCSI boot device is used
 
 ---
 
-## OCP-BM-23
+## OCP-BM-24
 
 **Title**
 RHCOS Multipathing Enablement Strategy
@@ -955,7 +996,7 @@ Installation Boot Device is SAN device.
 
 ---
 
-## OCP-BM-24
+## OCP-BM-25
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -995,7 +1036,7 @@ Installation Boot Device is Local Device.
 
 ---
 
-## OCP-BM-25
+## OCP-BM-26
 
 **Title**
 Control Plane Storage Performance Validation Strategy
@@ -1035,7 +1076,7 @@ N/A
 
 ---
 
-## OCP-BM-26
+## OCP-BM-27
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -1075,7 +1116,7 @@ N/A
 
 ---
 
-## OCP-BM-27
+## OCP-BM-28
 
 **Title**
 Control Plane Etcd Storage Partitioning Strategy
@@ -1116,7 +1157,7 @@ N/A
 
 ---
 
-## OCP-BM-28
+## OCP-BM-29
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -1156,7 +1197,7 @@ N/A
 
 ---
 
-## OCP-BM-29
+## OCP-BM-30
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1199,7 +1240,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-30
+## OCP-BM-31
 
 **Title**
 Storage Architecture for the Internal Image Registry (PVC vs. Object Storage)
@@ -1244,7 +1285,7 @@ The cluster is installed on bare metal infrastructure and requires persistent im
 
 ---
 
-## OCP-BM-31
+## OCP-BM-32
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1285,7 +1326,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-32
+## OCP-BM-33
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1326,7 +1367,7 @@ N/A
 
 ---
 
-## OCP-BM-33
+## OCP-BM-34
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1367,7 +1408,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-34
+## OCP-BM-35
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1408,7 +1449,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-35
+## OCP-BM-36
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1450,7 +1491,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-36
+## OCP-BM-37
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1491,7 +1532,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-37
+## OCP-BM-38
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -1531,7 +1572,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-38
+## OCP-BM-39
 
 **Title**
 Bare Metal Node Firmware Management
@@ -1571,7 +1612,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-39
+## OCP-BM-40
 
 **Title**
 Bare Metal Node Remediation
