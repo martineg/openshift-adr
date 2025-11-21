@@ -55,9 +55,9 @@ Format:
 - **Scope:** Use Dictionary definitions.
 - **Duplicate Check:** Aggressively check Baseline. If core concept/alternatives exist (even with different phrasing), DISCARD.
 - **Quality:** **CRITICAL:**
-  1. Alternatives must be **explicitly documented** (GA/TP). NO "Invented", "Unsupported", "Deprecated", "Planned Deprecation".
-  2. **Mutually Exclusive:** Must be distinct **choices** (A vs B). NO "Mandatory" vs "Optional". If only one option exists, DISCARD.
-  3. **Architecture Level:** Suggest **Strategies** (e.g. IPI vs UPI), NOT low-level **parameters** or **implementation details**.
+  1. Alternatives must be **valid, supported strategies** (GA/TP).
+  2. **Strictly Forbidden:** Do NOT list alternatives that are **"Deprecated"**, **"Unsupported"**, **"Planned Deprecation"**, or explicitly **"Not Recommended"** / **"Advising Against"** in the docs.
+  3. **No "Right vs Wrong":** Do NOT compare a "Mandatory Configuration" vs a "Misconfiguration". If the docs say "Do not do X", then X is not a choice. DISCARD.
 - **Format:** Alts=titles. Justification/Implications=`**[Title]:** [Text]`.
 - **Parties:** Use `Person: #TODO#, Role: [Role]` from `adr_parties_role_dictionnary.md`.
 - **Semantics:** Assumption=Dependency. Justification=Why. Implication=Risk.
