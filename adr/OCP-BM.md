@@ -1041,6 +1041,48 @@ Installation Boot Device is SAN device.
 ## OCP-BM-26
 
 **Title**
+RHCOS Multipath Installation Target Naming
+
+**Architectural Question**
+When installing RHCOS onto a primary multipathed SAN storage device, should the `coreos-installer` target the generic device mapper path or the unique World Wide Name (WWN) symlink?
+
+**Issue or Problem**
+When multiple multipath devices are connected or device enumeration changes, using non-explicit device names can reduce installation reliability. A clear, persistent naming convention for the installation target device is required to maintain automation robustness.
+
+**Assumption**
+Installation Boot Device is SAN device.
+Multipathing to be enabled.
+
+**Alternatives**
+
+- Use World Wide Name (WWN) Symlink
+- Use Generic Device Mapper Path
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Use World Wide Name (WWN) Symlink:** This approach is explicitly recommended when multiple multipath devices are connected to the machine, or when greater explicitness is required, because the symlink provides persistence in device identification. The WWN symlink is available in `/dev/disk/by-id` and represents the target multipathed device.
+- **Use Generic Device Mapper Path:** This method simplifies the command line argument (e.g., `/dev/mapper/mpatha`).
+
+**Implications**
+
+- **Use World Wide Name (WWN) Symlink:** Requires an explicit step to identify the WWN ID of the target multipathed device, and the installation command must reference the persistent path (e.g., `/dev/disk/by-id/wwn-<wwn_ID>`).
+- **Use Generic Device Mapper Path:** If multiple multipath devices exist or if device mapping changes unpredictably, this path may be less reliable for automated provisioning compared to the explicit WWN symlink.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-27
+
+**Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
 
 **Architectural Question**
@@ -1078,7 +1120,7 @@ Installation Boot Device is Local Device.
 
 ---
 
-## OCP-BM-27
+## OCP-BM-28
 
 **Title**
 Control Plane Storage Performance Validation Strategy
@@ -1118,7 +1160,7 @@ N/A
 
 ---
 
-## OCP-BM-28
+## OCP-BM-29
 
 **Title**
 RHCOS /var Partitioning Strategy (General Data Isolation)
@@ -1158,7 +1200,7 @@ The cluster will utilize large disk sizes (e.g., > 100GB) and may host applicati
 
 ---
 
-## OCP-BM-29
+## OCP-BM-30
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -1198,7 +1240,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-30
+## OCP-BM-31
 
 **Title**
 Control Plane Etcd Storage Partitioning Strategy
@@ -1239,7 +1281,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-31
+## OCP-BM-32
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -1279,7 +1321,7 @@ N/A
 
 ---
 
-## OCP-BM-32
+## OCP-BM-33
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1322,7 +1364,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-33
+## OCP-BM-34
 
 **Title**
 Storage Architecture for the Internal Image Registry
@@ -1370,7 +1412,7 @@ N/A
 
 ---
 
-## OCP-BM-34
+## OCP-BM-35
 
 **Title**
 Internal Image Registry Management State on Bare Metal UPI
@@ -1411,7 +1453,49 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-35
+## OCP-BM-36
+
+**Title**
+Internal Image Registry Persistent Volume Claim (PVC) Provisioning Strategy
+
+**Architectural Question**
+Should the Persistent Volume Claim (PVC) required for the OpenShift Internal Image Registry storage be instantiated automatically using cluster defaults, or manually pre-provisioned for explicit configuration control?
+
+**Issue or Problem**
+The image registry must have persistent storage to operate in a managed/production state. Relying solely on the cluster default storage configuration (automatic PVC creation) may result in inadequate size, performance, or access mode configuration necessary for HA production registries (which typically require ReadWriteMany access).
+
+**Assumption**
+The Internal Image Registry will be switched to the Managed management state post-installation.
+
+**Alternatives**
+
+- Rely on Default Automatic PVC Creation
+- Manually Pre-provision Custom PVC
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Rely on Default Automatic PVC Creation:** This approach minimizes configuration complexity as the default OpenShift setting creates an `image-registry-storage` PVC automatically when the `claim` field is left blank in the registry configuration.
+- **Manually Pre-provision Custom PVC:** This method allows administrators to define explicit storage parameters, such as access mode (RWX is required for two or more replicas/HA) and capacity, and ensures compatibility if specialized requirements exist, such as using block storage with a `Recreate` rollout strategy.
+
+**Implications**
+
+- **Rely on Default Automatic PVC Creation:** The resulting storage configuration is bound by the cluster's default StorageClass, which may not meet the high-availability requirements (e.g., if the default StorageClass only provides ReadWriteOnce access).
+- **Manually Pre-provision Custom PVC:** Requires creating a PersistentVolumeClaim object (e.g., via a `pvc.yaml` file) and explicitly editing the registry configuration to reference the custom PVC, adding manual complexity to the installation and setup process.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Security Expert
+
+---
+
+## OCP-BM-37
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1452,7 +1536,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-36
+## OCP-BM-38
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1493,7 +1577,7 @@ N/A
 
 ---
 
-## OCP-BM-37
+## OCP-BM-39
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1534,7 +1618,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-38
+## OCP-BM-40
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1575,7 +1659,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-39
+## OCP-BM-41
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1617,7 +1701,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-40
+## OCP-BM-42
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1658,7 +1742,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-41
+## OCP-BM-43
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -1698,7 +1782,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-42
+## OCP-BM-44
 
 **Title**
 Bare Metal Node Firmware Management
@@ -1738,7 +1822,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-43
+## OCP-BM-45
 
 **Title**
 Bare Metal Node Remediation
