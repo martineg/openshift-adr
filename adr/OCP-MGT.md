@@ -99,7 +99,7 @@ Image Registry Strategy (Application Images)
 Which image registry will be used for storing internally built application images (including custom RHOAI notebook images)?
 
 **Issue or Problem**
-An image registry is needed to store, scan, and distribute container images for CI/CD and deployments. This is separate from the disconnected mirror registry (OCP-BASE-08) which primarily holds Red Hat content.
+An image registry is needed to store, scan, and distribute container images for CI/CD and deployments. This is separate from the disconnected mirror registry which primarily holds Red Hat content.
 
 **Assumption**
 Internal applications/images will be built and deployed. Custom RHOAI images might be needed (RHOAI-SM-14).
@@ -220,3 +220,42 @@ Disaster recovery and data protection are required.
 - Person: #TODO#, Role: Operations Expert
 - Person: #TODO#, Role: Storage Expert
 - Person: #TODO#, Role: OCP Platform Owner
+
+## OCP-MGT-06
+
+**Title**
+Remote Health Reporting (Telemetry) Configuration
+
+**Architectural Question**
+Should the cluster enable the Remote Health Reporting (Telemetry) service to send cluster diagnostics and usage data to Red Hat?
+
+**Issue or Problem**
+Telemetry is enabled by default for connected OpenShift clusters. A decision is required on whether to maintain this default or disable it to meet strict security and compliance requirements related to exporting cluster diagnostic data or to conserve outbound network bandwidth.
+
+**Assumption**
+Cluster is in a connected environment.
+
+**Alternatives**
+
+- Enable Remote Health Reporting (Telemetry) (Default)
+- Disable Remote Health Reporting (Telemetry)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Enable Remote Health Reporting (Telemetry) (Default):** This leverages the default cluster configuration. The service automatically entitles the cluster if it has internet access. This configuration provides valuable built-in remote health monitoring and diagnostics to Red Hat.
+- **Disable Remote Health Reporting (Telemetry):** This is necessary to satisfy strict security policies or compliance mandates that prohibit sending diagnostic or usage data outside the internal network.
+
+**Implications**
+
+- **Enable Remote Health Reporting (Telemetry) (Default):** Requires open firewall egress rules to external Red Hat endpoints for the Telemetry service to function.
+- **Disable Remote Health Reporting (Telemetry):** Removes a built-in diagnostic safety net, potentially complicating troubleshooting and relying solely on external tools or manual inspection.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
