@@ -54,7 +54,8 @@ Rules:
 
 1.  Alts must be **valid strategies** (GA/TP).
 2.  **Forbid:** "Deprecated", "Unsupported", "Planned Deprecation", "Not Recommended".
-3.  **No 'Right vs Wrong':** Discard "Mandatory vs Misconfiguration".
+3.  **No 'Right vs Wrong':** Do NOT compare "Mandatory" vs "Misconfiguration". If the docs say "Do not do X", then X is not a choice. DISCARD.
+4.  **No Derivatives:** If a choice is **forced by a constraint** (e.g. RWO storage _requires_ Recreate strategy), it is a Configuration Detail, not an Architecture Decision. DISCARD.
 
 - **Format:** Alts=titles. Just/Impl=`**[Title]:** [Text]`.
 - **Parties:** Use `Person: #TODO#, Role: [Role]` from `adr_parties_role_dictionnary.md`.
