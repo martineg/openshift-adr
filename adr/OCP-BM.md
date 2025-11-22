@@ -1209,6 +1209,46 @@ Multipathing to be enabled.
 ## OCP-BM-30
 
 **Title**
+RHCOS Installation Drive Identification Strategy
+
+**Architectural Question**
+How should the installation target disk device (e.g., local disk, non-multipath SAN LUN) be specified to the `coreos-installer` during Red Hat Enterprise Linux CoreOS (RHCOS) installation to ensure persistence and reliability?
+
+**Issue or Problem**
+Using ephemeral device paths (e.g., `/dev/sda`) can lead to installation failure or inconsistent behavior if the kernel enumerates devices differently across reboots or installations, disrupting automation scripts. A persistent naming convention is required for robust deployment automation.
+
+**Assumption**
+Installation target is a local disk or single-path SAN LUN.
+
+**Alternatives**
+
+- Volatile Device Path Naming
+- Persistent Device Path Naming
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Volatile Device Path Naming:** This approach simplifies command usage (e.g., using `/dev/sda`) and is explicitly allowed for the `coreos.inst.install_dev` kernel argument.
+- **Persistent Device Path Naming:** This is the recommended practice for identifying devices (e.g., through `/dev/disk/by-id` symlinks). It prevents errors related to device enumeration changes upon reboot, which is critical for reliable automation and large-scale deployments. For multipath devices, using the World Wide Name (WWN) symlink available in `/dev/disk/by-id` is explicitly recommended over simpler paths.
+
+**Implications**
+
+- **Volatile Device Path Naming:** This carries a high risk of installation failure if the device naming changes (e.g., `/dev/sda` becomes `/dev/sdb`), which is common in environments where device enumeration is not strictly controlled.
+- **Persistent Device Path Naming:** Requires an additional step in the automation workflow to identify the persistent device path (e.g., `by-id`, `by-path`, or `by-wwn`) of the target installation disk before executing `coreos-installer`.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-31
+
+**Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
 
 **Architectural Question**
@@ -1246,7 +1286,7 @@ Installation Boot Device is Local Device.
 
 ---
 
-## OCP-BM-31
+## OCP-BM-32
 
 **Title**
 Control Plane Storage Performance Validation Strategy
@@ -1286,7 +1326,7 @@ N/A
 
 ---
 
-## OCP-BM-32
+## OCP-BM-33
 
 **Title**
 RHCOS /var Partitioning Strategy (General Data Isolation)
@@ -1326,7 +1366,7 @@ The cluster will utilize large disk sizes (e.g., > 100GB) and may host applicati
 
 ---
 
-## OCP-BM-33
+## OCP-BM-34
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -1366,7 +1406,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-34
+## OCP-BM-35
 
 **Title**
 Control Plane Etcd Storage Partitioning Strategy
@@ -1407,7 +1447,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-35
+## OCP-BM-36
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -1447,7 +1487,7 @@ N/A
 
 ---
 
-## OCP-BM-36
+## OCP-BM-37
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1490,7 +1530,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-37
+## OCP-BM-38
 
 **Title**
 Storage Architecture for the Internal Image Registry
@@ -1538,7 +1578,7 @@ N/A
 
 ---
 
-## OCP-BM-38
+## OCP-BM-39
 
 **Title**
 Internal Image Registry Management State on Bare Metal UPI
@@ -1579,7 +1619,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-39
+## OCP-BM-40
 
 **Title**
 Internal Image Registry Persistent Volume Claim (PVC) Provisioning Strategy
@@ -1621,7 +1661,7 @@ The Internal Image Registry will be switched to the Managed management state pos
 
 ---
 
-## OCP-BM-40
+## OCP-BM-41
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1662,7 +1702,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-41
+## OCP-BM-42
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1703,7 +1743,7 @@ N/A
 
 ---
 
-## OCP-BM-42
+## OCP-BM-43
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1744,7 +1784,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-43
+## OCP-BM-44
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1785,7 +1825,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-44
+## OCP-BM-45
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1827,7 +1867,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-45
+## OCP-BM-46
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1868,7 +1908,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-46
+## OCP-BM-47
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -1908,7 +1948,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-47
+## OCP-BM-48
 
 **Title**
 Bare Metal Node Firmware Management
@@ -1948,7 +1988,47 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-48
+## OCP-BM-49
+
+**Title**
+Bare Metal Firmware Update Application Timing Policy
+
+**Architectural Question**
+When leveraging the Bare Metal Operator (BMO) for node firmware management (BIOS, BMC, NICs) via `HostFirmwareComponents` or `HostFirmwareSettings`, should updates be applied immediately (live update) or deferred until a scheduled node reboot?
+
+**Issue or Problem**
+Automated firmware updates can be highly disruptive, potentially causing instability or service interruption if performed while the node is actively running application workloads. A strategy is needed to ensure updates are applied securely and predictably, balancing maintenance velocity against cluster service uptime.
+
+**Assumption**
+The Bare Metal Operator (BMO) is enabled and managing node firmware configurations.
+
+**Alternatives**
+
+- Immediate Application (Live Update)
+- Deferred Application (Update on Next Reboot)
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Immediate Application (Live Update):** This option allows for rapid deployment of firmware updates, as the firmware change is performed while the host is provisioned or active. This can be achieved by utilizing BMO's advanced features, such as `HostFirmwareSettings` live updates.
+- **Deferred Application (Update on Next Reboot):** This method provides maximum control and reliability, ensuring that disruptive firmware updates are performed during a planned maintenance window or scheduled operating system reboot. This approach requires setting the `HostUpdatePolicy` resource to `onReboot`.
+
+**Implications**
+
+- **Immediate Application (Live Update):** Live updates to the BMC are generally not recommended for testing, especially on earlier generation hardware. This process may cause node disruption and require coordination (e.g., node draining). Some advanced features supporting this may also be Technology Preview (TP).
+- **Deferred Application (Update on Next Reboot):** This simplifies maintenance coordination by aligning the disruptive firmware update process with the operating system update schedule. This requires defining, testing, and maintaining the `HostUpdatePolicy` Custom Resource.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-50
 
 **Title**
 Bare Metal Node Remediation

@@ -569,6 +569,46 @@ N/A
 ## OCP-NET-15
 
 **Title**
+Advanced CNI Parameter Configuration Strategy (Install-Config vs Custom Manifest)
+
+**Architectural Question**
+Should critical, Container Network Interface (CNI)-specific network parameters (e.g., IPsec mode, MTU, Geneve port, internal OVN subnets) be configured directly in the primary installation configuration file or via subsequent custom Cluster Network Operator manifests?
+
+**Issue or Problem**
+OpenShift installation splits network configuration into two phases: Phase 1 (pre-manifest creation, via `install-config.yaml`) and Phase 2 (post-manifest creation, via custom manifest files). Relying solely on Phase 1 limits access to specialized CNI settings (like OVN-Kubernetes parameters), while relying on Phase 2 requires creating extra files, and crucially, Phase 2 configurations cannot override conflicting settings already defined in Phase 1.
+
+**Assumption**
+Advanced network configuration (e.g., OVN-Kubernetes customization) is required.
+
+**Alternatives**
+
+- Configure CNI Parameters via Install-Config (Phase 1)
+- Configure CNI Parameters via Custom Manifests (Phase 2)
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Configure CNI Parameters via Install-Config (Phase 1):** This phase defines high-level network fields like `networking.networkType`, `networking.clusterNetwork`, and `networking.serviceNetwork`. This approach simplifies the overall setup as these values are managed directly within the primary installation file.
+- **Configure CNI Parameters via Custom Manifests (Phase 2):** This method is used to specify advanced network configurations that are not directly available in Phase 1. Creating a customized Cluster Network Operator manifest (e.g., `cluster-network-03-config.yml`) allows defining specific CNI settings, such as enabling IPsec for OVN-Kubernetes or overriding OVN overlay parameters like MTU or Geneve Port.
+
+**Implications**
+
+- **Configure CNI Parameters via Install-Config (Phase 1):** The available configuration options are limited to the high-level network fields present in the initial `install-config.yaml`.
+- **Configure CNI Parameters via Custom Manifests (Phase 2):** Requires manually creating and maintaining a supplementary manifest file (`cluster-network-03-config.yml`). Furthermore, administrators must be aware that the values defined in these custom manifests during Phase 2 cannot override values already specified in the `install-config.yaml` file (Phase 1).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-NET-16
+
+**Title**
 OVN-Kubernetes Overlay Network Parameter Configuration
 
 **Architectural Question**
@@ -606,7 +646,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-16
+## OCP-NET-17
 
 **Title**
 OVN-Kubernetes Internal Subnet Configuration Strategy
@@ -646,7 +686,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-17
+## OCP-NET-18
 
 **Title**
 OVN-Kubernetes Internal Masquerade Subnet Configuration
@@ -686,7 +726,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-18
+## OCP-NET-19
 
 **Title**
 OVN-Kubernetes Egress Traffic Routing Via Host Network Stack
@@ -726,7 +766,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-19
+## OCP-NET-20
 
 **Title**
 OVN-Kubernetes IPsec Encryption Mode
@@ -770,7 +810,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-20
+## OCP-NET-21
 
 **Title**
 OVN-Kubernetes Cluster Route Advertisement Strategy
@@ -811,7 +851,7 @@ N/A
 
 ---
 
-## OCP-NET-21
+## OCP-NET-22
 
 **Title**
 OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
@@ -852,7 +892,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-22
+## OCP-NET-23
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
@@ -893,7 +933,7 @@ N/A
 
 ---
 
-## OCP-NET-23
+## OCP-NET-24
 
 **Title**
 Ingress Controller Strategy
@@ -937,7 +977,7 @@ N/A
 
 ---
 
-## OCP-NET-24
+## OCP-NET-25
 
 **Title**
 Ingress Controller Replica Count
@@ -977,7 +1017,7 @@ N/A
 
 ---
 
-## OCP-NET-25
+## OCP-NET-26
 
 **Title**
 SSL/TLS Termination Strategy
@@ -1020,7 +1060,7 @@ N/A
 
 ---
 
-## OCP-NET-26
+## OCP-NET-27
 
 **Title**
 Access Control for Cluster Metrics Port (TCP 1936)
@@ -1061,7 +1101,7 @@ N/A
 
 ---
 
-## OCP-NET-27
+## OCP-NET-28
 
 **Title**
 Default Network Policy (Pod Isolation)
@@ -1105,7 +1145,7 @@ N/A
 
 ---
 
-## OCP-NET-28
+## OCP-NET-29
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -1148,7 +1188,7 @@ Cluster uses OVN-Kubernetes CNI.
 
 ---
 
-## OCP-NET-29
+## OCP-NET-30
 
 **Title**
 OVN-Kubernetes Network Policy Audit Log Destination
@@ -1192,7 +1232,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-30
+## OCP-NET-31
 
 **Title**
 Egress IP Address Strategy
@@ -1236,7 +1276,7 @@ N/A
 
 ---
 
-## OCP-NET-31
+## OCP-NET-32
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -1281,7 +1321,7 @@ N/A
 
 ---
 
-## OCP-NET-32
+## OCP-NET-33
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection
@@ -1322,7 +1362,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-33
+## OCP-NET-34
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy
@@ -1363,7 +1403,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-34
+## OCP-NET-35
 
 **Title**
 SR-IOV Virtual Function Bonding Mechanism
