@@ -993,7 +993,7 @@ N/A
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: Operations Experte: Network Expert
+- Person: #TODO#, Role: Operations Expert
 - Person: #TODO#, Role: Infra Leader
 
 ---

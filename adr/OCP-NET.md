@@ -1084,7 +1084,7 @@ N/A
 
 **Justification**
 
-- **Expose Port 1936 via Ingress Load Balancer:** Allows external systems direct access to host-level metrics (e.g., node exporter) through the Ingress path. This is explicitly advised against due to the risk of exposing sensitive information.
+- **Expose Port 1936 via Ingress Load Balancer:** This alternative allows external monitoring systems direct access to host-level metrics (e.g., node exporter) and Ingress statistics through the public Ingress load balancer endpoint.
 - **Restrict Port 1936 Access to Internal Nodes Only:** Recommended practice to ensure sensitive host-level statistics and metrics are not exposed externally via the Ingress load balancer.
 
 **Implications**

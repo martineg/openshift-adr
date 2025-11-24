@@ -433,6 +433,7 @@ Platform infrastructure supports the chosen topology.
 - **Standard HA Topology:** Requires a minimum of three control plane machines and at least two compute machines. Requires maintaining separate physical hosts for the cluster machines to ensure high availability.
 - **Compact HA Topology:** Infrastructure components (monitoring, registry, ingress) often share resources with the control plane, requiring careful sizing. If resource constraints exist, workload partitioning is strongly recommended.
 - **Two-Node OpenShift with Arbiter (TNA):** Requires 2 control plane nodes and 1 arbiter node. The arbiter node must meet minimum system requirements.
+- **Two-Node OpenShift with Fencing (TP):** Implies reliance on a Technology Preview (TP) feature, which is not recommended for production environments requiring full Red Hat support and Service Level Agreements (SLAs).
 - **Single Node OpenShift (SNO):** The major tradeoff is the **lack of high availability**, as failure of the single node stops the cluster. Requires a minimum of 8 vCPUs and 120GB of storage.
 - **Hosted Control Planes (HCP):** The control plane runs in a single namespace on a management cluster. A Single-Node OpenShift cluster is explicitly not supported as a management cluster.
 
