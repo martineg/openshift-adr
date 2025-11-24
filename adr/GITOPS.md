@@ -12,7 +12,7 @@ Will platform configuration (NodeConfigs, Networking, Operator subscriptions) be
 Platform management for multiple clusters (fleet management) requires standardization and governance. Choosing the right scope impacts consistency, scalability, and recovery posture.
 
 **Assumption**
-Multiple managed OpenShift clusters exist, necessitating a multi-cluster management strategy.
+A multi-cluster fleet strategy has been established.
 
 **Alternatives**
 

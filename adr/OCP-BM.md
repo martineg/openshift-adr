@@ -1496,6 +1496,47 @@ N/A
 ## OCP-BM-37
 
 **Title**
+Bare Metal Minimum Boot Disk Capacity Strategy
+
+**Architectural Question**
+What is the standardized minimum capacity for the primary boot drive across the bare metal fleet to support lifecycle operations, logging, and partitioning requirements?
+
+**Issue or Problem**
+While OpenShift supports small boot drives (e.g., 120GB for SNO), advanced configurations such as separate `/var` partitioning, image pre-caching for edge upgrades (IBU), or retention of verbose failure logs require significantly more space. Failing to standardize on a sufficient minimum capacity prevents the adoption of these resiliency patterns later in the cluster lifecycle.
+
+**Assumption**
+**RHCOS Installation Boot Device Selection** has been defined.
+
+**Alternatives**
+
+- Minimal Capacity (e.g., 120GB)
+- Expanded Capacity (e.g., 500GB or greater)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Minimal Capacity (e.g., 120GB):** Meets the absolute minimum requirements for a Single Node OpenShift (SNO) or standard node deployment. It reduces hardware costs but leaves very little headroom for Day 2 operations, log retention, or custom partitioning.
+- **Expanded Capacity (e.g., 500GB or greater):** Recommended for production environments. This provides the necessary storage buffer to safely implement **General /var Partitioning**, store pre-cached update images (saving bandwidth at the edge), and retain system logs during failure triage without triggering disk pressure evictions.
+
+**Implications**
+
+- **Minimal Capacity (e.g., 120GB):** Severely restricts the ability to use custom disk partitioning. The separate `/var` partitioning strategy is **not recommended** and likely impossible on this size due to the overhead of the immutable OS partitions.
+- **Expanded Capacity (e.g., 500GB or greater):** Increases the per-node hardware cost. Enables robust "Image-Based Upgrade" workflows by allowing multiple OS versions (stateroots) to coexist on the disk. Supports isolating volatile data (`/var`) to protect the root filesystem.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-38
+
+**Title**
 RHCOS /var Partitioning Strategy (General Data Isolation)
 
 **Architectural Question**
@@ -1533,7 +1574,7 @@ The cluster will utilize large disk sizes (e.g., > 100GB) and may host applicati
 
 ---
 
-## OCP-BM-38
+## OCP-BM-39
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -1573,7 +1614,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-39
+## OCP-BM-40
 
 **Title**
 Control Plane Etcd Storage Partitioning Strategy
@@ -1614,7 +1655,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-40
+## OCP-BM-41
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -1654,7 +1695,7 @@ N/A
 
 ---
 
-## OCP-BM-41
+## OCP-BM-42
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1697,7 +1738,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-42
+## OCP-BM-43
 
 **Title**
 Internal Image Registry Management State on Bare Metal UPI
@@ -1738,7 +1779,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-43
+## OCP-BM-44
 
 **Title**
 Storage Architecture for the Internal Image Registry
@@ -1786,7 +1827,7 @@ Internal Image Registry Management State is set to "Managed".
 
 ---
 
-## OCP-BM-44
+## OCP-BM-45
 
 **Title**
 Internal Image Registry Persistent Volume Claim (PVC) Provisioning Strategy
@@ -1828,7 +1869,7 @@ The Internal Image Registry will be switched to the Managed management state pos
 
 ---
 
-## OCP-BM-45
+## OCP-BM-46
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1869,7 +1910,7 @@ Low-latency workloads are required, consistent with the Hardware Acceleration St
 
 ---
 
-## OCP-BM-46
+## OCP-BM-47
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1910,7 +1951,7 @@ N/A
 
 ---
 
-## OCP-BM-47
+## OCP-BM-48
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1951,7 +1992,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-48
+## OCP-BM-49
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1992,7 +2033,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-49
+## OCP-BM-50
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -2034,7 +2075,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-50
+## OCP-BM-51
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -2074,7 +2115,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-51
+## OCP-BM-52
 
 **Title**
 Bare Metal Node Firmware Management
@@ -2114,7 +2155,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-52
+## OCP-BM-53
 
 **Title**
 Bare Metal Firmware Update Application Timing Policy
@@ -2154,7 +2195,7 @@ The Bare Metal Operator (BMO) is enabled and managing node firmware configuratio
 
 ---
 
-## OCP-BM-53
+## OCP-BM-54
 
 **Title**
 Bare Metal Node Remediation

@@ -449,7 +449,7 @@ Applications require secrets; GitOps might be used; storing secrets directly in 
 
 **Justification**
 
-- **Kubernetes Native Secrets:** Simplest K8s approach. Secrets stored as native objects, protected at rest by etcd encryption. Can be combined with GitOps tools like Sealed Secrets (GITOPS-04 option) to encrypt secrets _before_ committing to Git.
+- **Kubernetes Native Secrets:** Simplest K8s approach. Secrets stored as native objects, protected at rest by etcd encryption. Can be combined with GitOps tools like Sealed Secrets to encrypt secrets _before_ committing to Git.
 - **External Secret Store Integration (ESO/SSCSI):** Recommended enterprise approach. Decouples app deployment from secret lifecycle, centralizes secret storage (Vault, Cloud KMS), enhances compliance/auditing. Secrets Store CSI Driver (SSCSI) mounts secrets as volumes, avoiding persistence on node after pod deletion. ESO can sync external secrets into K8s native secrets.
 
 **Implications**
