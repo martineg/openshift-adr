@@ -166,49 +166,6 @@ Multi-tenancy must support isolation between application delivery teams (tenants
 ## GITOPS-05
 
 **Title**
-Secret Management Strategy
-
-**Architectural Question**
-How will secrets be securely managed and exposed to applications deployed via GitOps?
-
-**Issue or Problem**
-Storing unencrypted secrets in Git is a major security risk. A secure solution is required to manage secrets (e.g., API keys, passwords) and make them available to applications at runtime.
-
-**Assumption**
-Applications require secrets, and a GitOps operational model will be used.
-
-**Alternatives**
-
-- Vault/External Secrets Manager (e.g., Sealed Secrets)
-- External Secrets Operator (TP)
-- Secrets Store CSI Driver (SSCSI)
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Vault/External Secrets Manager (e.g., Sealed Secrets):** To provide a robust, community-accepted method for securely encrypting secrets stored in Git, requiring manual decryption/injection at deployment time or relying on third-party tooling outside the standard OLM ecosystem.
-- **External Secrets Operator (TP):** To leverage the specialized Red Hat Operator (based on upstream external-secrets) for securely integrating with external secret management systems (like dedicated vaults), pulling secrets dynamically at runtime to avoid storing sensitive data in the Git repository entirely.
-- **Secrets Store CSI Driver (SSCSI):** To use the modern approach for securely retrieving secrets from external stores (like HashiCorp Vault or AWS Secrets Manager) and mounting them directly as a volume into application pods at runtime, enhancing security and efficiency
-
-**Implications**
-
-- **Vault/External Secrets Manager (e.g., Sealed Secrets):** The encryption key is managed within the cluster, creating a dependency on the controller's availability. Sharing secrets across clusters requires sharing the private key. The Red Hat OpenShift GitOps Operator manages the core Argo CD secret (`argocd-secret`). Modifying this secret using external secret management solutions (like Vault or the External Secrets Operator/plugins) is warned against, as it can cause reconciliation conflicts or unpredictable behavior. The Argo CD CR now supports configuring sensitive annotation masking in the Argo CD web UI/CLI via the `.spec.extraConfig.resource.sensitive.mask.annotations` field, which prevents the accidental exposure of sensitive information stored in annotations on Secret resources.
-- **External Secrets Operator (TP):** This feature is marked as **Technology Preview (TP)**, meaning it is **not supported with Red Hat production service level agreements (SLAs)** and might not be functionally complete. Requires integration and maintenance of the External Secrets Operator and the chosen external secret store. The Red Hat OpenShift GitOps Operator manages the core Argo CD secret (`argocd-secret`). Modifying this secret using external secret management solutions (like Vault or the External Secrets Operator/plugins) is warned against, as it can cause reconciliation conflicts or unpredictable behavior. The Argo CD CR now supports configuring sensitive annotation masking in the Argo CD web UI/CLI via the `.spec.extraConfig.resource.sensitive.mask.annotations` field, which prevents the accidental exposure of sensitive information stored in annotations on Secret resources.
-- **Secrets Store CSI Driver (SSCSI):** Requires additional configuration and setup of the SSCSI Driver Operator, providers (e.g., AWS, Vault), and appropriate Kubernetes Service Account permissions for role binding to the external vault. This approach prevents sensitive data from existing in Kubernetes secrets. The Argo CD CR now supports configuring sensitive annotation masking in the Argo CD web UI/CLI via the `.spec.extraConfig.resource.sensitive.mask.annotations` field, which prevents the accidental exposure of sensitive information stored in annotations on Secret resources.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Security Expert
-- Person: #TODO#, Role: OCP Platform Owner
-
----
-
-## GITOPS-06
-
-**Title**
 Local User Management and API Token Strategy
 
 **Architectural Question**
@@ -246,7 +203,7 @@ OpenShift SSO (Dex) is the primary method for human user authentication. Dedicat
 
 ---
 
-## GITOPS-07
+## GITOPS-06
 
 **Title**
 Argo CD Control Plane Workload Sizing

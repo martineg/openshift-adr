@@ -3,40 +3,49 @@
 ## PIPELINES-01
 
 **Title**
-Pipeline Strategy and Scope
+CI/CD Engine Selection
 
 **Architectural Question**
-What is the strategic scope and intended use case for OpenShift Pipelines within the organization?
+Which technology will be the standardized engine for Continuous Integration and Continuous Delivery (CI/CD) workflows executed on the platform?
 
 **Issue or Problem**
-A clear domain must be defined for which OpenShift Pipelines will be the standard CI tool. Different workloads, such as traditional application development and data science model training, have distinct CI/CD requirements.
+To automate builds and deployments, a supported CI/CD engine must be selected. The choice impacts the operational model (server-based vs. serverless), resource scaling, and developer experience.
 
 **Assumption**
-A CI/CD solution is required for building and deploying applications on the platform.
+A CI/CD solution is required for building and deploying applications.
 
 **Alternatives**
 
-- Unified Pipeline Strategy
-- Segregated Pipeline Strategy (Apps vs. Data Science)
+- **OpenShift Pipelines (Tekton):** Kubernetes-native, serverless CI/CD.
+- **OpenShift Jenkins:** Traditional, server-based CI.
+- **External CI (e.g., GitLab CI, GitHub Actions):** SaaS or external hosted runners.
 
 **Decision**
 #TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Unified Pipeline Strategy:** To standardize on a single, cloud-native CI/CD tool for all workloads, simplifying the toolchain and operational knowledge required.
-- **Segregated Pipeline Strategy (Apps vs. Data Science):** To use the best-fit tool for each domain. OpenShift Pipelines (Tekton) is ideal for container-native application CI, while specialized tools (like Kubeflow Pipelines, part of RHOAI) are better suited for the experimental and data-centric nature of MLOps.
+- **OpenShift Pipelines (Tekton):** Standardizes on a modern, Kubernetes-native architecture. Pipelines run as Pods on-demand (Serverless), scaling to zero when unused. It integrates tightly with the platform's RBAC and quotas.
+- **OpenShift Jenkins:** Leverages existing institutional knowledge and legacy Jenkinsfiles. Suitable for teams migrating complex, imperative Groovy pipelines that cannot easily be converted to YAML.
+- **External CI:** Offloads the compute burden of builds to an external system.
 
 **Implications**
 
-- **Unified Pipeline Strategy:** May require extensive customization of Tekton Tasks to accommodate the specific needs of data science workloads. Data science teams may face a steeper learning curve.
-- **Segregated Pipeline Strategy (Apps vs. Data Science):** Establishes clear boundaries and provides purpose-built tools for each team. However, it increases the number of tools the platform team must support and requires integration points.
+- **OpenShift Pipelines (Tekton):**
+  - Requires learning Tekton primitives (Task, Pipeline, Workspace).
+  - Stateless execution requires external storage (PVC/S3) for artifact persistence between steps (see PIPELINES-02).
+  - Native support for "Pipelines as Code" workflows.
+- **OpenShift Jenkins:**
+  - Requires managing a "Pet" Jenkins server (plugins, updates, memory scaling).
+  - Often struggles with resource quotas in multi-tenant clusters compared to Tekton.
+- **External CI:**
+  - Requires configuring secure ingress/egress for the external runner to deploy into the OpenShift cluster.
 
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: DevOps Lead
 
 ---
 
@@ -210,10 +219,10 @@ OpenShift Pipelines (Tekton) will be used for CI/CD automation.
 ## PIPELINES-06
 
 **Title**
-What mechanism should be adopted to pause CI/CD workflows pending explicit human approval?
+Manual Approval Gate Strategy
 
 **Architectural Question**
-What strategy will be adopted for defining and executing CI/CD workflows using OpenShift Pipelines?
+What mechanism should be adopted to pause CI/CD workflows pending explicit human approval?
 
 **Issue or Problem**
 The release process requires a formal gate (e.g., security sign-off or production deployment approval) that mandates pausing the pipeline execution until an authorized user approves the continuation or rejects the task, potentially failing the pipeline.
@@ -232,10 +241,12 @@ A formal approval step is mandatory in high-risk delivery paths (e.g., promotion
 **Justification**
 
 - **Manual Approval Gate (TP):** To leverage the built-in mechanism provided by the manual approval gate controller to pause pipeline execution and await input from configured OpenShift Container Platform users.
+- **External Ticketing System Integration:** To integrate with enterprise IT Service Management (ITSM) workflows (e.g., ServiceNow, Jira), ensuring approvals are recorded and managed within the organization's standard change management system rather than inside the cluster.
 
 **Implications**
 
 - **Manual Approval Gate (TP):** This feature is marked as **Technology Preview (TP)** and is not supported with Red Hat production service level agreements (SLAs). Requires enabling the manual approval gate controller.
+- **External Ticketing System Integration:** Requires developing and maintaining custom Tekton Tasks to interact with external APIs. Increases complexity regarding authentication and network connectivity to the ticketing system. The pipeline logic must handle polling for status or complex webhook callbacks to resume execution.
 
 **Agreeing Parties**
 

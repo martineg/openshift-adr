@@ -656,3 +656,45 @@ N/A
 - Person: #TODO#, Role: Infra Leader
 
 ---
+
+## OCP-BASE-16
+
+**Title**
+Virtualization Strategy
+
+**Architectural Question**
+Will the OpenShift platform be configured to host Virtual Machines (VMs) alongside containerized workloads (Converged Infrastructure)?
+
+**Issue or Problem**
+Many organizations have legacy applications that cannot be immediately containerized but need to run in close proximity to modern cloud-native services. A decision is required on whether to manage VMs within OpenShift or rely on external hypervisors (vSphere, RHV).
+
+**Assumption**
+Platform Infrastructure supports virtualization (Bare Metal is preferred; Nested Virtualization is possible but performance-limited).
+
+**Alternatives**
+
+- **Containers Only (No Virtualization):** The platform hosts only containerized workloads. VMs remain on legacy hypervisors.
+- **Converged Containers & VMs (OpenShift Virtualization):** The platform hosts both containers and VMs using KubeVirt technology.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Containers Only (No Virtualization):** Keeps the platform simple and focused on cloud-native patterns. Reduces the "noisy neighbor" risk of heavy VM monoliths affecting microservices.
+- **Converged Containers & VMs (OpenShift Virtualization):** Enables infrastructure consolidation ("modernize in place"). Allows legacy VMs to share the same network/storage fabric as containers, reducing latency and operational silos. It is a prerequisite for running Windows Containers (via WMCO) or Hosted Control Planes (HCP) on Bare Metal.
+
+**Implications**
+
+- **Containers Only:** Requires maintaining separate legacy hypervisor infrastructure/licensing.
+- **Converged Containers & VMs (OpenShift Virtualization):**
+  - **Bare Metal** is strongly recommended for production performance.
+  - Requires enabling the **OpenShift Virtualization Operator**.
+  - Impacts **Storage** decisions (Block storage/RWX is often required for VM disks and Live Migration).
+  - Impacts **Networking** (L2/Multus is often required for VMs to look like "real servers" on the network).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Infra Leader
