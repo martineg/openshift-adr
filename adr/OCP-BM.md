@@ -932,7 +932,7 @@ Cluster uses User-Provisioned Infrastructure (UPI).
 
 **Alternatives**
 
-- Single Interface or Aggregated Interface (Bonding/Teaming)
+- Single Interface or Aggregated Interface (Bonding)
 - Multiple Discrete Network Interfaces (Configured Separately)
 
 **Decision**
@@ -940,12 +940,12 @@ Cluster uses User-Provisioned Infrastructure (UPI).
 
 **Justification**
 
-- **Single Interface or Aggregated Interface (Bonding/Teaming):** This approach simplifies initial configuration and reduces the number of kernel arguments required during installation.
+- **Single Interface or Aggregated Interface (Bonding):** This approach simplifies initial configuration and reduces the number of kernel arguments required during installation.
 - **Multiple Discrete Network Interfaces (Configured Separately):** This allows fine-grained control over network addressing per NIC, permitting the configuration of mixed IP methods (DHCP and static) on the same host for different purposes.
 
 **Implications**
 
-- **Single Interface or Aggregated Interface (Bonding/Teaming):** May limit flexibility if specific network segmentation is required at the host OS level before the CNI takes over.
+- **Single Interface or Aggregated Interface (Bonding):** May limit flexibility if specific network segmentation is required at the host OS level before the CNI takes over.
 - **Multiple Discrete Network Interfaces (Configured Separately):** Requires careful planning and configuration of multiple kernel arguments (e.g., multiple `ip=` entries) during the RHCOS installation process.
 
 **Agreeing Parties**
