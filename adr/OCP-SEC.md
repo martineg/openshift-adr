@@ -474,14 +474,14 @@ Kubelet Serving Certificate Signing Request (CSR) Management Strategy for UPI
 How will the kubelet serving certificate requests (CSRs) for nodes managed via User-Provisioned Infrastructure (UPI) be managed and approved to ensure API server communication remains functional without manual intervention?
 
 **Issue or Problem**
-In UPI deployments, the lack of `Machine` resources often prevents the default `machine-approver` from verifying and automatically approving Kubelet serving certificates. If these CSRs are not approved, critical operations like `oc exec`, `oc rsh`, and `oc logs` will fail because the API server cannot securely verify the Kubelet's identity. A mechanism is required to handle this lifecycle event.
+The default mechanism often requires manual approval for Kubelet server CSRs on UPI nodes during scaling or recovery, placing a significant operational burden on platform teams unless an automated custom mechanism is implemented.
 
 **Assumption**
 Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 **Alternatives**
 
-- Rely on Manual Approval (Operator Intervention)
+- Rely on Manual Approval (Operator Intervention for Server CSRs)
 - Implement Automated CSR Approval Mechanism
 
 **Decision**
@@ -489,13 +489,13 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 **Justification**
 
-- **Rely on Manual Approval (Operator Intervention):** This minimizes initial configuration overhead by relying on human operators to run `oc adm certificate approve`. It places a significant operational burden on teams, especially during node scaling or recovery.
+- **Rely on Manual Approval (Operator Intervention for Server CSRs):** This minimizes initial configuration overhead by relying on human operators to run `oc adm certificate approve` for server CSRs. It places a significant operational burden on teams, especially during initial node installation, scaling, or recovery.
 - **Implement Automated CSR Approval Mechanism:** This is the recommended approach for UPI clusters. It involves deploying a custom controller (like the Red Hat-provided Kubelet CSR Approver) that verifies the CSRs against a trusted source of truth (e.g., node labels or specific groups) and approves them automatically, ensuring consistent cluster operability.
 
 **Implications**
 
-- **Rely on Manual Approval (Operator Intervention):** Results in slow cluster recovery times and potential service disruption. Any operation requiring the API server to contact the Kubelet will fail until a human intervenes.
-- **Implement Automated CSR Approval Mechanism:** Requires deploying and maintaining an additional Day 2 operator or cronjob. It significantly improves operational resilience by removing a manual bottleneck during node provisioning and certificate rotation.
+- **Rely on Manual Approval (Operator Intervention for Server CSRs):** High operational overhead, leading to delays and potential cluster instability during scale-up events until an operator manually approves all necessary server CSRs.
+- **Implement Automated CSR Approval Mechanism:** Requires deploying and maintaining an external component (the custom controller), but ensures smooth day-2 operations and node lifecycle management.
 
 **Agreeing Parties**
 

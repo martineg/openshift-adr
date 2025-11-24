@@ -27,19 +27,19 @@ N/A
 
 **Justification**
 
-- **User-Provisioned Infrastructure (UPI):** Requires the user to manually provision and configure all cluster infrastructure (including networking, DNS, load balancers, and storage) and install Red Hat Enterprise Linux CoreOS (RHCOS) on hosts using generated Ignition configuration files. This approach offers **maximum customizability**. Required if both TPM and Tang for disk encryption is required.
+- **User-Provisioned Infrastructure (UPI):** Requires the user to manually provision and configure all cluster infrastructure (including networking, DNS, load balancers, and storage) and install Red Hat Enterprise Linux CoreOS (RHCOS) on hosts using generated Ignition configuration files. This approach offers maximum customizability. Required if both TPM and Tang for disk encryption is required.
 - **Installer-Provisioned Infrastructure (IPI):** Delegates the infrastructure bootstrapping and provisioning to the installation program. For bare metal, this process automates provisioning using the host’s Baseboard Management Controller (BMC) by leveraging the Bare Metal Operator (BMO) features.
-- **Agent-based Installer (ABI):** Provides the convenience of the Assisted Installer but enables installation **locally for disconnected environments or restricted networks**. It uses a lightweight agent booted from a discovery ISO to facilitate provisioning.
-- **Assisted Installer:** A web-based SaaS service designed for **connected networks** that simplifies deployment by providing a user-friendly interface, smart defaults, and pre-flight validations, generating a discovery image for the bare metal installation.
+- **Agent-based Installer (ABI):** Provides the convenience of the Assisted Installer but enables installation locally for disconnected environments or restricted networks. It uses a lightweight agent booted from a discovery ISO to facilitate provisioning.
+- **Assisted Installer:** A web-based SaaS service designed for connected networks that simplifies deployment by providing a user-friendly interface, smart defaults, and pre-flight validations, generating a discovery image for the bare metal installation.
 - **Image-based Installer (IBI):** Significantly reduces the deployment time of single-node OpenShift clusters by enabling the preinstallation of configured and validated instances on target hosts, supporting rapid reconfiguration and deployment even in disconnected environments.
 
 **Implications**
 
-- **User-Provisioned Infrastructure (UPI):** Implies the **highest operational overhead** because the user must manage and maintain all infrastructure resources (Load Balancers, Networking, Storage) throughout the cluster lifecycle. It requires additional validation and configuration to use the Machine API capabilities. Support both TPM and Tang for disk encryption.
-- **Installer-Provisioned Infrastructure (IPI):** Requires integration with the BMO and related provisioning infrastructure. For bare metal IPI, the user must provide all cluster infrastructure resources, including the bootstrap machine, networking, load balancing, storage, and individual cluster machines. Once installed, it allows OpenShift Container Platform to manage the operating system and supports using the Machine API for node lifecycle management. Only support TPM for disk encryption.
-- **Agent-based Installer (ABI):** Ideal for **disconnected environments** and provides features like integrated tools for configuring nodes (e.g., disk encryption or LVM storage configuration). Requires the user to provide all cluster infrastructure and resources (networking, load balancing, storage). Only support TPM for disk encryption.
-- **Assisted Installer:** Requires a working internet connection during the preparation phase (unless steps are followed for a disconnected approach). It simplifies deployment by handling Ignition configuration generation and supports **full integration for bare metal platforms**. Only support TPM for disk encryption.
-- **Image-based Installer (IBI):** Primarily intended for **Single-Node OpenShift (SNO) cluster deployments**, often managed using a hub-and-spoke architecture via Red Hat Advanced Cluster Management (RHACM) and the multicluster engine for Kubernetes Operator (MCE). Does not support disk encryption.
+- **User-Provisioned Infrastructure (UPI):** Implies the highest operational overhead because the user must manage and maintain all infrastructure resources (Load Balancers, Networking, Storage) throughout the cluster lifecycle. It requires additional validation and configuration to use the Machine API capabilities. Supports No encryption, TPM v2 Only, Tang Server Only, and the TPM v2 and Tang Server Combination for disk encryption.
+- **Installer-Provisioned Infrastructure (IPI):** Requires integration with the BMO and related provisioning infrastructure. Once installed, it allows OpenShift Container Platform to manage the operating system and supports using the Machine API for node lifecycle management. Supports only TPM for disk encryption, excluding Tang Server Only and the combined TPM/Tang method.
+- **Agent-based Installer (ABI):** Ideal for disconnected environments and provides features like integrated tools for configuring nodes. Supports only TPM for disk encryption, excluding Tang Server Only and the combined TPM/Tang method.
+- **Assisted Installer:** Requires a working internet connection during the preparation phase. Supports only TPM for disk encryption, excluding Tang Server Only and the combined TPM/Tang method.
+- **Image-based Installer (IBI):** Primarily intended for Single-Node OpenShift (SNO) cluster deployments. Does not support disk encryption.
 
 **Agreeing Parties**
 
@@ -1106,14 +1106,14 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 **Justification**
 
 - **Secure Boot will not be enabled:** This simplifies installation and avoids the complex hardware compatibility constraints associated with enabling Secure Boot.
-- **Secure Boot will be enabled manually:** This approach utilizes the node's native Secure Boot feature, which is supported during IPI deployments when using **Redfish virtual media**. This is also the only supported method for UPI deployment. This method provides flexibility across more diverse hardware platforms compared to the Managed option and avoids reliance on a Technology Preview feature.
-- **Secure Boot will be enabled through Managed Secure Boot (TP):** This option automates Secure Boot provisioning by setting `bootMode: "UEFISecureBoot"` in the `install-config.yaml` file. It streamlines node configuration and management, and crucially, does **not** require using Redfish virtual media for the installation.
+- **Secure Boot will be enabled manually:** This approach utilizes the node's native Secure Boot feature, which is supported during IPI deployments when using Redfish virtual media. This is also the only supported method for UPI deployment. This method provides flexibility across more diverse hardware platforms compared to the Managed option and avoids reliance on a Technology Preview feature.
+- **Secure Boot will be enabled through Managed Secure Boot (TP):** This option automates Secure Boot provisioning by setting `bootMode: "UEFISecureBoot"` in the `install-config.yaml` file. It streamlines node configuration and management, and crucially, does not require using Redfish virtual media for the installation.
 
 **Implications**
 
 - **Secure Boot will not be enabled:** This approach might fail to meet security or regulatory compliance standards that require verifying the integrity of the boot chain.
-- **Secure Boot will be enabled manually:** Requires manual configuration of UEFI boot mode and Secure Boot settings on _each_ control plane and worker node. This is the only supported method when using UPI deployment. Furthermore, Red Hat explicitly supports this manual configuration for IPI only when the installation uses Redfish virtual media.
-- **Secure Boot will be enabled through Managed Secure Boot (TP):** This feature is only supported on specific hardware models: **10th generation HPE hardware** and **13th generation Dell hardware** running firmware version **2.75.75.75 or greater**. This capability is currently designated as a Technology Preview (TP) feature.
+- **Secure Boot will be enabled manually:** Requires manual configuration of UEFI boot mode and Secure Boot settings on each control plane and worker node. This is the only supported method when using UPI deployment. Furthermore, Red Hat explicitly supports this manual configuration for IPI only when the installation uses Redfish virtual media.
+- **Secure Boot will be enabled through Managed Secure Boot (TP):** This feature is only supported on specific hardware models: 10th generation HPE hardware and 13th generation Dell hardware running firmware version 2.75.75.75 or greater. This capability is currently designated as a Technology Preview (TP) feature.
 
 **Agreeing Parties**
 
@@ -1422,7 +1422,7 @@ Hardware RAID Configuration for Bare Metal Installation Drive
 How should hardware RAID be configured for the OpenShift Container Platform installation drive on bare metal nodes, ensuring compatibility with supported BMCs and adhering to Red Hat requirements?
 
 **Issue or Problem**
-OpenShift Container Platform documentation explicitly supports using hardware RAID on the installation drive for nodes managed by specific BMCs, such as Dell iDRAC (firmware version 6.10.30.20 or later, RAID levels 0, 1, and 5) and Fujitsu iRMC (RAID levels 0, 1, 5, 6, and 10). However, **software RAID is not supported** on the installation drive. A decision is required on whether to utilize supported hardware RAID features or configure nodes without hardware RAID for the installation drive.
+The choice of hardware RAID must align with Red Hat requirements: only specific Hardware RAID volumes (e.g., Dell iDRAC, Fujitsu iRMC) are supported on the installation drive, and software RAID is not supported. This decision determines whether to utilize supported hardware RAID features or configure nodes without RAID for the installation drive.
 
 **Assumption**
 Installation Boot Device is Local Device.
@@ -1442,8 +1442,8 @@ Installation Boot Device is Local Device.
 
 **Implications**
 
-- **Configure and use supported Hardware RAID volumes for the installation drive:** Requires specifying the logical drives within the `hardwareRAIDVolumes` parameter of the installation configuration. Incorrect configuration or use with unsupported BMC versions or RAID levels may lead to unsupported clusters or installation failure.
-- **Configure the installation drive without using Hardware RAID:** Node resiliency relies solely on the underlying physical disk health, which might not be desirable for critical bare metal components if a disk fails.
+- **Configure and use supported Hardware RAID volumes for the installation drive:** Requires ensuring the hardware, BMC firmware, and RAID levels match the supported configurations (e.g., Dell iDRAC firmware 6.10.30.20+ for levels 0, 1, 5).
+- **Configure the installation drive without using Hardware RAID:** Simplifies the underlying storage configuration, avoiding configuration complexities, but relies solely on software volumes for redundancy (e.g., etcd).
 
 **Agreeing Parties**
 
@@ -2164,14 +2164,14 @@ Bare Metal Firmware Update Application Timing Policy
 When leveraging the Bare Metal Operator (BMO) for node firmware management (BIOS, BMC, NICs) via `HostFirmwareComponents` or `HostFirmwareSettings`, should updates be applied immediately (live update) or deferred until a scheduled node reboot?
 
 **Issue or Problem**
-Automated firmware updates can be highly disruptive, potentially causing instability or service interruption if performed while the node is actively running application workloads. A strategy is needed to ensure updates are applied securely and predictably, balancing maintenance velocity against cluster service uptime.
+This decision defines whether disruptive firmware updates are applied immediately (requiring coordination) or aligned with planned OS reboots, balancing rapid deployment against maximum control and reliability.
 
 **Assumption**
 The Bare Metal Operator (BMO) is enabled and managing node firmware configurations.
 
 **Alternatives**
 
-- Immediate Application (Live Update)
+- Immediate Application (Live Update) (TP)
 - Deferred Application (Update on Next Reboot)
 
 **Decision**
@@ -2179,12 +2179,12 @@ The Bare Metal Operator (BMO) is enabled and managing node firmware configuratio
 
 **Justification**
 
-- **Immediate Application (Live Update):** This option allows for rapid deployment of firmware updates, as the firmware change is performed while the host is provisioned or active. This can be achieved by utilizing BMO's advanced features, such as `HostFirmwareSettings` live updates.
+- **Immediate Application (Live Update) (TP):** This option allows for rapid deployment of firmware updates, as the firmware change is performed while the host is provisioned or active. This can be achieved by utilizing BMO's advanced features, such as `HostFirmwareSettings` live updates.
 - **Deferred Application (Update on Next Reboot):** This method provides maximum control and reliability, ensuring that disruptive firmware updates are performed during a planned maintenance window or scheduled operating system reboot. This approach requires setting the `HostUpdatePolicy` resource to `onReboot`.
 
 **Implications**
 
-- **Immediate Application (Live Update):** Live updates to the BMC are generally not recommended for testing, especially on earlier generation hardware. This process may cause node disruption and require coordination (e.g., node draining). Some advanced features supporting this may also be Technology Preview (TP).
+- **Immediate Application (Live Update) (TP):** Live updates to the BMC are generally not recommended for testing, especially on earlier generation hardware. This process may cause node disruption and require coordination (e.g., node draining). Some advanced features supporting this may also be Technology Preview (TP).
 - **Deferred Application (Update on Next Reboot):** This simplifies maintenance coordination by aligning the disruptive firmware update process with the operating system update schedule. This requires defining, testing, and maintaining the `HostUpdatePolicy` Custom Resource.
 
 **Agreeing Parties**
@@ -2222,13 +2222,13 @@ N/A.
 
 - **No Automated Remediation:** To rely on manual detection (via monitoring) and manual intervention by an operator to troubleshoot and reboot physical nodes.
 - **Node Health Check (NHC) with Self Node Remediation:** To deploy the Node Health Check operator, which monitors node health. When a node fails, the `SelfNodeRemediation` agent on other nodes will fence the unhealthy node and restart its workloads elsewhere.
-- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** To use the NHC in combination with the BareMetal Operator (enabled by an IPI install). When NHC detects a failure, it triggers the BMO to power-cycle the node via its BMC, attempting a full hardware reboot.
+- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** This is the most robust, fully automated solution. It attempts to recover the node by "turning it off and on again" via its BMC.
 
 **Implications**
 
 - **No Automated Remediation:** High operational burden and slow recovery times. Not recommended for a production cluster.
 - **Node Health Check (NHC) with Self Node Remediation:** Provides software-level remediation. It ensures workloads are moved but does not fix the underlying node, which will remain unavailable until manually repaired.
-- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** This is the most robust, fully automated solution. It attempts to recover the node by "turning it off and on again" via its BMC. This requires a reliable IPI installation and stable Redfish/IPMI connectivity. Furthermore, the BMO facilitates the **Cluster API management of compute nodes (TP)** for dynamic lifecycle management. Advanced operational features, such as performing **live updates to HostFirmwareSettings (TP)** or **HostFirmwareComponents (TP)**, are available through BMO, but utilizing live updates requires setting the **HostUpdatePolicy (TP)** resource to `onReboot`. **We do not recommend that you perform live updates to the BMC for test purposes, especially on earlier generation hardware**
+- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** This requires a reliable IPI installation and stable Redfish/IPMI connectivity. Furthermore, the BMO facilitates the **Cluster API management of compute nodes (TP)** for dynamic lifecycle management. Advanced operational features, such as performing **live updates to HostFirmwareSettings (TP)** or **HostFirmwareComponents (TP)**, are available through BMO, but utilizing live updates requires setting the **HostUpdatePolicy (TP)** resource to `onReboot`.
 
 **Agreeing Parties**
 
