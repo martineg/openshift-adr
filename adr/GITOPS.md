@@ -3,49 +3,6 @@
 ## GITOPS-01
 
 **Title**
-Argo CD Instance Scoping (Instance Architecture)
-
-**Architectural Question**
-What is the scoping strategy for the Argo CD instance(s) deployed by the OpenShift GitOps Operator?
-
-**Issue or Problem**
-The choice of Argo CD scope (cluster-wide or namespace-specific) impacts security, multi-tenancy capabilities, operational overhead, and administrative separation between platform management and application delivery.
-
-**Assumption**
-OpenShift GitOps (Argo CD) is the chosen engine for declarative configuration management.
-
-**Alternatives**
-
-- Single Cluster-Scoped Instance (Shared)
-- Dual Instance (Dedicated Platform Instance + Application Instance(s))
-- Namespace-Scoped Instances (Application Delivery Only).
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Single Cluster-Scoped Instance (Shared):** Provides the simplest operational profile with the lowest overhead. Suitable when administrative separation between platform configuration and applications is not a primary concern. The default instance is cluster-scoped. The new ability to define local users in the Argo CD CR simplifies creating API tokens for automation tasks. The decision to reduce reliance on external SSO/RBAC is reinforced by the removal of support for Keycloak-based authentication starting in OpenShift GitOps 1.18. SSO reliance now defaults to Dex, which integrates with the OpenShift OAuth server.
-- **Dual Instance (Dedicated Platform Instance + Application Instance(s)):** Provides strict separation of concerns, ensuring platform administration tasks are isolated from application rollouts. The platform team manages the Cluster-scoped instance, while application teams utilize dedicated instances or segregated resources. The inclusion of local users allows administrators to declaratively define dedicated users and manage their API tokens in the Argo CD CR for automation scenarios. The removal of support for Keycloak-based authentication (as of GitOps 1.18) mandates migration to Dex or a self-managed Red Hat Build of Keycloak (RHBK) instance for external identity providers.
-- **Namespace-Scoped Instances (Application Delivery Only):** Maximizes security and blast radius reduction by limiting each Argo CD instance to a single namespace (project). The availability of local user management reduces the reliance on external SSO/RBAC configurations for automation accounts required in these segregated instances. The removal of support for Keycloak-based authentication (as of GitOps 1.18) means automation relying on SSO must use Dex or alternative authentication methods.
-
-**Implications**
-
-- **Single Cluster-Scoped Instance (Shared):** Any configuration error in one domain (e.g., application) could potentially impact cluster-wide stability. Higher privileges are required for the single Argo CD instance.
-- **Dual Instance (Dedicated Platform Instance + Application Instance(s)):** Increases management complexity due to multiple Argo CD installations and potentially overlapping configuration files.
-- **Namespace-Scoped Instances (Application Delivery Only):** The NamespaceManagement CR enables tenants to delegate control of their own namespaces to Argo CD instances without requiring direct cluster administrator action. Cluster administrators must explicitly enable this feature in the Subscription CR using the environment variable ALLOW_NAMESPACE_MANAGEMENT_IN_NAMESPACE_SCOPED_INSTANCES and specify allowed namespaces in the Argo CD CR. The explicit use of the .spec.sso parameter is now required for SSO configuration, as the older .spec.dex parameter is no longer supported from OpenShift GitOps v1.10.0 onwards.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-
----
-
-## GITOPS-02
-
-**Title**
 Platform GitOps Deployment Scope
 
 **Architectural Question**
@@ -74,6 +31,49 @@ Multiple managed OpenShift clusters exist, necessitating a multi-cluster managem
 
 - **Local/Decentralized Scope:** Requires custom tooling outside of the cluster itself to orchestrate configuration updates consistently across the entire fleet, leading to potential configuration drift. Requires care when scheduling components on Infrastructure Nodes, as manually added node selectors/tolerations might be overwritten by the GitOpsService configuration.
 - **Centralized Hub Scope (Managed by RHACM):** Provides centralized visibility and control (Single Pane of Glass). It requires the Hub cluster and the RHACM infrastructure to be highly available. This model is commonly used for large-scale management, particularly in edge computing scenarios. Adoption of Dynamic Scaling of Shards (TP) or the Round-Robin Sharding Algorithm (TP) means relying on features that are not supported with Red Hat production service level agreements (SLAs).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## GITOPS-02
+
+**Title**
+Argo CD Instance Scoping (Instance Architecture)
+
+**Architectural Question**
+What is the scoping strategy for the Argo CD instance(s) deployed by the OpenShift GitOps Operator?
+
+**Issue or Problem**
+The choice of Argo CD scope (cluster-wide or namespace-specific) impacts security, multi-tenancy capabilities, operational overhead, and administrative separation between platform management and application delivery.
+
+**Assumption**
+OpenShift GitOps (Argo CD) is the chosen engine for declarative configuration management.
+
+**Alternatives**
+
+- Single Cluster-Scoped Instance (Shared)
+- Dual Instance (Dedicated Platform Instance + Application Instance(s))
+- Namespace-Scoped Instances (Application Delivery Only)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Single Cluster-Scoped Instance (Shared):** Provides the simplest operational profile with the lowest overhead. Suitable when administrative separation between platform configuration and applications is not a primary concern. The default instance is cluster-scoped. The new ability to define local users in the Argo CD CR simplifies creating API tokens for automation tasks. The decision to reduce reliance on external SSO/RBAC is reinforced by the removal of support for Keycloak-based authentication starting in OpenShift GitOps 1.18. SSO reliance now defaults to Dex, which integrates with the OpenShift OAuth server.
+- **Dual Instance (Dedicated Platform Instance + Application Instance(s)):** Provides strict separation of concerns, ensuring platform administration tasks are isolated from application rollouts. The platform team manages the Cluster-scoped instance, while application teams utilize dedicated instances or segregated resources. The inclusion of local users allows administrators to declaratively define dedicated users and manage their API tokens in the Argo CD CR for automation scenarios. The removal of support for Keycloak-based authentication (as of GitOps 1.18) mandates migration to Dex or a self-managed Red Hat Build of Keycloak (RHBK) instance for external identity providers.
+- **Namespace-Scoped Instances (Application Delivery Only):** Maximizes security and blast radius reduction by limiting each Argo CD instance to a single namespace (project). The availability of local user management reduces the reliance on external SSO/RBAC configurations for automation accounts required in these segregated instances. The removal of support for Keycloak-based authentication (as of GitOps 1.18) means automation relying on SSO must use Dex or alternative authentication methods.
+
+**Implications**
+
+- **Single Cluster-Scoped Instance (Shared):** Any configuration error in one domain (e.g., application) could potentially impact cluster-wide stability. Higher privileges are required for the single Argo CD instance.
+- **Dual Instance (Dedicated Platform Instance + Application Instance(s)):** Increases management complexity due to multiple Argo CD installations and potentially overlapping configuration files.
+- **Namespace-Scoped Instances (Application Delivery Only):** The NamespaceManagement CR enables tenants to delegate control of their own namespaces to Argo CD instances without requiring direct cluster administrator action. Cluster administrators must explicitly enable this feature in the Subscription CR using the environment variable `ALLOW_NAMESPACE_MANAGEMENT_IN_NAMESPACE_SCOPED_INSTANCES` and specify allowed namespaces in the Argo CD CR. The explicit use of the `.spec.sso` parameter is now required for SSO configuration, as the older `.spec.dex` parameter is no longer supported from OpenShift GitOps v1.10.0 onwards.
 
 **Agreeing Parties**
 
@@ -112,7 +112,7 @@ A GitOps operational model will be used.
 
 **Implications**
 
-- **Monorepo:** Leveraging Argo CD application sets in non-control plane namespaces remains a Technology Preview (TP) feature. Allowing ApplicationSet resources in non-control plane namespaces can result in the exfiltration of secrets through malicious API endpoints in Source Code Manager (SCM) Provider or Pull Request (PR) generators. To prevent unauthorized access, the Operator disables the SCM Provider and PR generators by default, requiring administrators to explicitly define a list of allowed SCM Providers (.spec.applicationSet.scmProviders) in the Argo CD CR to use these generators.
+- **Monorepo:** Leveraging Argo CD application sets in non-control plane namespaces remains a Technology Preview (TP) feature. Allowing ApplicationSet resources in non-control plane namespaces can result in the exfiltration of secrets through malicious API endpoints in Source Code Manager (SCM) Provider or Pull Request (PR) generators. To prevent unauthorized access, the Operator disables the SCM Provider and PR generators by default, requiring administrators to explicitly define a list of allowed SCM Providers (`.spec.applicationSet.scmProviders`) in the Argo CD CR to use these generators.
 - **Multirepo (Repo per Component):** Increases the number of repositories, secrets, and webhooks to manage. Requires cross-repository tooling if dependencies exist between components.
 
 **Agreeing Parties**
@@ -121,7 +121,7 @@ A GitOps operational model will be used.
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: AI/ML Platform Owner
 
---
+---
 
 ## GITOPS-04
 
@@ -137,7 +137,10 @@ In multi-tenant environments, isolating deployment logic (Applications and Appli
 **Assumption**
 Multi-tenancy must support isolation between application delivery teams (tenants).
 
-**Alternatives** - Standard Deployment from Control Plane (Legacy/GA) - Applications in any namespace (GA) + ApplicationSets in non-control plane namespaces (TP)
+**Alternatives**
+
+- Standard Deployment from Control Plane (Legacy/GA)
+- Applications in any namespace (GA) + ApplicationSets in non-control plane namespaces (TP)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -187,13 +190,13 @@ Applications require secrets, and a GitOps operational model will be used.
 
 - **Vault/External Secrets Manager (e.g., Sealed Secrets):** To provide a robust, community-accepted method for securely encrypting secrets stored in Git, requiring manual decryption/injection at deployment time or relying on third-party tooling outside the standard OLM ecosystem.
 - **External Secrets Operator (TP):** To leverage the specialized Red Hat Operator (based on upstream external-secrets) for securely integrating with external secret management systems (like dedicated vaults), pulling secrets dynamically at runtime to avoid storing sensitive data in the Git repository entirely.
-- **Secrets Store CSI Driver (SSCSI)**: To use the modern approach for securely retrieving secrets from external stores (like HashiCorp Vault or AWS Secrets Manager) and mounting them directly as a volume into application pods at runtime, enhancing security and efficiency
+- **Secrets Store CSI Driver (SSCSI):** To use the modern approach for securely retrieving secrets from external stores (like HashiCorp Vault or AWS Secrets Manager) and mounting them directly as a volume into application pods at runtime, enhancing security and efficiency
 
 **Implications**
 
-- **Vault/External Secrets Manager (e.g., Sealed Secrets):** The encryption key is managed within the cluster, creating a dependency on the controller's availability. Sharing secrets across clusters requires sharing the private key. The Red Hat OpenShift GitOps Operator manages the core Argo CD secret (argocd-secret). Modifying this secret using external secret management solutions (like Vault or the External Secrets Operator/plugins) is warned against, as it can cause reconciliation conflicts or unpredictable behavior. The Argo CD CR now supports configuring sensitive annotation masking in the Argo CD web UI/CLI via the .spec.extraConfig.resource.sensitive.mask.annotations field, which prevents the accidental exposure of sensitive information stored in annotations on Secret resources.
-- **External Secrets Operator (TP):** This feature is marked as **Technology Preview (TP)**, meaning it is **not supported with Red Hat production service level agreements (SLAs)** and might not be functionally complete. Requires integration and maintenance of the External Secrets Operator and the chosen external secret store. The Red Hat OpenShift GitOps Operator manages the core Argo CD secret (argocd-secret). Modifying this secret using external secret management solutions (like Vault or the External Secrets Operator/plugins) is warned against, as it can cause reconciliation conflicts or unpredictable behavior. The Argo CD CR now supports configuring sensitive annotation masking in the Argo CD web UI/CLI via the .spec.extraConfig.resource.sensitive.mask.annotations field, which prevents the accidental exposure of sensitive information stored in annotations on Secret resources.
-- **Secrets Store CSI Driver (SSCSI)**: Requires additional configuration and setup of the SSCSI Driver Operator, providers (e.g., AWS, Vault), and appropriate Kubernetes Service Account permissions for role binding to the external vault.This approach prevents sensitive data from existing in Kubernetes secrets. The Argo CD CR now supports configuring sensitive annotation masking in the Argo CD web UI/CLI via the .spec.extraConfig.resource.sensitive.mask.annotations field, which prevents the accidental exposure of sensitive information stored in annotations on Secret resources.
+- **Vault/External Secrets Manager (e.g., Sealed Secrets):** The encryption key is managed within the cluster, creating a dependency on the controller's availability. Sharing secrets across clusters requires sharing the private key. The Red Hat OpenShift GitOps Operator manages the core Argo CD secret (`argocd-secret`). Modifying this secret using external secret management solutions (like Vault or the External Secrets Operator/plugins) is warned against, as it can cause reconciliation conflicts or unpredictable behavior. The Argo CD CR now supports configuring sensitive annotation masking in the Argo CD web UI/CLI via the `.spec.extraConfig.resource.sensitive.mask.annotations` field, which prevents the accidental exposure of sensitive information stored in annotations on Secret resources.
+- **External Secrets Operator (TP):** This feature is marked as **Technology Preview (TP)**, meaning it is **not supported with Red Hat production service level agreements (SLAs)** and might not be functionally complete. Requires integration and maintenance of the External Secrets Operator and the chosen external secret store. The Red Hat OpenShift GitOps Operator manages the core Argo CD secret (`argocd-secret`). Modifying this secret using external secret management solutions (like Vault or the External Secrets Operator/plugins) is warned against, as it can cause reconciliation conflicts or unpredictable behavior. The Argo CD CR now supports configuring sensitive annotation masking in the Argo CD web UI/CLI via the `.spec.extraConfig.resource.sensitive.mask.annotations` field, which prevents the accidental exposure of sensitive information stored in annotations on Secret resources.
+- **Secrets Store CSI Driver (SSCSI):** Requires additional configuration and setup of the SSCSI Driver Operator, providers (e.g., AWS, Vault), and appropriate Kubernetes Service Account permissions for role binding to the external vault. This approach prevents sensitive data from existing in Kubernetes secrets. The Argo CD CR now supports configuring sensitive annotation masking in the Argo CD web UI/CLI via the `.spec.extraConfig.resource.sensitive.mask.annotations` field, which prevents the accidental exposure of sensitive information stored in annotations on Secret resources.
 
 **Agreeing Parties**
 
@@ -269,7 +272,6 @@ Argo CD workloads must run reliably in environments constrained by quotas. Initi
 **Justification**
 
 - **Default Operator Settings:** Using the default resource requests and limits provided by the Operator ensures compatibility and avoids failure in namespaces with quotas. Example requests include **250m CPU and 1Gi memory for the Application Controller**, and **250m CPU and 512Mi memory for the ApplicationSet Controller**.
-
 - **Standardized Low Profile:** Setting explicit minimum requests helps **guarantee minimum resources** for stability, while slightly higher limits can prevent unbounded resource consumption in shared environments. This is achieved by defining the `.spec.<component>.resources` field in the Argo CD CR.
 
 **Implications**

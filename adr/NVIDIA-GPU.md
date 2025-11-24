@@ -12,7 +12,7 @@ Which method will be used to deploy the NVIDIA GPU Operator onto the OpenShift c
 The GPU Operator manages device drivers, container toolkits, and device plugins, automating the configuration required to utilize NVIDIA GPUs. The deployment method impacts management complexity and flexibility.
 
 **Assumption**
-GPUs will be used for AI/ML or high-performance computing workloads.
+Hardware Acceleration Strategy includes NVIDIA GPUs.
 
 **Alternatives**
 

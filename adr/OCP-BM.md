@@ -52,6 +52,47 @@ N/A
 ## OCP-BM-02
 
 **Title**
+UPI Worker Node Operating System Selection (RHCOS vs RHEL)
+
+**Architectural Question**
+Which operating system (RHCOS or RHEL) will be standardized for compute (worker) nodes in user-provisioned infrastructure (UPI) bare metal clusters?
+
+**Issue or Problem**
+The choice between RHCOS and RHEL for compute machines in UPI environments dictates the Day 2 operational model: RHEL provides flexibility but shifts OS lifecycle management entirely to the user, while RHCOS ensures consistency and uses the Machine Config Operator (MCO) for updates, supporting the standard immutable infrastructure model.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- Standardize on Red Hat Enterprise Linux CoreOS (RHCOS) workers
+- Standardize on Red Hat Enterprise Linux (RHEL) workers
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Standardize on Red Hat Enterprise Linux CoreOS (RHCOS) workers:** This ensures the standard immutable OS image is used and allows the Machine Config Operator to manage the OS lifecycle via cluster upgrades, simplifying ongoing maintenance and consistency.
+- **Standardize on Red Hat Enterprise Linux (RHEL) workers:** This allows the use of a traditional Linux OS (e.g., RHEL 8.6+ or RHEL 9 depending on OCP version), providing maximum customizability for specialized applications or legacy configurations, and leveraging existing enterprise RHEL operational toolchains.
+
+**Implications**
+
+- **Standardize on Red Hat Enterprise Linux CoreOS (RHCOS) workers:** Supports the default cluster operational model. All cluster changes are applied by Operators. SSH access is not recommended for routine use.
+- **Standardize on Red Hat Enterprise Linux (RHEL) workers:** The organization takes full responsibility for all operating system life cycle management and maintenance of the compute nodes, including updates, patching, and required tasks. The cluster upgrade process will not automatically update the OS on these nodes.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Security Expert
+
+---
+
+## OCP-BM-03
+
+**Title**
 Bare Metal Provisioning Workflow
 
 **Architectural Question**
@@ -91,7 +132,7 @@ Bare metal provisioning involves complex steps (BMC interaction, ISO booting, ho
 
 ---
 
-## OCP-BM-03
+## OCP-BM-04
 
 **Title**
 Bare Metal Fleet Cluster Upgrade Strategy
@@ -134,7 +175,7 @@ Managing simultaneous upgrades across a large fleet of bare metal clusters, part
 
 ---
 
-## OCP-BM-04
+## OCP-BM-05
 
 **Title**
 Bare Metal Operator (BMO) for UPI
@@ -175,7 +216,48 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-05
+## OCP-BM-06
+
+**Title**
+Bare Metal Operator Enrollment Policy for Existing UPI Hosts
+
+**Architectural Question**
+When enabling the Bare Metal Operator (BMO) on a User-Provisioned Infrastructure (UPI) cluster for Day 2 automation, should existing, already-installed nodes (e.g., control plane) be enrolled only for inventory and status purposes, or prepared for full BMO lifecycle management (remediation, re-provisioning)?
+
+**Issue or Problem**
+Integrating existing UPI nodes into the BMO system for inventory and management visibility risks accidental re-provisioning or state corruption if the BMO attempts to manage the node's lifecycle without the correct configuration flag.
+
+**Assumption**
+The Bare Metal Operator (BMO) is enabled on a UPI cluster.
+
+**Alternatives**
+
+- Enroll as Fully Managed Hosts
+- Enroll as Externally Provisioned Hosts (Inventory Only)
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Enroll as Fully Managed Hosts:** This allows the BMO to perform full node lifecycle management (remediation, scaling), treating the UPI node similarly to an IPI node, provided it conforms to Ironic standards.
+- **Enroll as Externally Provisioned Hosts (Inventory Only):** This strategy allows the cluster administrator to use the BMO to manage existing hosts solely for inventory purposes and to observe status, ensuring the host is recognized without attempting to re-provision the underlying operating system.
+
+**Implications**
+
+- **Enroll as Fully Managed Hosts:** Increased risk of unintended node re-provisioning if the original UPI installation deviated from the BMO/Ironic expectations or if the `externallyProvisioned` flag is mistakenly omitted.
+- **Enroll as Externally Provisioned Hosts (Inventory Only):** Requires explicitly setting the `spec.externallyProvisioned: true` specification in the `BareMetalHost` Custom Resource to prevent the BMO from re-provisioning the host.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-07
 
 **Title**
 Bare Metal Operator Namespace Scope
@@ -217,7 +299,7 @@ To enable features like Bare Metal as a Service (BMaaS) or GitOps ZTP, the BMO m
 
 ---
 
-## OCP-BM-06
+## OCP-BM-08
 
 **Title**
 BMC protocol
@@ -261,7 +343,7 @@ Bare Metal Operator is enabled.
 
 ---
 
-## OCP-BM-07
+## OCP-BM-09
 
 **Title**
 BMC Credential Security and Storage Strategy
@@ -302,7 +384,7 @@ Bare Metal Operator is enabled.
 
 ---
 
-## OCP-BM-08
+## OCP-BM-10
 
 **Title**
 Provisioning Network Strategy for Installer-Provisioned Bare Metal
@@ -342,7 +424,48 @@ Cluster installation method is Installer-Provisioned Infrastructure (IPI).
 
 ---
 
-## OCP-BM-09
+## OCP-BM-11
+
+**Title**
+IPI Provisioning Network DHCP Management Mode
+
+**Architectural Question**
+When utilizing a dedicated provisioning network during Installer-Provisioned Infrastructure (IPI) deployment, should the cluster allow Ironic to manage DHCP services, or should it rely on an existing external DHCP server?
+
+**Issue or Problem**
+The default IPI installation attempts to run an Ironic-managed DHCP service (`ironic-dnsmasq`) on the provisioning network. If another DHCP server is already present on this non-routable network, this causes conflicts and installation failure unless the provisioning network mode is explicitly changed to unmanaged.
+
+**Assumption**
+A dedicated provisioning network is configured for IPI deployment (OCP-BM-09).
+
+**Alternatives**
+
+- Managed Provisioning Network (Ironic DHCP)
+- Unmanaged Provisioning Network (External DHCP)
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Managed Provisioning Network (Ironic DHCP):** This is the default `Managed` provisioning network setting. It automatically enables the `ironic-dnsmasq` DHCP server on the provisioner node, isolating the operating system provisioning traffic onto a non-routable network segment.
+- **Unmanaged Provisioning Network (External DHCP):** This is configured by setting `provisioningNetwork` to a setting other than `Managed`. This is required if a DHCP server is already running on the provisioning network, as relying on an existing external server avoids conflicts with Ironic's integrated DHCP service.
+
+**Implications**
+
+- **Managed Provisioning Network (Ironic DHCP):** This network must be isolated and cannot have an external DHCP server if configured as `Managed`.
+- **Unmanaged Provisioning Network (External DHCP):** The administrator is fully responsible for deploying and managing the highly available external DHCP service on the provisioning network to assign IP addresses to the bare metal nodes.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-12
 
 **Title**
 IPI/Assisted Provisioning Boot Mechanism
@@ -383,7 +506,48 @@ Cluster installation method is IPI, Agent-based Installer (ABI), or Assisted Ins
 
 ---
 
-## OCP-BM-10
+## OCP-BM-13
+
+**Title**
+Ironic RHCOS Image Transfer Protocol (Virtual Media)
+
+**Architectural Question**
+When deploying OpenShift Container Platform using virtual media for RHCOS image transfer via the Baseboard Management Controller (BMC), should the transfer rely on unencrypted HTTP or TLS-encrypted HTTPS?
+
+**Issue or Problem**
+When omitting the provisioning network, virtual media transfer is required. Using unencrypted HTTP for image transfer introduces a data security risk during the provisioning phase. However, enabling TLS/HTTPS adds operational complexity related to certificate trust management.
+
+**Assumption**
+Installation utilizes Virtual Media BMC addressing (e.g., `redfish-virtualmedia` or `idrac-virtualmedia`) as decided in OCP-BM-11.
+
+**Alternatives**
+
+- HTTP Image Transfer (Port 6180)
+- HTTPS/TLS Image Transfer (Port 6183)
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **HTTP Image Transfer (Port 6180):** This is the default HTTP port for image access. It simplifies the setup as it avoids the requirement for provisioning and managing TLS certificates for the provisioning service.
+- **HTTPS/TLS Image Transfer (Port 6183):** This enhances security by encrypting the RHCOS image transfer. Port 6183 is the required TLS port for virtual media installation.
+
+**Implications**
+
+- **HTTP Image Transfer (Port 6180):** The RHCOS image is transferred unencrypted, which may not meet security or compliance mandates.
+- **HTTPS/TLS Image Transfer (Port 6183):** Requires that the provisioner node and control plane nodes have port 6183 open on the baremetal network interface. Requires careful management of the certificate authority chain to ensure the BMC trusts the server.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-14
 
 **Title**
 Network Controller Sideband Interface (NC-SI) Support Enforcement
@@ -423,48 +587,7 @@ Bare Metal Operator is enabled.
 
 ---
 
-## OCP-BM-11
-
-**Title**
-UPI Worker Node Operating System Selection (RHCOS vs RHEL)
-
-**Architectural Question**
-Which operating system (RHCOS or RHEL) will be standardized for compute (worker) nodes in user-provisioned infrastructure (UPI) bare metal clusters?
-
-**Issue or Problem**
-The choice between RHCOS and RHEL for compute machines in UPI environments dictates the Day 2 operational model: RHEL provides flexibility but shifts OS lifecycle management entirely to the user, while RHCOS ensures consistency and uses the Machine Config Operator (MCO) for updates, supporting the standard immutable infrastructure model.
-
-**Assumption**
-Cluster installation method is User-Provisioned Infrastructure (UPI).
-
-**Alternatives**
-
-- Standardize on Red Hat Enterprise Linux CoreOS (RHCOS) workers
-- Standardize on Red Hat Enterprise Linux (RHEL) workers
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Standardize on Red Hat Enterprise Linux CoreOS (RHCOS) workers:** This ensures the standard immutable OS image is used and allows the Machine Config Operator to manage the OS lifecycle via cluster upgrades, simplifying ongoing maintenance and consistency.
-- **Standardize on Red Hat Enterprise Linux (RHEL) workers:** This allows the use of a traditional Linux OS (e.g., RHEL 8.6+ or RHEL 9 depending on OCP version), providing maximum customizability for specialized applications or legacy configurations, and leveraging existing enterprise RHEL operational toolchains.
-
-**Implications**
-
-- **Standardize on Red Hat Enterprise Linux CoreOS (RHCOS) workers:** Supports the default cluster operational model. All cluster changes are applied by Operators. SSH access is not recommended for routine use.
-- **Standardize on Red Hat Enterprise Linux (RHEL) workers:** The organization takes full responsibility for all operating system life cycle management and maintenance of the compute nodes, including updates, patching, and required tasks. The cluster upgrade process will not automatically update the OS on these nodes.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: Security Expert
-
----
-
-## OCP-BM-12
+## OCP-BM-15
 
 **Title**
 UPI Provisioning Boot Mechanism
@@ -504,7 +627,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-13
+## OCP-BM-16
 
 **Title**
 Ignition Configuration Integrity Validation Strategy
@@ -513,7 +636,7 @@ Ignition Configuration Integrity Validation Strategy
 How will the authenticity and integrity of the fetched Ignition Configuration files be validated during Red Hat Enterprise Linux CoreOS (RHCOS) node installation?
 
 **Issue or Problem**
-During manual RHCOS installation (ISO/PXE), the Ignition config files are downloaded from an HTTP/S server. Without verification, the system is vulnerable to fetching tampered configurations. If relying on HTTP, a hash is required for integrity validation. If relying on HTTPS, the Certificate Authority (CA) might need to be explicitly trusted.
+During manual RHCOS installation (ISO/PXE), the Ignition config files are downloaded from an HTTP/S server. Without verification, the system is vulnerable to fetching tampered configurations. If relying on HTTP, a hash is required for integrity validation.
 
 **Assumption**
 Cluster installation method is User-Provisioned Infrastructure (UPI).
@@ -522,6 +645,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 - Validate using SHA512 Hash over HTTP/S
 - Validate using HTTPS TLS/CA Trust (without explicit hash)
+- Disable Integrity Validation (Insecure)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -530,11 +654,13 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 - **Validate using SHA512 Hash over HTTP/S:** This approach provides a strong integrity check regardless of the network protocol (HTTP or HTTPS). Using the `--ignition-hash` is required when the Ignition config file is obtained through an HTTP URL to validate its authenticity.
 - **Validate using HTTPS TLS/CA Trust (without explicit hash):** If the Ignition configuration files are provided through an HTTPS server that uses TLS, the certificate authority (CA) can be added to the system trust store before running `coreos-installer`, ensuring integrity and confidentiality during transfer.
+- **Disable Integrity Validation (Insecure):** This simplifies installation and debugging by removing the dependency on HTTPS certificate authorities or manually verifying the SHA512 digest. Supported via the `--insecure-ignition` option.
 
 **Implications**
 
 - **Validate using SHA512 Hash over HTTP/S:** Requires the administrator to obtain the SHA512 digest for each Ignition config file and pass it using the `--ignition-hash` option to `coreos-installer`.
-- **Validate using HTTPS TLS/CA Trust (without explicit hash):** If using a custom CA, requires adding the internal certificate authority (CA) to the system trust store via `coreos-installer` before installation. This relies on a correctly managed certificate chain.
+- **Validate using HTTPS TLS/CA Trust (without explicit hash):** If using a custom CA, requires adding the internal certificate authority (CA) to the system trust store via `coreos-installer` before installation.
+- **Disable Integrity Validation (Insecure):** **Not recommended for production.** This leaves the node vulnerable to accepting a compromised Ignition configuration file if the network or download URL is manipulated (Man-in-the-Middle).
 
 **Agreeing Parties**
 
@@ -544,7 +670,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-14
+## OCP-BM-17
 
 **Title**
 RHCOS Live Installer Custom CA Trust Strategy
@@ -585,7 +711,7 @@ The cluster installation method is User-Provisioned Infrastructure (UPI) or PXE/
 
 ---
 
-## OCP-BM-15
+## OCP-BM-18
 
 **Title**
 RHCOS Artifact Sourcing Strategy
@@ -626,7 +752,7 @@ N/A
 
 ---
 
-## OCP-BM-16
+## OCP-BM-19
 
 **Title**
 RHCOS Day-1 Customization and Network Configuration Strategy
@@ -666,7 +792,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-17
+## OCP-BM-20
 
 **Title**
 RHCOS Customization Timing Strategy (Live vs Permanent Ignition)
@@ -707,7 +833,7 @@ Custom Day-0 tasks requiring non-MCO methods are needed (e.g., advanced partitio
 
 ---
 
-## OCP-BM-18
+## OCP-BM-21
 
 **Title**
 RHCOS Live Network Configuration Persistence Strategy (UPI)
@@ -748,7 +874,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-19
+## OCP-BM-22
 
 **Title**
 RHCOS Node Day-1 DNS Resolver Redundancy Strategy
@@ -790,7 +916,7 @@ The cluster machines are configured with static IP addresses during RHCOS instal
 
 ---
 
-## OCP-BM-20
+## OCP-BM-23
 
 **Title**
 Multi-NIC Strategy for RHCOS Core Network (UPI)
@@ -830,7 +956,7 @@ Cluster uses User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-21
+## OCP-BM-24
 
 **Title**
 Bare Metal Network Bridge Configuration Tooling Strategy
@@ -872,7 +998,7 @@ N/A
 
 ---
 
-## OCP-BM-22
+## OCP-BM-25
 
 **Title**
 Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
@@ -913,7 +1039,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-23
+## OCP-BM-26
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -956,7 +1082,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-24
+## OCP-BM-27
 
 **Title**
 Bare Metal Host Firmware Configuration Management
@@ -997,7 +1123,7 @@ Provisioning workflow is GitOps ZTP.
 
 ---
 
-## OCP-BM-25
+## OCP-BM-28
 
 **Title**
 RHCOS Node Console Access Strategy
@@ -1037,7 +1163,7 @@ N/A
 
 ---
 
-## OCP-BM-26
+## OCP-BM-29
 
 **Title**
 RHCOS Installation Boot Device Selection
@@ -1078,7 +1204,7 @@ N/A
 
 ---
 
-## OCP-BM-27
+## OCP-BM-30
 
 **Title**
 iSCSI Boot Configuration Method for RHCOS
@@ -1119,7 +1245,7 @@ iSCSI boot device is used
 
 ---
 
-## OCP-BM-28
+## OCP-BM-31
 
 **Title**
 RHCOS Multipathing Enablement Strategy (Boot and Secondary Disks)
@@ -1164,7 +1290,7 @@ Installation Boot Device or Secondary Storage is a SAN device.
 
 ---
 
-## OCP-BM-29
+## OCP-BM-32
 
 **Title**
 RHCOS Multipath Installation Target Naming
@@ -1206,7 +1332,7 @@ Multipathing to be enabled.
 
 ---
 
-## OCP-BM-30
+## OCP-BM-33
 
 **Title**
 RHCOS Installation Drive Identification Strategy
@@ -1246,7 +1372,7 @@ Installation target is a local disk or single-path SAN LUN.
 
 ---
 
-## OCP-BM-31
+## OCP-BM-34
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -1286,7 +1412,7 @@ Installation Boot Device is Local Device.
 
 ---
 
-## OCP-BM-32
+## OCP-BM-35
 
 **Title**
 Control Plane Storage Performance Validation Strategy
@@ -1326,7 +1452,7 @@ N/A
 
 ---
 
-## OCP-BM-33
+## OCP-BM-36
 
 **Title**
 RHCOS /var Partitioning Strategy (General Data Isolation)
@@ -1366,7 +1492,7 @@ The cluster will utilize large disk sizes (e.g., > 100GB) and may host applicati
 
 ---
 
-## OCP-BM-34
+## OCP-BM-37
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -1406,7 +1532,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-35
+## OCP-BM-38
 
 **Title**
 Control Plane Etcd Storage Partitioning Strategy
@@ -1447,7 +1573,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-36
+## OCP-BM-39
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -1487,7 +1613,7 @@ N/A
 
 ---
 
-## OCP-BM-37
+## OCP-BM-40
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1530,7 +1656,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-38
+## OCP-BM-41
 
 **Title**
 Storage Architecture for the Internal Image Registry
@@ -1578,7 +1704,7 @@ N/A
 
 ---
 
-## OCP-BM-39
+## OCP-BM-42
 
 **Title**
 Internal Image Registry Management State on Bare Metal UPI
@@ -1619,7 +1745,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-40
+## OCP-BM-43
 
 **Title**
 Internal Image Registry Persistent Volume Claim (PVC) Provisioning Strategy
@@ -1661,7 +1787,7 @@ The Internal Image Registry will be switched to the Managed management state pos
 
 ---
 
-## OCP-BM-41
+## OCP-BM-44
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1702,7 +1828,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-42
+## OCP-BM-45
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1743,7 +1869,7 @@ N/A
 
 ---
 
-## OCP-BM-43
+## OCP-BM-46
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1784,7 +1910,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-44
+## OCP-BM-47
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1825,7 +1951,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-45
+## OCP-BM-48
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1867,7 +1993,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-46
+## OCP-BM-49
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1908,7 +2034,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-47
+## OCP-BM-50
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -1948,7 +2074,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-48
+## OCP-BM-51
 
 **Title**
 Bare Metal Node Firmware Management
@@ -1988,7 +2114,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-49
+## OCP-BM-52
 
 **Title**
 Bare Metal Firmware Update Application Timing Policy
@@ -2028,7 +2154,7 @@ The Bare Metal Operator (BMO) is enabled and managing node firmware configuratio
 
 ---
 
-## OCP-BM-50
+## OCP-BM-53
 
 **Title**
 Bare Metal Node Remediation

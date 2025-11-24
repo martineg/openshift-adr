@@ -25,13 +25,13 @@ N/A
 
 **Justification**
 
-- **OpenShift Logging (LokiStack) using ViaQ Data Model:** To deploy the integrated logging stack which collects logs from platform and user workloads, providing visualization and storage within the cluster. This is the standard, supported approach for on-cluster visibility and the default data model when forwarding logs to LokiStack.
+- **OpenShift Logging (LokiStack) using ViaQ Data Model:** To deploy the integrated logging stack **(using the Vector collector)** which collects logs from platform and user workloads, providing visualization and storage within the cluster. This is the standard, supported approach for on-cluster visibility and the default data model when forwarding logs to LokiStack.
 - **OpenShift Logging (LokiStack) using OpenTelemetry (OTEL) Data Model (TP):** To deploy the integrated logging stack utilizing the OpenTelemetry data model. This is a **(TP)** feature not recommended for production due to lack of production SLAs, but it aligns with modern observability standards and is planned to become the future default.
-- **External Log Collector (Forwarding Only):** To rely exclusively on an external log aggregation tool, configuring the cluster only to forward logs (LOG-02) without storing or querying them internally. This minimizes resource consumption on the cluster but eliminates immediate in-cluster visibility.
+- **External Log Collector (Forwarding Only):** To rely exclusively on an external log aggregation tool, configuring the cluster only to forward logs without storing or querying them internally. This minimizes resource consumption on the cluster but eliminates immediate in-cluster visibility.
 
 **Implications**
 
-- **OpenShift Logging (LokiStack) using ViaQ Data Model:** Requires sizing the local log store appropriately (LOG-03) and consumes worker node resources for storage and indexing.
+- **OpenShift Logging (LokiStack) using ViaQ Data Model:** Requires sizing the local log store appropriately and consumes worker node resources for storage and indexing.
 - **OpenShift Logging (LokiStack) using OpenTelemetry (OTEL) Data Model (TP):** This is a (TP) feature. Requires careful configuration, including setting schema version v13 on the LokiStack CR for structured metadata support.
 - **External Log Collector (Forwarding Only):** Requires network configuration to reach the external collector. Cluster health monitoring relies heavily on the external system.
 
@@ -73,7 +73,7 @@ N/A
 **Implications**
 
 - **External Log Forwarding Enabled:** Requires provisioning and configuring an external logging platform (e.g., Splunk, Elasticsearch, or cloud native services). Requires cluster resources for the forwarding components (e.g., Vector). If OTLP output is used, it is a (TP) feature that is not supported with Red Hat production SLAs, and requires the `observability.openshift.io/tech-preview-otlp-output: "enabled"` annotation on the ClusterLogForwarder CR.
-- **External Log Forwarding Disabled:** Limits auditability and long-term troubleshooting capability. All log data relies entirely on the sizing and retention policy of the internal log store (LOG-03).
+- **External Log Forwarding Disabled:** Limits auditability and long-term troubleshooting capability. All log data relies entirely on the sizing and retention policy of the internal log store.
 
 **Agreeing Parties**
 
@@ -95,7 +95,7 @@ What will be the size of the on-cluster log store?
 The LokiStack component, which provides the on-cluster log store, must be sized appropriately to handle the log volume and retention requirements without consuming excessive cluster resources.
 
 **Assumption**
-The OpenShift Logging Operator is deployed with the LokiStack storage solution (chosen in LOG-01).
+The OpenShift Logging Operator is deployed with the LokiStack storage solution.
 
 **Alternatives**
 
@@ -119,7 +119,7 @@ The OpenShift Logging Operator is deployed with the LokiStack storage solution (
 **Implications**
 
 - **1x.demo:** Lowest resource footprint, lowest capacity, suitable only for demonstration environments.
-- **1x.pico:** Has the lowest resource footprint among HA supported sizes but also limited capacity for ingestion, storage, and querying, designed for 50GB/dayy. **Requires OpenShift Logging 6.1 or later.**
+- **1x.pico:** Has the lowest resource footprint among HA supported sizes but also limited capacity for ingestion, storage, and querying, designed for 50GB/day. **Requires OpenShift Logging 6.1 or later.**
 - **1x.extra-small:** Has the lowest resource footprint among production sizes but limited capacity for ingestion, storage, and querying (100GB/day).
 - **1x.small:** Provides a good baseline for performance and capacity (500GB/day). The size can be scaled up in the future if requirements change.
 - **1x.medium:** Consumes more significant CPU, memory, and storage resources (2TB/day). This size should be chosen based on a clear understanding of the expected log volume.
@@ -143,7 +143,7 @@ Which object storage solution will be used as the persistent backend for LokiSta
 LokiStack requires an object storage backend to persist log data. The choice of backend dictates infrastructure setup, authentication configuration (e.g., secrets, STS/Workload ID), and region compatibility.
 
 **Assumption**
-LokiStack solution is selected (as per LOG-01) and requires persistent object storage for log data.
+LokiStack solution is selected and requires persistent object storage for log data.
 
 **Alternatives**
 
@@ -288,12 +288,12 @@ The LokiStack deployment must be configured to support modern data models and re
 
 **Justification**
 
-- **Use Schema Version v13:** To ensure future compatibility and support for structured metadata, which is essential for fully utilizing the OpenTelemetry data model (if chosen in LOG-01).
+- **Use Schema Version v13:** To ensure future compatibility and support for structured metadata, which is essential for fully utilizing the OpenTelemetry data model.
 - **Use Schema Version v12 (Legacy):** To maintain compatibility with an existing, older Loki deployment that has not yet been migrated.
 
 **Implications**
 
-- **Use Schema Version v13:** Requires setting version: v13 and a future effectiveDate in the LokiStack CR specification; existing schemas must be retained to prevent data loss.
+- **Use Schema Version v13:** Requires setting `version: v13` and a future `effectiveDate` in the LokiStack CR specification; existing schemas must be retained to prevent data loss.
 - **Use Schema Version v12 (Legacy):** Lacks support for structured metadata, which will break OTLP log ingestion if that is ever enabled.
 
 **Agreeing Parties**
@@ -328,7 +328,7 @@ Cluster log volume is high enough to warrant customizing the default collector r
 
 **Justification**
 
-- **Custom Collector Limits and Requests:** To ensure stable log collection and forwarding across all nodes by setting CPU and memory limits (spec.collector.resources) appropriate for the expected log ingestion rate.
+- **Custom Collector Limits and Requests:** To ensure stable log collection and forwarding across all nodes by setting CPU and memory limits (`spec.collector.resources`) appropriate for the expected log ingestion rate.
 - **Default Collector Limits and Requests:** To simplify deployment and use the Red Hat-provided baseline, which is sufficient for most low-to-moderate log volume clusters.
 
 **Implications**

@@ -127,6 +127,46 @@ Performance must be maintained by limiting the total simultaneous compute resour
 ## PIPELINES-04
 
 **Title**
+Pipelines as Code (PaC) Adoption Strategy
+
+**Architectural Question**
+What strategy will be adopted for defining and executing CI/CD workflows using OpenShift Pipelines?
+
+**Issue or Problem**
+CI/CD pipelines should be managed declaratively alongside application source code to facilitate GitOps principles and version control of the entire development and deployment process.
+
+**Assumption**
+OpenShift Pipelines will be deployed.
+
+**Alternatives**
+
+- Manual Definition of Tekton Resources
+- Pipelines as Code (PaC) Integration (using Repository CR)
+
+**Decision**
+#TODO: Document the decision.#
+
+**Justification**
+
+- **Manual Definition of Tekton Resources:** To define and apply `Pipeline` and `PipelineRun` resources directly to the cluster, typically via CLI commands or application manifests. This offers maximum control but lacks the Git integration benefits of PaC.
+- **Pipelines as Code (PaC) Integration (using Repository CR):** To leverage the **Repository custom resource (CR)**, repository webhooks, and GitOps commands (like in-line comments) to trigger and manage Tekton pipelines directly from the Git repository.This tightly aligns the CI/CD definition with the application source code.
+
+**Implications**
+
+- **Manual Definition of Tekton Resources:** Requires external orchestration (e.g., Jenkins, GitLab CI) to manage pipeline runs, increasing complexity.
+- **Pipelines as Code (PaC) Integration:** Requires configuring webhooks on the source control system and deployment of the specialized PaC components within the cluster. Using the `pipelinesascode.tekton.dev/cancel-in-progress: "true"` annotation or global settings enables automatic cancellation-in-progress (TP) for stale runs, consuming fewer cluster resources. These global settings include `enable-cancel-in-progress-on-pull-requests` (TP) and `enable-cancel-in-progress-on-push` (TP). This feature is currently for testing and feedback. Furthermore, enabling PaC allows overriding a task in a remote pipeline definition by supplying a task definition with the same name (TP). The system automatically populates a new Pipelines as Code dynamic variable, `pull_request_number` (TP), for push events triggered by pull requests, allowing for a clear reference to the specific pull request associated with the push event and improving traceability. The reliance on remote resource resolution means adopting Artifact Hub or a self-hosted Tekton Hub instance, as the public instance of Tekton Hub (hub.tekton.dev) is deprecated and scheduled for removal.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: AI/ML Platform Owner
+
+---
+
+## PIPELINES-05
+
+**Title**
 Pipeline Triggering Mechanism
 
 **Architectural Question**
@@ -164,46 +204,6 @@ OpenShift Pipelines (Tekton) will be used for CI/CD automation.
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Storage Expert
-
----
-
-## PIPELINES-05
-
-**Title**
-Pipelines as Code (PaC) Adoption Strategy
-
-**Architectural Question**
-What strategy will be adopted for defining and executing CI/CD workflows using OpenShift Pipelines?
-
-**Issue or Problem**
-CI/CD pipelines should be managed declaratively alongside application source code to facilitate GitOps principles and version control of the entire development and deployment process.
-
-**Assumption**
-OpenShift Pipelines will be deployed.
-
-**Alternatives**
-
-- Manual Definition of Tekton Resources
-- Pipelines as Code (PaC) Integration (using Repository CR)
-
-**Decision**
-#TODO: Document the decision.#
-
-**Justification**
-
-- **Manual Definition of Tekton Resources:** To define and apply `Pipeline` and `PipelineRun` resources directly to the cluster, typically via CLI commands or application manifests. This offers maximum control but lacks the Git integration benefits of PaC.
-- **Pipelines as Code (PaC) Integration (using Repository CR):** To leverage the **Repository custom resource (CR)**, repository webhooks, and GitOps commands (like in-line comments) to trigger and manage Tekton pipelines directly from the Git repository.This tightly aligns the CI/CD definition with the application source code.
-
-**Implications**
-
-- **Manual Definition of Tekton Resources:** Requires external orchestration (e.g., Jenkins, GitLab CI) to manage pipeline runs, increasing complexity.
-- **Pipelines as Code (PaC) Integration:** Requires configuring webhooks on the source control system and deployment of the specialized PaC components within the cluster. Using the pipelinesascode.tekton.dev/cancel-in-progress: "true" annotation or global settings enables automatic cancellation-in-progress (TP) for stale runs, consuming fewer cluster resources. These global settings include enable-cancel-in-progress-on-pull-requests (TP) and enable-cancel-in-progress-on-push (TP). This feature is currently for testing and feedback. Furthermore, enabling PaC allows overriding a task in a remote pipeline definition by supplying a task definition with the same name (TP). The system automatically populates a new Pipelines as Code dynamic variable, pull_request_number (TP), for push events triggered by pull requests, allowing for a clear reference to the specific pull request associated with the push event and improving traceability. The reliance on remote resource resolution means adopting Artifact Hub or a self-hosted Tekton Hub instance, as the public instance of Tekton Hub (hub.tekton.dev) is deprecated and scheduled for removal
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: AI/ML Platform Owner
 
 ---
 

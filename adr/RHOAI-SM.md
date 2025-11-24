@@ -58,7 +58,7 @@ Which OpenShift clusters will be used to host Red Hat OpenShift AI instances?
 Choosing the host clusters for Red Hat OpenShift AI instances affects resource utilization, deployment timelines, and compatibility with existing workloads. Using existing clusters may constrain capacity or conflict with other applications, while creating new clusters increases setup effort and infrastructure costs.
 
 **Assumption**
-Red Hat OpenShift AI instances have been defined (RHOAI-SM-01).
+Red Hat OpenShift AI instances have been defined.
 
 **Alternatives**
 
@@ -101,7 +101,7 @@ Environment connectivity
 Should Red Hat OpenShift AI Self-Managed be deployed in a connected or disconnected environment?
 
 **Issue or Problem**
-The environment’s internet connectivity impacts access to external resources (e.g., container images, updates) and security requirements. A connected environment requires internet access, while a disconnected environment must operate without it. (Aligns with OCP-BASE-07).
+The environment’s internet connectivity impacts access to external resources (e.g., container images, updates) and security requirements. A connected environment requires internet access, while a disconnected environment must operate without it.
 
 **Assumption**
 N/A
@@ -122,7 +122,7 @@ N/A
 **Implications**
 
 - **Connected Environment:** Increases security monitoring needs; enables direct resource pulls (e.g., images, updates), speeding setup.
-- **Disconnected Environment:** Demands manual update processes and skilled admins; requires mirroring resources (e.g., images to local registry), adding setup time. (See RHOAI-SM-04).
+- **Disconnected Environment:** Demands manual update processes and skilled admins; requires mirroring resources (e.g., images to local registry), adding setup time.
 
 **Agreeing Parties**
 
@@ -143,7 +143,7 @@ Mirror registry (disconnected environment)
 If deploying in a disconnected environment, what mirror registry will be used for RHOAI components?
 
 **Issue or Problem**
-In a disconnected environment (RHOAI-SM-03), a mirror registry is essential for providing OpenShift AI with access to container images and operators. The choice of registry impacts availability, scalability, and integration. (Aligns with OCP-BASE-08).
+In a disconnected environment, a mirror registry is essential for providing OpenShift AI with access to container images and operators. The choice of registry impacts availability, scalability, and integration.
 
 **Assumption**
 OpenShift cluster is in a disconnected environment.
@@ -158,7 +158,7 @@ OpenShift cluster is in a disconnected environment.
 
 **Justification**
 
-- **Use OCP Mirror Registry:** To leverage the same mirror registry infrastructure used for the underlying OpenShift platform (as decided in OCP-BASE-08), ensuring consistency and simplifying mirror management.
+- **Use OCP Mirror Registry:** To leverage the same mirror registry infrastructure used for the underlying OpenShift platform, ensuring consistency and simplifying mirror management.
 - **Dedicated RHOAI-Specific Mirror:** To maintain a separate mirror registry specifically for RHOAI components, potentially for organizational separation or different update cadences. Generally increases complexity.
 
 **Implications**
@@ -185,10 +185,10 @@ Identity provider Integration
 Which OpenShift identity provider (IdP) will be used to authenticate users accessing Red Hat OpenShift AI?
 
 **Issue or Problem**
-OpenShift AI relies entirely on the OpenShift platform's configured authentication mechanism (OCP-SEC-03). The choice of IdP affects user login experience, integration with enterprise directories, group management for RBAC, and overall security posture for RHOAI users.
+OpenShift AI relies entirely on the OpenShift platform's configured authentication mechanism. The choice of IdP affects user login experience, integration with enterprise directories, group management for RBAC, and overall security posture for RHOAI users.
 
 **Assumption**
-An appropriate OpenShift IdP must be configured (see OCP-SEC-03).
+An appropriate OpenShift IdP must be configured.
 
 **Alternatives**
 
@@ -199,11 +199,11 @@ An appropriate OpenShift IdP must be configured (see OCP-SEC-03).
 
 **Justification**
 
-- **Leverage Configured OpenShift IdP:** RHOAI integrates directly with the IdP configured at the OpenShift cluster level. The justification aligns with the choice made in OCP-SEC-03 (e.g., simplicity for HTPasswd, enterprise integration for LDAP, modern features/SSO for OIDC).
+- **Leverage Configured OpenShift IdP:** RHOAI integrates directly with the IdP configured at the OpenShift cluster level.
 
 **Implications**
 
-- The implications are inherited from the OCP-SEC-03 decision. RHOAI dashboard and components utilize the OpenShift OAuth proxy flow, meaning user authentication is handled transparently based on the cluster's IdP configuration. Group synchronization (OCP-SEC-04) becomes important for managing RHOAI roles (RHOAI-SM-06).
+- RHOAI dashboard and components utilize the OpenShift OAuth proxy flow, meaning user authentication is handled transparently based on the cluster's IdP configuration. Group synchronization becomes important for managing RHOAI roles.
 
 **Agreeing Parties**
 
@@ -226,7 +226,7 @@ How will access to the OpenShift AI dashboard be controlled based on user groups
 By default, any authenticated OpenShift user can access the RHOAI dashboard. A mechanism is needed to restrict access to specific administrator and standard user groups defined in OpenShift, aligning with RBAC best practices.
 
 **Assumption**
-Access to the OpenShift AI dashboard must be restricted based on OpenShift user groups. OpenShift groups are synchronized or defined (OCP-SEC-04). RHOAI IdP integration is confirmed (RHOAI-SM-05).
+Access to the OpenShift AI dashboard must be restricted based on OpenShift user groups. OpenShift groups are synchronized or defined. RHOAI IdP integration is confirmed.
 
 **Alternatives**
 
@@ -264,7 +264,7 @@ OpenShift AI Namespace Strategy (Core Components)
 What namespace strategy will be used for deploying OpenShift AI core components?
 
 **Issue or Problem**
-Red Hat OpenShift AI Self-Managed uses default projects (`redhat-ods-operator`, `redhat-ods-applications`), but enterprise environments often require custom names for standardization or compliance. This decision focuses on the core platform namespaces, distinct from user workload namespaces (RHOAI-SM-13).
+Red Hat OpenShift AI Self-Managed uses default projects (`redhat-ods-operator`, `redhat-ods-applications`), but enterprise environments often require custom names for standardization or compliance. This decision focuses on the core platform namespaces, distinct from user workload namespaces.
 
 **Assumption**
 N/A
@@ -297,6 +297,55 @@ N/A
 ---
 
 ## RHOAI-SM-08
+
+**Title**
+Data science project allocation strategy (User Namespaces)
+
+**Architectural Question**
+How will OpenShift Projects (Kubernetes Namespaces) be allocated and used for data science activities (workbenches, pipelines, models)?
+
+**Issue or Problem**
+OpenShift Projects provide isolation (resources, RBAC, network, quotas). The allocation strategy impacts multi-tenancy, resource management, security, and collaboration.
+
+**Assumption**
+Data science workloads need namespace isolation beyond the core RHOAI components.
+
+**Alternatives**
+
+- Single Shared Data Science Project (e.g., default `rhods-notebooks`)
+- Project per Team/Group
+- Project per ML Project/Initiative
+- Hybrid (e.g., Shared for experimentation, dedicated for production)
+
+**Decision**
+#TODO#
+
+**Justification**
+
+- **Single Shared Project:** Simplest, often uses default `rhods-notebooks`. Users share resources/RBAC. Suitable for small teams/pilots.
+- **Project per Team/Group:** Isolation between DS teams. Allows team-specific RBAC, quotas, network policies. Promotes autonomy.
+- **Project per ML Project/Initiative:** Highest isolation (per model/problem). Facilitates project-specific resource tracking/security.
+- **Hybrid:** Shared space for experimentation, dedicated/controlled namespaces for critical pipelines/serving.
+
+**Implications**
+
+- **Single Shared:** Higher risk of resource contention (needs quotas). Complex internal RBAC/NetworkPolicy. Hard to track usage per initiative.
+- **Project per Team:** Increases namespace count. Requires automation for project creation/config. Clearer resource/security boundaries per team.
+- **Project per ML Project:** Largest number of namespaces, needs high automation. Granular control/chargeback.
+- **Hybrid:** Balances flexibility/control but needs clear promotion processes between shared/dedicated namespaces.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Lead Data Scientist
+- Person: #TODO#, Role: MLOps Engineer
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## RHOAI-SM-09
 
 **Title**
 CA Certificate management
@@ -338,7 +387,7 @@ Secure communication using TLS is required.
 
 ---
 
-## RHOAI-SM-09
+## RHOAI-SM-10
 
 **Title**
 S3 Object Storage Location
@@ -350,7 +399,7 @@ Will S3-compatible object storage be used for OpenShift AI, and if so, where wil
 OpenShift AI requires S3-compatible object storage for model serving artifacts (KServe) and Data Science Pipelines intermediate data. The choice of provider impacts integration, cost, latency, and management.
 
 **Assumption**
-Model serving (RHOAI-SM-27) and/or Data Science Pipelines (RHOAI-SM-33) capabilities are required.
+Model serving and/or Data Science Pipelines capabilities are required.
 
 **Alternatives**
 
@@ -363,7 +412,7 @@ Model serving (RHOAI-SM-27) and/or Data Science Pipelines (RHOAI-SM-33) capabili
 
 **Justification**
 
-- **OpenShift Data Foundation (MCG):** To utilize integrated, on-cluster object storage provided by ODF (if deployed, OCP-STOR-01 / ODF-BASE-02), optimizing data co-location and simplifying platform storage management.
+- **OpenShift Data Foundation (MCG):** To utilize integrated, on-cluster object storage provided by ODF (if deployed), optimizing data co-location and simplifying platform storage management.
 - **External Cloud Provider S3:** To leverage native cloud services for scalability, durability, and managed features (less relevant for on-prem context unless hybrid connectivity exists).
 - **External Dedicated S3:** To utilize an existing, dedicated, enterprise-grade S3 solution (on-prem or private cloud) for centralized storage management outside the OCP cluster lifecycle.
 
@@ -383,7 +432,7 @@ Model serving (RHOAI-SM-27) and/or Data Science Pipelines (RHOAI-SM-33) capabili
 
 ---
 
-## RHOAI-SM-10
+## RHOAI-SM-11
 
 **Title**
 Default storage class for Red Hat OpenShift AI components
@@ -395,7 +444,7 @@ Which default storage class (StorageClass) will be configured for use by Red Hat
 Components like workbenches automatically create PVCs and rely on a cluster-defined default `StorageClass`. The selected default affects performance, access modes (RWO/RWX), and capacity management for these components.
 
 **Assumption**
-Dynamic volume provisioning is used. Components like Workbenches (RHOAI-SM-14) will require PVCs.
+Dynamic volume provisioning is used. Components like Workbenches will require PVCs.
 
 **Alternatives**
 
@@ -408,7 +457,7 @@ Dynamic volume provisioning is used. Components like Workbenches (RHOAI-SM-14) w
 **Justification**
 
 - **Use Existing Cluster Default:** Simplest approach, leveraging the pre-configured default `StorageClass` if it meets RHOAI's needs (e.g., provides reliable RWO block storage).
-- **Designate a Specific RHOAI Default:** Explicitly choose/create a `StorageClass` (e.g., from ODF, OCP-STOR-01 / ODF-BASE-01) and mark it as default (`storageclass.kubernetes.io/is-default-class: "true"`), ensuring RHOAI components use the desired backend. Requires cluster-admin privilege.
+- **Designate a Specific RHOAI Default:** Explicitly choose/create a `StorageClass` (e.g., from ODF) and mark it as default (`storageclass.kubernetes.io/is-default-class: "true"`), ensuring RHOAI components use the desired backend. Requires cluster-admin privilege.
 
 **Implications**
 
@@ -425,7 +474,7 @@ Dynamic volume provisioning is used. Components like Workbenches (RHOAI-SM-14) w
 
 ---
 
-## RHOAI-SM-11
+## RHOAI-SM-12
 
 **Title**
 Usage data collection (Telemetry)
@@ -450,7 +499,7 @@ N/A
 **Justification**
 
 - **Enable Sending Usage Data:** To contribute usage statistics that help Red Hat understand product usage patterns and prioritize improvements. May facilitate proactive support.
-- **Disable Sending Usage Data:** To maintain strict data isolation, comply with privacy regulations, or operate in disconnected environments (RHOAI-SM-03).
+- **Disable Sending Usage Data:** To maintain strict data isolation, comply with privacy regulations, or operate in disconnected environments.
 
 **Implications**
 
@@ -467,7 +516,7 @@ N/A
 
 ---
 
-## RHOAI-SM-12
+## RHOAI-SM-13
 
 **Title**
 Red Hat partner solutions integration
@@ -499,7 +548,7 @@ N/A
 - **Anaconda:** Provide Anaconda's curated package distribution/management.
 - **IBM Watson Studio:** Integrate IBM's AI tools/MLOps capabilities.
 - **Intel AI Tools:** Leverage Intel-optimized libraries/frameworks (OpenVINO).
-- **NVIDIA AI Enterprise:** Utilize NVIDIA's optimized AI/ML software suite (requires NVIDIA GPUs, RHOAI-SM-22).
+- **NVIDIA AI Enterprise:** Utilize NVIDIA's optimized AI/ML software suite (requires NVIDIA GPUs).
 - **Pachyderm:** Integrate data versioning/pipelining.
 - **Starburst Galaxy:** Integrate distributed SQL query engine.
 - **None:** Rely solely on Red Hat components for simplicity/minimal dependencies.
@@ -508,55 +557,6 @@ N/A
 
 - **Enabling ISV Components:** Typically requires separate partner licenses. Consumes additional cluster resources. Requires managing partner operator/component lifecycle. Adds specific functionalities. Compatibility must be maintained.
 - **None:** Simplifies licensing/dependency management. Relies on RHOAI built-in features and community integrations.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Lead Data Scientist
-- Person: #TODO#, Role: MLOps Engineer
-- Person: #TODO#, Role: AI/ML Platform Owner
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-
----
-
-## RHOAI-SM-13
-
-**Title**
-Data science project allocation strategy (User Namespaces)
-
-**Architectural Question**
-How will OpenShift Projects (Kubernetes Namespaces) be allocated and used for data science activities (workbenches, pipelines, models)?
-
-**Issue or Problem**
-OpenShift Projects provide isolation (resources, RBAC, network, quotas). The allocation strategy impacts multi-tenancy, resource management, security, and collaboration. (Aligns with OCP-MGT-01).
-
-**Assumption**
-Data science workloads need namespace isolation beyond the core RHOAI components (RHOAI-SM-07).
-
-**Alternatives**
-
-- Single Shared Data Science Project (e.g., default `rhods-notebooks`)
-- Project per Team/Group
-- Project per ML Project/Initiative
-- Hybrid (e.g., Shared for experimentation, dedicated for production)
-
-**Decision**
-#TODO#
-
-**Justification**
-
-- **Single Shared Project:** Simplest, often uses default `rhods-notebooks`. Users share resources/RBAC. Suitable for small teams/pilots.
-- **Project per Team/Group:** Isolation between DS teams. Allows team-specific RBAC, quotas, network policies. Promotes autonomy.
-- **Project per ML Project/Initiative:** Highest isolation (per model/problem). Facilitates project-specific resource tracking/security.
-- **Hybrid:** Shared space for experimentation, dedicated/controlled namespaces for critical pipelines/serving.
-
-**Implications**
-
-- **Single Shared:** Higher risk of resource contention (needs quotas, OCP-MGT-04). Complex internal RBAC/NetworkPolicy. Hard to track usage per initiative.
-- **Project per Team:** Increases namespace count. Requires automation for project creation/config. Clearer resource/security boundaries per team.
-- **Project per ML Project:** Largest number of namespaces, needs high automation. Granular control/chargeback.
-- **Hybrid:** Balances flexibility/control but needs clear promotion processes between shared/dedicated namespaces.
 
 **Agreeing Parties**
 
@@ -581,14 +581,14 @@ What notebook images (providing JupyterLab or other IDE environments) will be ma
 Data scientists use notebook images within workbenches for their runtime environment (libs, tools). The choice and management strategy impacts available tools, consistency, security, maintenance, and user experience.
 
 **Assumption**
-Workbenches will be used (RHOAI-SM-16).
+Workbenches will be used.
 
 **Alternatives**
 
 - Red Hat Provided Standard Images (CPU)
-- Red Hat Provided CUDA Images (if NVIDIA GPUs enabled, RHOAI-SM-22)
-- Red Hat Provided ROCm Images (if AMD GPUs enabled, RHOAI-SM-25)
-- Red Hat Provided Intel Images (if Intel accelerators enabled, RHOAI-SM-24 / RHOAI-SM-26)
+- Red Hat Provided CUDA Images
+- Red Hat Provided ROCm Images
+- Red Hat Provided Intel Images
 - Open Data Hub (ODH) Community Images
 - Custom-Built Images (Derived from Red Hat/ODH)
 - Combination of Above
@@ -607,7 +607,7 @@ Workbenches will be used (RHOAI-SM-16).
 
 - **Red Hat Provided:** Limited customization (users install packages at runtime). Updates managed via RHOAI upgrades. Consistent, supported baseline.
 - **ODH Community:** More options but no official Red Hat support. Requires vetting. Community-dependent updates.
-- **Custom-Built:** Max control/standardization. Requires build pipeline (Pipelines, Jenkins, etc.), dependency management, security scanning, updates. Increases maintenance. (See RHOAI-SM-15, RHOAI-SM-16).
+- **Custom-Built:** Max control/standardization. Requires build pipeline (Pipelines, Jenkins, etc.), dependency management, security scanning, updates. Increases maintenance.
 - **Combination:** Flexibility but needs governance on support/management of custom images.
 
 **Agreeing Parties**
@@ -633,7 +633,7 @@ If building custom notebook images, what additional Python packages (beyond the 
 Custom notebook images need defined package sets. Identifying necessary packages upfront is crucial for image design, dependency management, and reproducibility.
 
 **Assumption**
-Custom notebook images will be built (Decision from RHOAI-SM-14).
+Custom notebook images will be built.
 
 **Alternatives**
 
@@ -679,10 +679,10 @@ Custom notebook images location
 Where will custom-built notebook server images be stored and accessed from?
 
 **Issue or Problem**
-Custom notebook images need hosting in a container registry accessible by the OpenShift cluster. The choice impacts accessibility, security, build pipeline integration, and operational management. (Aligns with OCP-MGT-03 for application images).
+Custom notebook images need hosting in a container registry accessible by the OpenShift cluster. The choice impacts accessibility, security, build pipeline integration, and operational management.
 
 **Assumption**
-Custom notebook images will be built (Decision from RHOAI-SM-14).
+Custom notebook images will be built.
 
 **Alternatives**
 
@@ -700,7 +700,7 @@ Custom notebook images will be built (Decision from RHOAI-SM-14).
 **Implications**
 
 - **Existing HA Corporate Registry:** Requires network connectivity. Pull secrets needed in workbench namespaces. Build pipelines need push access. Integrates with existing security scanning/signing.
-- **OpenShift Internal Registry:** Requires configuring internal registry with persistent storage (ODF RWO/RWX or other PVs, OCP-STOR-01). Lifecycle tied to cluster. Build pipelines within cluster can easily push. May need separate security scanning setup.
+- **OpenShift Internal Registry:** Requires configuring internal registry with persistent storage (ODF RWO/RWX or other PVs). Lifecycle tied to cluster. Build pipelines within cluster can easily push. May need separate security scanning setup.
 
 **Agreeing Parties**
 
@@ -767,10 +767,10 @@ code-server workbenches enablement
 Will the `code-server` (VS Code in browser) workbench option be enabled alongside JupyterLab?
 
 **Issue or Problem**
-RHOAI allows enabling `code-server` as an alternative IDE, offering a VS Code experience. However, it's often Tech Preview, may lack full integration (e.g., Elyra, RHOAI-SM-34), and uses a different base image.
+RHOAI allows enabling `code-server` as an alternative IDE, offering a VS Code experience. However, it's often Tech Preview, may lack full integration e.g., Elyra, and uses a different base image.
 
 **Assumption**
-Red Hat notebook server images (RHOAI-SM-14) are used. Workbenches are provisioned (RHOAI-SM-17).
+Red Hat notebook server images are used. Workbenches are provisioned.
 
 **Alternatives**
 
@@ -811,7 +811,7 @@ How will Persistent Volume Claim (PVC) sizing be managed for workbench local sto
 Workbench PVC size impacts local data storage capacity and overall cluster storage consumption.
 
 **Assumption**
-Workbenches are configured (RHOAI-SM-17). Local PVC storage is used (RHOAI-SM-20).
+Workbenches are configured. Local PVC storage is used.
 
 **Alternatives**
 
@@ -831,7 +831,7 @@ Workbenches are configured (RHOAI-SM-17). Local PVC storage is used (RHOAI-SM-20
 **Implications**
 
 - **Fixed Default:** May be insufficient for large local datasets/libraries. Users might hit limits. Easiest capacity planning.
-- **User-Selectable:** Balances flexibility/control. Needs defined tiers and potentially project quotas (OCP-MGT-04). Users need guidance.
+- **User-Selectable:** Balances flexibility/control. Needs defined tiers and potentially project quotas. Users need guidance.
 - **Custom:** High admin overhead unless automated. Precise allocation but complicates capacity management.
 
 **Agreeing Parties**
@@ -858,7 +858,7 @@ Where will data scientists primarily store their notebook files (`.ipynb`) and a
 Notebook files are core work products. The storage strategy impacts version control, collaboration, reproducibility, backup/recovery, and MLOps practices.
 
 **Assumption**
-Workbenches are used (RHOAI-SM-17).
+Workbenches are used.
 
 **Alternatives**
 
@@ -870,13 +870,13 @@ Workbenches are used (RHOAI-SM-17).
 
 **Justification**
 
-- **Local Workbench Storage (PVC):** Simplicity and immediate persistence within user's workbench environment (on attached PVC, RHOAI-SM-19).
+- **Local Workbench Storage (PVC):** Simplicity and immediate persistence within user's workbench environment (on attached PVC).
 - **Git Repository:** Enable version control, collaboration, code reviews, easier integration with CI/CD or MLOps pipelines. Workbenches can clone Git repos. Recommended best practice.
 
 **Implications**
 
-- **Local PVC Only:** Simplest setup. Persists across workbench restarts. Difficult version control/collaboration. Requires PVC backup strategy (RHOAI-SM-40) for resilience. Can lead to data silos.
-- **Git Repository:** Promotes best practices. Requires users to commit/push regularly. Needs network connectivity to Git server. Git credentials management needed (secrets). Enables GitOps workflows. Data resilience relies on Git server backup strategy. Enables RHOAI-SM-21.
+- **Local PVC Only:** Simplest setup. Persists across workbench restarts. Difficult version control/collaboration. Requires PVC backup strategy for resilience. Can lead to data silos.
+- **Git Repository:** Promotes best practices. Requires users to commit/push regularly. Needs network connectivity to Git server. Git credentials management needed (secrets). Enables GitOps workflows. Data resilience relies on Git server backup strategy.
 
 **Agreeing Parties**
 
@@ -899,7 +899,7 @@ If using Git for notebook storage, how will repositories be structured and manag
 Repository structure/access patterns impact collaboration efficiency, code sharing, version control clarity, MLOps integration.
 
 **Assumption**
-Notebook files/code primarily stored in Git (RHOAI-SM-20).
+Notebook files/code primarily stored in Git.
 
 **Alternatives**
 
@@ -946,11 +946,11 @@ Which types of data sources need to be accessible to data scientists within the 
 Data scientists require access to various data sources. Identifying these and planning connectivity impacts network configuration, security policies, authentication, and tools needed within workbenches.
 
 **Assumption**
-Data scientists will need to access data beyond local workbench storage. S3 Location decided (RHOAI-SM-09).
+Data scientists will need to access data beyond local workbench storage. S3 Location decided.
 
 **Alternatives**
 
-- S3-Compatible Object Storage (Configured in RHOAI-SM-09)
+- S3-Compatible Object Storage
 - Relational Databases (e.g., PostgreSQL, MySQL)
 - Data Warehouses (e.g., Snowflake, Redshift, Teradata)
 - Data Lakes (e.g., HDFS, Iceberg via Trino/Spark)
@@ -975,7 +975,7 @@ Data scientists will need to access data beyond local workbench storage. S3 Loca
 
 **Implications**
 
-- **Connecting External Sources:** Requires network connectivity (firewalls, routing, DNS - OCP-NET decisions), credentials/authentication (secrets management, OCP-SEC-10), and necessary drivers/libraries within notebook images (RHOAI-SM-14). Security reviews needed.
+- **Connecting External Sources:** Requires network connectivity (firewalls, routing, DNS), credentials/authentication (secrets management), and necessary drivers/libraries within notebook images. Security reviews needed.
 - **S3:** Requires configuring access credentials and potentially S3 libraries (boto3).
 - **DBs/DWs:** Requires installing drivers (psycopg2) and managing connection strings/credentials securely.
 - **Lakes/Streaming:** May require specialized libraries (PySpark, Kafka clients) and complex network configs.
@@ -1007,7 +1007,7 @@ Will NVIDIA GPUs be utilized by Red Hat OpenShift AI workloads?
 OpenShift AI supports NVIDIA GPUs for compute-intensive tasks (training, inference). Enabling them impacts hardware requirements, cost, installation complexity (NVIDIA GPU Operator), versus potential performance gains.
 
 **Assumption**
-Workloads potentially require GPU acceleration. Sizing Strategy considered (OCP-BASE-10).
+Workloads potentially require GPU acceleration. Hardware Acceleration Strategy and Cluster Topology established.
 
 **Alternatives**
 
@@ -1020,11 +1020,11 @@ Workloads potentially require GPU acceleration. Sizing Strategy considered (OCP-
 **Justification**
 
 - **Enable NVIDIA GPU Support:** Accelerate demanding AI/ML workloads using NVIDIA GPU hardware. Essential for many deep learning tasks.
-- **Disable NVIDIA GPU Support:** Simplify cost/setup if workloads don't require NVIDIA GPUs or if alternative accelerators (RHOAI-SM-24, RHOAI-SM-25) are sufficient.
+- **Disable NVIDIA GPU Support:** Simplify cost/setup if workloads don't require NVIDIA GPUs or if alternative accelerators are sufficient.
 
 **Implications**
 
-- **Enable NVIDIA GPU Support:** Requires compatible NVIDIA GPU hardware. Necessitates installation/configuration of NVIDIA GPU Operator (see NVIDIA-GPU-01). Increases cost/complexity. Enables use of CUDA images (RHOAI-SM-14) and potentially NVIDIA AI Enterprise (RHOAI-SM-12), NIM (RHOAI-SM-30), NIM Metrics (RHOAI-SM-31), DCGM Monitoring (NVIDIA-GPU-04). Affects Sizing (OCP-BASE-10).
+- **Enable NVIDIA GPU Support:** Requires compatible NVIDIA GPU hardware.
 - **Disable NVIDIA GPU Support:** Simplifies setup/maintenance. Limits high-performance workloads suitable for NVIDIA GPUs.
 
 **Agreeing Parties**
@@ -1051,7 +1051,7 @@ Will Intel HPUs (e.g., Gaudi) be utilized by Red Hat OpenShift AI workloads?
 OpenShift AI supports Intel HPUs for cost-effective deep learning performance. Enabling them impacts hardware needs, cost, and complexity versus potential gains.
 
 **Assumption**
-Workloads potentially require HPU acceleration. Sizing Strategy considered (OCP-BASE-10).
+Workloads potentially require GPU acceleration. Hardware Acceleration Strategy and Cluster Topology established.
 
 **Alternatives**
 
@@ -1064,11 +1064,11 @@ Workloads potentially require HPU acceleration. Sizing Strategy considered (OCP-
 **Justification**
 
 - **Enable Intel HPU Usage (Gaudi):** Utilize supported Intel Gaudi devices for a cost-efficient, flexible, scalable solution optimized for deep learning.
-- **Do Not Enable Intel HPU Usage:** Simplify hardware/procurement by relying on CPU, GPUs (RHOAI-SM-23, RHOAI-SM-25), or other accelerators.
+- **Do Not Enable Intel HPU Usage:** Simplify hardware/procurement by relying on CPU, GPUs, or other accelerators.
 
 **Implications**
 
-- **Enable Intel HPU Usage (Gaudi):** Requires installation/configuration of device plugins/operators (Intel AI Tools or Habana Operator). Requires specific Intel hardware procurement. Needs container images compatible with Habana SynapseAI SDK (RHOAI-SM-14). Affects Sizing (OCP-BASE-10). Enables RHOAI-SM-26.
+- **Enable Intel HPU Usage (Gaudi):** Requires installation/configuration of device plugins/operators (Intel AI Tools or Habana Operator). Requires specific Intel hardware procurement. Needs container images compatible with Habana SynapseAI SDK. Affects Sizing.
 - **Do Not Enable Intel HPU Usage:** Limits acceleration options. Reduces operational overhead for Intel devices.
 
 **Agreeing Parties**
@@ -1095,7 +1095,7 @@ Will AMD GPUs (ROCm) be utilized by Red Hat OpenShift AI workloads?
 Enabling AMD GPUs supports high-performance AI/ML using ROCm but impacts hardware, complexity, and has limitations (e.g., disconnected environments).
 
 **Assumption**
-Workloads potentially require GPU acceleration. Sizing Strategy considered (OCP-BASE-10).
+Workloads potentially require GPU acceleration. Hardware Acceleration Strategy and Cluster Topology established.
 
 **Alternatives**
 
@@ -1108,11 +1108,11 @@ Workloads potentially require GPU acceleration. Sizing Strategy considered (OCP-
 **Justification**
 
 - **Enable AMD GPU Usage (ROCm):** Support high-performance AI/ML leveraging AMD ROCm platform, providing an alternative accelerator option.
-- **Do Not Enable AMD GPU Usage:** Simplify hardware/ecosystem dependency by relying on other supported accelerators (NVIDIA RHOAI-SM-23, Intel RHOAI-SM-24, CPU).
+- **Do Not Enable AMD GPU Usage:** Simplify hardware/ecosystem dependency by relying on other supported accelerators.
 
 **Implications**
 
-- **Enable AMD GPU Usage (ROCm):** Requires AMD GPU Operator installation. **Currently unsupported for disconnected installations (RHOAI-SM-03)**. Requires compatible AMD Instinct hardware and ROCm-compatible images (RHOAI-SM-14). Affects Sizing (OCP-BASE-10).
+- **Enable AMD GPU Usage (ROCm):** Requires AMD GPU Operator installation. **Currently unsupported for disconnected installations**. Requires compatible AMD Instinct hardware and ROCm-compatible images. Affects Sizing.
 - **Do Not Enable AMD GPU Usage:** Limits hardware options. Avoids ROCm integration complexity and disconnected limitation.
 
 **Agreeing Parties**
@@ -1139,7 +1139,7 @@ If using Intel accelerators (e.g., Intel Data Center GPUs, potentially HPUs), wi
 Leveraging Intel accelerators within workbenches requires specific Intel libraries/drivers. Standard images may not utilize hardware efficiently.
 
 **Assumption**
-Intel accelerators are available (RHOAI-SM-24). Intel partner component might be enabled (RHOAI-SM-12). Notebook images decided (RHOAI-SM-14).
+Intel accelerators are available. Intel partner component might be enabled. Notebook images decided.
 
 **Alternatives**
 
@@ -1156,7 +1156,7 @@ Intel accelerators are available (RHOAI-SM-24). Intel partner component might be
 
 **Implications**
 
-- **Use Intel-Optimized Images:** Requires making these images available (Red Hat/Intel provided or custom, RHOAI-SM-14). May need Intel device plugin operator installed. Ensures workloads can leverage Intel features.
+- **Use Intel-Optimized Images:** Requires making these images available (Red Hat/Intel provided or custom). May need Intel device plugin operator installed. Ensures workloads can leverage Intel features.
 - **Use Standard Images:** Simplifies image management. Workloads needing Intel optimizations require runtime library installation or rely on CPU. Intel accelerators likely unused by these workbenches.
 
 **Agreeing Parties**
@@ -1197,7 +1197,7 @@ Orchestration of ML workflows is required.
 
 **Implications**
 
-- **Enable Data Science Pipelines:** Installs KFP/Tekton components. Requires configuring a database backend (RHOAI-SM-29) and S3 object storage (RHOAI-SM-09). Enables Elyra usage (RHOAI-SM-28). Consumes additional cluster resources. Provides ML-specific pipeline features (artifact tracking, metadata).
+- **Enable Data Science Pipelines:** Installs KFP/Tekton components. Requires configuring a database backend and S3 object storage. Enables Elyra usage. Consumes additional cluster resources. Provides ML-specific pipeline features (artifact tracking, metadata).
 - **Disable Data Science Pipelines:** Reduces RHOAI footprint and dependencies. Users needing pipeline orchestration must use alternative tools. Elyra extension in JupyterLab will not function for pipeline submission.
 
 **Agreeing Parties**
@@ -1223,7 +1223,7 @@ Will the Elyra extension for visual pipeline authoring within JupyterLab be enab
 Elyra provides a UI within JupyterLab for building KFP/Tekton pipelines visually. Enabling it requires compatible notebook images and impacts user workflow.
 
 **Assumption**
-Data Science Pipelines component is enabled (RHOAI-SM-27). Users primarily use JupyterLab (RHOAI-SM-17/RHOAI-SM-18).
+Data Science Pipelines component is enabled. Users primarily use JupyterLab.
 
 **Alternatives**
 
@@ -1240,7 +1240,7 @@ Data Science Pipelines component is enabled (RHOAI-SM-27). Users primarily use J
 
 **Implications**
 
-- **Enable Elyra:** Requires notebook images including Elyra (most standard RHOAI images do, RHOAI-SM-14). Simplifies pipeline creation. Generated pipeline is KFP/Tekton compatible. Some advanced KFP features might not be exposed via UI.
+- **Enable Elyra:** Requires notebook images including Elyra (most standard RHOAI images do). Simplifies pipeline creation. Generated pipeline is KFP/Tekton compatible. Some advanced KFP features might not be exposed via UI.
 - **Disable Elyra:** Users define pipelines entirely via KFP SDK (Python). Requires SDK in notebook images. Provides full access to all KFP features but steeper learning curve.
 
 **Agreeing Parties**
@@ -1264,7 +1264,7 @@ Which database backend will be used for storing Red Hat OpenShift AI Pipelines (
 Data Science Pipelines require a database (SQL-based) for run history, metadata, artifacts. Choice impacts scalability, reliability, persistence, operational management.
 
 **Assumption**
-Data Science Pipelines component is enabled (RHOAI-SM-27).
+Data Science Pipelines component is enabled.
 
 **Alternatives**
 
@@ -1281,7 +1281,7 @@ Data Science Pipelines component is enabled (RHOAI-SM-27).
 
 **Implications**
 
-- **Internal MariaDB:** Simplest deployment. Runs as pods, consumes cluster resources. Data on PVC; persistence/backup depend on cluster storage/backup strategy (RHOAI-SM-40). May not scale for very high throughput.
+- **Internal MariaDB:** Simplest deployment. Runs as pods, consumes cluster resources. Data on PVC; persistence/backup depend on cluster storage/backup strategy. May not scale for very high throughput.
 - **External MySQL/MariaDB:** Requires provisioning/managing separate DB instance. RHOAI Pipelines need connection details config. Offloads DB management but adds external dependency. Allows leveraging enterprise DB features (HA, backup, monitoring).
 
 **Agreeing Parties**
@@ -1324,7 +1324,7 @@ Workloads might benefit from distributed computation.
 
 **Implications**
 
-- **Enable Distributed Workloads:** Installs CodeFlare/KubeRay operators. Requires additional cluster resources (~1.6 vCPU, ~2 GiB RAM for operators minimum). Users define/launch Ray clusters (`AppWrapper` or `RayCluster` CRs). Requires configuring security (Ray dashboard certs). Adds complexity but enables performance gains for suitable workloads. Enables RHOAI-SM-31, RHOAI-SM-32, RHOAI-SM-33.
+- **Enable Distributed Workloads:** Installs CodeFlare/KubeRay operators. Requires additional cluster resources (~1.6 vCPU, ~2 GiB RAM for operators minimum). Users define/launch Ray clusters (`AppWrapper` or `RayCluster` CRs). Requires configuring security (Ray dashboard certs). Adds complexity but enables performance gains for suitable workloads.
 - **Disable Distributed Workloads:** Reduces operators/resources consumed by RHOAI. Simplifies platform but limits ability to scale certain tasks horizontally.
 
 **Agreeing Parties**
@@ -1350,7 +1350,7 @@ How will resource quotas and scheduling for distributed workloads (Ray clusters 
 Distributed workloads (Ray clusters) consume significant resources. RHOAI integrates Kueue for batch scheduling/resource quota management specifically for these, preventing cluster saturation. Configuration impacts resource sharing/prioritization.
 
 **Assumption**
-Distributed workloads (CodeFlare/KubeRay) are enabled (RHOAI-SM-30).
+Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 **Alternatives**
 
@@ -1363,7 +1363,7 @@ Distributed workloads (CodeFlare/KubeRay) are enabled (RHOAI-SM-30).
 **Justification**
 
 - **Enable Kueue:** Leverage Kueue's batch scheduling (fair sharing, prioritization) and resource quotas (`ClusterQueue`, `LocalQueue`) designed for managing ephemeral, high-resource jobs like Ray clusters. Finer control than standard OpenShift quotas.
-- **Disable Kueue:** Rely solely on standard OpenShift ResourceQuotas at namespace level (OCP-MGT-04). Simpler setup but lacks advanced scheduling features.
+- **Disable Kueue:** Rely solely on standard OpenShift ResourceQuotas at namespace level. Simpler setup but lacks advanced scheduling features.
 
 **Implications**
 
@@ -1391,7 +1391,7 @@ Which authentication method will be used to secure access to the Ray Dashboard a
 The Ray Dashboard needs protection. RHOAI supports integrating it with OpenShift OAuth (SSO) or alternative methods.
 
 **Assumption**
-Distributed workloads (CodeFlare/KubeRay) are enabled (RHOAI-SM-30).
+Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 **Alternatives**
 
@@ -1430,10 +1430,10 @@ Distributed workloads monitoring (Ray)
 Will monitoring be enabled for distributed workloads (Ray clusters)?
 
 **Issue or Problem**
-Monitoring Ray clusters provides visibility (resource usage, job status) but requires enabling OpenShift User Workload Monitoring (UWM) and ensuring Ray metrics are scraped, impacting resources/configuration. (Aligns with OCP-MON-01).
+Monitoring Ray clusters provides visibility (resource usage, job status) but requires enabling OpenShift User Workload Monitoring (UWM) and ensuring Ray metrics are scraped, impacting resources/configuration.
 
 **Assumption**
-Distributed workloads (CodeFlare/KubeRay) are enabled (RHOAI-SM-30).
+Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 **Alternatives**
 
@@ -1450,7 +1450,7 @@ Distributed workloads (CodeFlare/KubeRay) are enabled (RHOAI-SM-30).
 
 **Implications**
 
-- **Enable Ray Monitoring:** Requires enabling User Workload Monitoring (UWM) in cluster (OCP-MON-01). Consumes Prometheus resources for scraping/storing Ray metrics. Ray cluster defs need annotations/labels for scraping. Provides valuable operational insights.
+- **Enable Ray Monitoring:** Requires enabling User Workload Monitoring (UWM) in cluster. Consumes Prometheus resources for scraping/storing Ray metrics. Ray cluster defs need annotations/labels for scraping. Provides valuable operational insights.
 - **Disable Ray Monitoring:** Reduces monitoring overhead/resource use. Limits visibility into Ray cluster internal state/performance, making troubleshooting harder.
 
 **Agreeing Parties**
@@ -1518,7 +1518,7 @@ Will an authorization provider (Authorino) be used for KServe single-model servi
 KServe endpoints may need fine-grained authorization beyond basic OpenShift RBAC. Using Authorino (integrated with Istio) impacts security granularity and complexity. Skipping it relies on simpler OpenShift/Istio mechanisms.
 
 **Assumption**
-Single-model serving platform (KServe) is enabled (RHOAI-SM-34).
+Single-model serving platform (KServe) is enabled.
 
 **Alternatives**
 
@@ -1560,7 +1560,7 @@ Which specific model serving runtime(s) will be primarily used within the KServe
 KServe supports various runtimes for different model formats and optimizations (LLMs, ONNX, scikit-learn). Selecting runtimes determines which models can be served and how efficiently.
 
 **Assumption**
-Single-model serving platform (KServe) is enabled (RHOAI-SM-34).
+Single-model serving platform (KServe) is enabled.
 
 **Alternatives**
 
@@ -1612,7 +1612,7 @@ Will NVIDIA NIM integration be enabled for the single-model serving platform in 
 NVIDIA NIM provides optimized inference microservices for LLMs. Enabling it impacts integration complexity and hardware dependency.
 
 **Assumption**
-NVIDIA GPU acceleration is enabled (RHOAI-SM-23). Single-model serving (KServe) is enabled (RHOAI-SM-34).
+NVIDIA GPU acceleration is enabled. Single-model serving (KServe) is enabled.
 
 **Alternatives**
 
@@ -1629,8 +1629,8 @@ NVIDIA GPU acceleration is enabled (RHOAI-SM-23). Single-model serving (KServe) 
 
 **Implications**
 
-- **Enable NVIDIA NIM:** Requires specific hardware/software configs validated by NVIDIA/Red Hat. Requires access to NIM images (NGC). Increases complexity (integrating specialized proprietary software). Requires deploying NIM as custom KServe runtime. May involve NVIDIA AI Enterprise licensing (RHOAI-SM-12).
-- **Rely on Standard KServe:** Less specialized integration. Performance optimization relies on chosen model server (vLLM, Triton, Caikit) and GPU Operator config (NVIDIA-GPU-XX ADs).
+- **Enable NVIDIA NIM:** Requires specific hardware/software configs validated by NVIDIA/Red Hat. Requires access to NIM images (NGC). Increases complexity (integrating specialized proprietary software). Requires deploying NIM as custom KServe runtime. May involve NVIDIA AI Enterprise licensing.
+- **Rely on Standard KServe:** Less specialized integration. Performance optimization relies on chosen model server (vLLM, Triton, Caikit) and GPU Operator config.
 
 **Agreeing Parties**
 
@@ -1656,7 +1656,7 @@ Will the Distributed Inference with llm-d component (TP) be used for large langu
 Serving LLMs often requires significant resources and sharding workloads across multiple nodes/GPUs, which is complex for scaling/recovery. `llm-d` aims to simplify this.
 
 **Assumption**
-LLMs requiring distributed processing (multi-GPU/multi-node) are planned for deployment via KServe (RHOAI-SM-34).
+LLMs requiring distributed processing (multi-GPU/multi-node) are planned for deployment via KServe.
 
 **Alternatives**
 
@@ -1696,10 +1696,10 @@ Single-model serving platform (KServe) monitoring enablement
 Will monitoring be enabled for the KServe single-model serving platform?
 
 **Issue or Problem**
-Monitoring KServe `InferenceService` deployments provides visibility into request latency, throughput, success/error rates, and resource usage. Enabling it requires User Workload Monitoring (UWM). (Aligns with OCP-MON-01).
+Monitoring KServe `InferenceService` deployments provides visibility into request latency, throughput, success/error rates, and resource usage. Enabling it requires User Workload Monitoring (UWM).
 
 **Assumption**
-Single-model serving platform (KServe) is enabled (RHOAI-SM-34).
+Single-model serving platform (KServe) is enabled.
 
 **Alternatives**
 
@@ -1716,7 +1716,7 @@ Single-model serving platform (KServe) is enabled (RHOAI-SM-34).
 
 **Implications**
 
-- **Enable KServe Monitoring:** Requires enabling User Workload Monitoring (UWM) in cluster (OCP-MON-01). Consumes Prometheus resources for scraping/storing KServe metrics. Provides essential MLOps observability. RHOAI typically configures KServe scraping automatically if UWM enabled.
+- **Enable KServe Monitoring:** Requires enabling User Workload Monitoring (UWM) in cluster. Consumes Prometheus resources for scraping/storing KServe metrics. Provides essential MLOps observability. RHOAI typically configures KServe scraping automatically if UWM enabled.
 - **Disable KServe Monitoring:** Reduces monitoring overhead. Limits visibility into model serving performance, making diagnosis/optimization harder.
 
 **Agreeing Parties**
@@ -1741,7 +1741,7 @@ If using NVIDIA NIM, will metrics collection be enabled for NIM-based KServe dep
 Monitoring NIM-specific metrics (GPU utilization, inference latency) enhances visibility but requires ensuring NIM endpoints are scraped by OpenShift Monitoring (UWM).
 
 **Assumption**
-NVIDIA NIM integration is enabled (RHOAI-SM-37). User Workload Monitoring (UWM) is enabled (OCP-MON-01 / RHOAI-SM-39).
+NVIDIA NIM integration is enabled. User Workload Monitoring (UWM) is enabled.
 
 **Alternatives**
 
@@ -1783,7 +1783,7 @@ Will the TrustyAI component be enabled for monitoring model fairness and explain
 TrustyAI provides advanced monitoring (fairness metrics, explainability) beyond basic serving metrics. Enabling it requires deploying the TrustyAI service and integrating it with model serving runtimes.
 
 **Assumption**
-Model serving (likely KServe, RHOAI-SM-34) is enabled.
+Model serving is enabled.
 
 **Alternatives**
 
@@ -1796,7 +1796,7 @@ Model serving (likely KServe, RHOAI-SM-34) is enabled.
 **Justification**
 
 - **Enable TrustyAI:** Gain insights into model fairness, identify bias, generate explanations for predictions, supporting responsible AI/compliance.
-- **Disable TrustyAI:** Simpler deployment if advanced fairness/explainability monitoring aren't immediate needs (rely on standard performance metrics, RHOAI-SM-39).
+- **Disable TrustyAI:** Simpler deployment if advanced fairness/explainability monitoring aren't immediate needs.
 
 **Implications**
 
