@@ -29,6 +29,11 @@ Report specific violations using this format:
 
 - List any ADRs that fail to use the standard sections (Question, Issue, Assumption, Alternatives, Decision, Justification, Implications, Parties).
 
+**6. Hardcoded Reference Violations**
+(Check the _body text_ of all ADRs (Assumptions, Justifications, etc.). We must NOT refer to other ADRs by their ID (e.g. "See OCP-BM-01"). We must refer to them by Title or Topic.)
+
+- **[ID]**: Contains hardcoded reference to `[Referenced ID]`. Change to use the Title/Concept instead.
+
 **Rules:**
 
 - **No Static IDs:** When suggesting moves/changes, refer to "The ADR titled..." or current IDs, but do not invent new static ID numbers.
