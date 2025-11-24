@@ -12,7 +12,7 @@ Will OpenShift Data Foundation (ODF) be deployed internally on existing OpenShif
 The deployment approach dictates resource sharing, scalability, and operational management boundaries for the storage platform.
 
 **Assumption**
-OpenShift Data Foundation (ODF) will be deployed as the storage solution (see OCP-STOR-01).
+OpenShift Data Foundation (ODF) will be deployed as the storage solution.
 
 **Alternatives**
 

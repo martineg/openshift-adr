@@ -1051,7 +1051,7 @@ Data Science Pipelines enablement (KFP/Tekton)
 Will the Data Science Pipelines component (based on Kubeflow Pipelines with Tekton backend) be enabled within RHOAI?
 
 **Issue or Problem**
-Enabling Data Science Pipelines provides a framework for orchestrating multi-step ML workflows. It requires specific configuration (database, object storage) and impacts the tools available to MLOps engineers. (Related to PIPELINES-01 for broader CI/CD strategy).
+Enabling Data Science Pipelines provides a framework for orchestrating multi-step ML workflows. It requires specific configuration (database, object storage) and impacts the tools available to MLOps engineers.
 
 **Assumption**
 Orchestration of ML workflows is required.

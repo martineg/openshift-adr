@@ -61,7 +61,7 @@ N/A
 **Alternatives**
 
 - Deploy Cluster Observability Operator (COO)
-- Rely solely on Default/User Workload Monitoring (OCP-MON-01)
+- Rely solely on Default/User Workload Monitoring
 
 **Decision**
 #TODO: Document the decision.#
@@ -69,12 +69,12 @@ N/A
 **Justification**
 
 - **Deploy Cluster Observability Operator (COO):** To automate configuration and management of monitoring components, offering a more tailored and detailed view of each namespace compared to the default OpenShift Container Platform monitoring system.
-- **Rely solely on Default/User Workload Monitoring (OCP-MON-01):** To keep the monitoring footprint minimal, relying on the out-of-the-box features managed by the Cluster Monitoring Operator (CMO).
+- **Rely solely on Default/User Workload Monitoring:** To keep the monitoring footprint minimal, relying on the out-of-the-box features managed by the Cluster Monitoring Operator (CMO).
 
 **Implications**
 
 - **Deploy Cluster Observability Operator (COO):** Adds another Operator (and potentially complexity) to manage within the cluster lifecycle.
-- **Rely solely on Default/User Workload Monitoring (OCP-MON-01):** Limits the ability to create highly custom metrics scraping or retention policies outside the standard configuration boundary.
+- **Rely solely on Default/User Workload Monitoring:** Limits the ability to create highly custom metrics scraping or retention policies outside the standard configuration boundary.
 
 **Agreeing Parties**
 

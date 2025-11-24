@@ -437,7 +437,7 @@ What method will safely externalize and inject sensitive configuration data (sec
 Secrets must not be stored unencrypted in Git. A mechanism is needed to securely retrieve credentials from dedicated enterprise secret stores and make them available to pods at runtime.
 
 **Assumption**
-Applications require secrets; GitOps might be used (GITOPS-01); storing secrets directly in Git is forbidden.
+Applications require secrets; GitOps might be used; storing secrets directly in Git is forbidden.
 
 **Alternatives**
 
