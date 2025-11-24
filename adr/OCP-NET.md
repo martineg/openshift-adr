@@ -387,13 +387,13 @@ N/A
 
 **Justification**
 
-- **Default Platform Load Balancer:** Leverages tightly integrated, automatically configured LB (cloud native service or built-in on-prem solution). Simplest approach, especially with IPI.
-- **User-Managed Load Balancer:** Utilizes existing enterprise-standard LB offering advanced features, specific security compliance, and aligning with current operational workflows. Required for UPI.
+- **Default Platform Load Balancer:** Leverages tightly integrated, automatically configured LB (cloud native service or built-in on-prem solution). This is the simplest approach, especially with Installer-Provisioned Infrastructure (IPI).
+- **User-Managed Load Balancer:** Utilizes existing enterprise-standard load balancer offering advanced features and specific security compliance. This approach is required for User-Provisioned Infrastructure (UPI).
 
 **Implications**
 
-- **Default:** Functionality limited by the platform's default LB. Configuration managed automatically by OCP (simpler but less flexible). Cost typically included or based on cloud usage.
-- **User-Managed:** Requires manual configuration and integration for API and Ingress Operator Services. Operations team retains full control and responsibility (lifecycle, HA, features). Adds operational overhead but allows advanced customization. The Load Balancer MUST be configured to use the /readyz endpoint (not a generic TCP check) for the Kubernetes API pool. The LB must probe every 5-10 seconds and remove the API server instance from the pool within 30 seconds of /readyz returning an error. Failure to configure this correctly will result in API instability and traffic blackholing during node updates.
+- **Default Platform Load Balancer:** Functionality is limited by the platform's default Load Balancer. Configuration is managed automatically by OpenShift Container Platform, resulting in less flexibility.
+- **User-Managed Load Balancer:** Requires manual configuration and integration for API and Ingress Operator Services. The operations team retains full control and responsibility (lifecycle, HA, features). Adds operational overhead but allows advanced customization.
 
 **Agreeing Parties**
 
