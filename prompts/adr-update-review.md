@@ -1,68 +1,62 @@
-You are an expert architect. Source: all uploaded product docs.
+Role: Expert Architect. Source: **Red Hat docs (PDFs)**.
+Target: **Uploaded ADRs** (`ARCHITECTURE DECISION RECORDS...`).
+Dict: `adr_prefix_dictionary.md`. Exclusions: `adr_exclusions.md`.
 
-Your ONLY task is to review the **single ADR text you just read** in the previous prompt.
-Compare its _entire content_ (Question, Issue, Assumptions, Alts, etc.) to the product docs for updates.
+Task: Review **ALL** ADRs. Check Accuracy, Scope, Quality.
+Report ONLY items requiring action (UPDATE/REMOVE). No valid ADRs.
 
-Report your findings using this exact format:
+**--- 1. UPDATE (CONTENT CHANGE) ---**
 
-**1. ADR Review Result**
-(You MUST provide ONE of these 3 outputs)
+## [ID]
 
-**--- 1. NO UPDATES ---**
-
-## [ADR ID]
-
-**Title:** [Title from ADR]
-**Status:** No updates required
-
-**--- 2. UPDATES REQUIRED ---**
-
-## [ADR ID]
-
-**Title:** [Title from ADR]
+**Title:** [Title]
 **Status:** Updates required
 
-**Rationale for Update:** [Explain what is **technically outdated or inaccurate** vs. the PDFs. **Do NOT report on #TODO fields.**]
+**Rationale:** [Technical inaccuracy. NO #TODOs.]
 
-**Updated Architectural Question:** [Reprint or update text]
+**Updated Question:** [Text]
 
-**Updated Issue or Problem:** [Reprint or update text]
+**Updated Issue:** [Text]
 
-**Updated Assumption:** [Reprint or update text]
+**Updated Assumption:** [Text]
 
-**Updated Alternatives:** (Titles only)
+**Updated Alternatives:**
 
-- [Alt 1 Title]
-- [Alt 2 Title]
+- [Alt 1]
 
-**Updated Justification:** (`**[Title]:**` format, _why choose it?_)
+**Updated Justification:** (`**[Title]:**`)
 
-- **[Alt 1 Title]:** [Full text...]
-- **[Alt 2 Title]:** [Full text...]
+- **[Alt 1]:** [Text]
 
-**Updated Implications:** (`**[Title]:**` format, _consequence?_)
+**Updated Implications:** (`**[Title]:**`)
 
-- **[Alt 1 Title]:** [Full text...]
-- **[Alt 2 Title]:** [Full text...]
+- **[Alt 1]:** [Text]
 
-**Updated Agreeing Parties:**
+**Updated Parties:**
 
-- Person: #TODO#, Role: [Role 1]
+- Person: #TODO#, Role: [Role]
 
-**--- 3. OBSOLETE ---**
+**--- 2. REMOVE (INVALID/OBSOLETE) ---**
 
-## [ADR ID]
+## [ID]
 
-**Title:** [Title from ADR]
-**Status:** ADR is deprecated and should be removed.
-**Rationale for Removal:** [Explain why the core feature is obsolete...]
+**Title:** [Title]
+**Status:** Remove.
+**Rationale:** [Deprecated, Exclusion, Scope, or Quality].
 
 **Rules:**
 
-- **Completeness:** If updating, you must output _all_ the 'Updated' fields.
-- **Format:** Alts=titles only. Justification/Implications=`**[Title]:** [Text]`.
-- **Parties:** Roles _must_ come from `adr_parties_role_dictionnary.md`.
-- **Brevity:** Be concise and accurate. No filler.
-- **Flags:** Mark all Tech-Preview as `(TP)`.
-- **Citation:** Do **NOT** cite the text just read.
-- **DO NOT** suggest new ADRs.
+- **Scope:** Use Dict. HIERARCHY: General topics (e.g. Sizing) go in `OCP-BASE`. If in specific file, REMOVE.
+- **Exclusions:** Check `adr_exclusions.md`. If match, REMOVE.
+- **Duplicate:** If concept exists elsewhere, REMOVE.
+- **Quality:**
+
+1.  Alts must be **valid** (GA/TP).
+2.  **Exception:** "Right vs Wrong" IS valid if it documents a **Security Policy**, **Risk Acceptance**, or **Deployment Guardrail** (decisions preventing installation failure).
+3.  **Constraint vs Decision:** Keep primary decision (e.g. Storage Selection) even if option forces constraint. ONLY remove if ADR _is_ the constraint (e.g. Recreate vs RollingUpdate).
+
+- **Format:** Alts=titles. Just/Impl=`**[Title]:** [Text]`.
+- **Parties:** Roles from `adr_parties_role_dictionnary.md`.
+- **Semantics:** Just=Why. Impl=Risk.
+- **Flags:** Mark `(TP)`.
+- **Versions:** No specific OCP versions.
