@@ -12,7 +12,7 @@ What is the deployment strategy for OpenShift Data Foundation on the Bare Metal 
 On Bare Metal, ODF requires direct access to physical storage devices. A strategy is needed for device discovery, selection, and configuration (e.g., using LVM or directly consuming devices).
 
 **Assumption**
-ODF will be deployed on the Bare Metal cluster (see OCP-STOR-01).
+OpenShift Data Foundation (ODF) has been selected as the Storage provider.
 
 **Alternatives**
 

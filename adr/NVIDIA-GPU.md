@@ -29,7 +29,7 @@ Hardware Acceleration Strategy includes NVIDIA GPUs.
 
 **Implications**
 
-- **OperatorHub Deployment:** Relies on OperatorHub availability and may require configuration if the cluster is disconnected (OCP-BASE-5).
+- **OperatorHub Deployment:** Relies on OperatorHub availability and may require configuration if the cluster is disconnected.
 - **Manual/Helm Deployment:** Requires careful version tracking to ensure compatibility with the specific RHCOS kernel versions deployed on the cluster.
 
 **Agreeing Parties**

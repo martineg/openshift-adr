@@ -187,6 +187,46 @@ LokiStack solution is selected and requires persistent object storage for log da
 ## LOG-05
 
 **Title**
+LokiStack Storage Schema Version Selection
+
+**Architectural Question**
+Which storage schema version should be configured for LokiStack, particularly regarding compatibility with structured metadata and OTLP ingestion?
+
+**Issue or Problem**
+LokiStack requires a minimum schema version to support features like structured metadata, which is critical if the cluster plans to adopt the OpenTelemetry (OTEL) data model. Schema version v13 is recommended for future compatibility.
+
+**Assumption**
+The LokiStack deployment must be configured to support modern data models and retention capabilities.
+
+**Alternatives**
+
+- Use Schema Version v13
+- Use Schema Version v12 (Legacy)
+
+**Decision**
+#TODO: Document the decision.#
+
+**Justification**
+
+- **Use Schema Version v13:** To ensure future compatibility and support for structured metadata, which is essential for fully utilizing the OpenTelemetry data model.
+- **Use Schema Version v12 (Legacy):** To maintain compatibility with an existing, older Loki deployment that has not yet been migrated.
+
+**Implications**
+
+- **Use Schema Version v13:** Requires setting `version: v13` and a future `effectiveDate` in the LokiStack CR specification; existing schemas must be retained to prevent data loss.
+- **Use Schema Version v12 (Legacy):** Lacks support for structured metadata, which will break OTLP log ingestion if that is ever enabled.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## LOG-06
+
+**Title**
 Log Collector Tuning for Delivery Mode
 
 **Architectural Question**
@@ -224,7 +264,7 @@ The tuning specification is utilized, meaning the logging deployment uses the Ve
 
 ---
 
-## LOG-06
+## LOG-07
 
 **Title**
 Enabling LokiStack-based Alerting and Recording Rules
@@ -255,46 +295,6 @@ Customized log monitoring and alerting are necessary beyond the default platform
 
 - **Enable LokiStack Ruler (Custom Alerts/Metrics):** Enabling the ruler requires additional CPU and memory resources for the LokiStack deployment. Administrators must configure necessary RBAC ClusterRoles/RoleBindings to grant users permissions to manage AlertingRule or RecordingRule resources.
 - **Disable LokiStack Ruler (Rely on default alerts and external monitoring):** The inability to create custom, log-based alerts within the cluster. Troubleshooting must be done manually or via external tools.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: OCP Platform Owner
-
----
-
-## LOG-07
-
-**Title**
-LokiStack Storage Schema Version Selection
-
-**Architectural Question**
-Which storage schema version should be configured for LokiStack, particularly regarding compatibility with structured metadata and OTLP ingestion?
-
-**Issue or Problem**
-LokiStack requires a minimum schema version to support features like structured metadata, which is critical if the cluster plans to adopt the OpenTelemetry (OTEL) data model. Schema version v13 is recommended for future compatibility.
-
-**Assumption**
-The LokiStack deployment must be configured to support modern data models and retention capabilities.
-
-**Alternatives**
-
-- Use Schema Version v13
-- Use Schema Version v12 (Legacy)
-
-**Decision**
-#TODO: Document the decision.#
-
-**Justification**
-
-- **Use Schema Version v13:** To ensure future compatibility and support for structured metadata, which is essential for fully utilizing the OpenTelemetry data model.
-- **Use Schema Version v12 (Legacy):** To maintain compatibility with an existing, older Loki deployment that has not yet been migrated.
-
-**Implications**
-
-- **Use Schema Version v13:** Requires setting `version: v13` and a future `effectiveDate` in the LokiStack CR specification; existing schemas must be retained to prevent data loss.
-- **Use Schema Version v12 (Legacy):** Lacks support for structured metadata, which will break OTLP log ingestion if that is ever enabled.
 
 **Agreeing Parties**
 

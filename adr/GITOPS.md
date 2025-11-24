@@ -175,7 +175,7 @@ What is the preferred method for generating and managing non-human (automation) 
 Automation tasks (e.g., CI/CD pipelines, monitoring integrations) require API tokens to interact with Argo CD. A standard method is required to provision, secure, and manage the lifecycle of these tokens, balancing the need for long-lived tokens with security best practices.
 
 **Assumption**
-OpenShift SSO (Dex) is the primary method for human user authentication. Dedicated API tokens are required for automation.
+OpenShift SSO (Dex) is the primary method for human user authentication, as decided in Identity Provider Selection.
 
 **Alternatives**
 

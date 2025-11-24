@@ -158,7 +158,7 @@ N/A
 **Implications**
 
 - **HTPasswd:** Manual user management, does not scale.
-- **LDAP:** Requires secure connectivity (LDAPS) and query configuration. Group sync needs OCP-SEC-04.
+- **LDAP:** Requires secure connectivity (LDAPS) and query configuration. Group sync needs.
 - **OpenID Connect (OIDC):** Recommended. Requires managing client IDs/secrets, relies on external IdP infrastructure.
 - **Other Providers:** Integration complexity varies.
 
@@ -410,7 +410,7 @@ Protection of sensitive configuration data at rest is required.
 **Justification**
 
 - **No Application-Layer Encryption:** Relies solely on lower-level security (RHCOS disk encryption, TPM/Tang). Simpler, avoids potential performance impact or complexity during rollout.
-- **Platform-Managed Encryption:** Provides an **additional security layer** for sensitive resources (Secrets, OAuth tokens). Supports AES-CBC and AES-GCM. If FIPS mode (OCP-SEC-01) is enabled, uses FIPS-approved `aes cbc`.
+- **Platform-Managed Encryption:** Provides an **additional security layer** for sensitive resources (Secrets, OAuth tokens). Supports AES-CBC and AES-GCM. If FIPS mode is enabled, uses FIPS-approved `aes cbc`.
 
 **Implications**
 
@@ -449,7 +449,7 @@ Applications require secrets; GitOps might be used (GITOPS-01); storing secrets 
 
 **Justification**
 
-- **Kubernetes Native Secrets:** Simplest K8s approach. Secrets stored as native objects, protected at rest by etcd encryption (OCP-SEC-09). Can be combined with GitOps tools like Sealed Secrets (GITOPS-04 option) to encrypt secrets _before_ committing to Git.
+- **Kubernetes Native Secrets:** Simplest K8s approach. Secrets stored as native objects, protected at rest by etcd encryption. Can be combined with GitOps tools like Sealed Secrets (GITOPS-04 option) to encrypt secrets _before_ committing to Git.
 - **External Secret Store Integration (ESO/SSCSI):** Recommended enterprise approach. Decouples app deployment from secret lifecycle, centralizes secret storage (Vault, Cloud KMS), enhances compliance/auditing. Secrets Store CSI Driver (SSCSI) mounts secrets as volumes, avoiding persistence on node after pod deletion. ESO can sync external secrets into K8s native secrets.
 
 **Implications**

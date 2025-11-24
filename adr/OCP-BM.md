@@ -387,6 +387,46 @@ Bare Metal Operator is enabled.
 ## OCP-BM-10
 
 **Title**
+Network Controller Sideband Interface (NC-SI) Support Enforcement
+
+**Architectural Question**
+For OpenShift Container Platform bare metal deployments utilizing hardware where the Baseboard Management Controller (BMC) shares a system Network Interface Card (NIC) via NC-SI, how must the cluster ensure continuous BMC connectivity during power events?
+
+**Issue or Problem**
+OpenShift Container Platform require NC-SI compliant hardware when the BMC shares a system NIC. Without the correct configuration, powering down the host can cause the loss of BMC connectivity (NC-SI connection loss), interrupting bare metal provisioning or management operations.
+
+**Assumption**
+Bare Metal Operator is enabled.
+
+**Alternatives**
+
+- BMC uses Network Controller Sideband Interface (NC-SI) for management traffic
+- BMC uses a dedicated network interface for management traffic
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **BMC uses Network Controller Sideband Interface (NC-SI) for management traffic:** This approach reduces the overall physical network port requirement per server by allowing the BMC to share a system NIC with the host for management traffic. This method is supported on OpenShift Container Platform if the hardware is NC-SI compliant. However, this configuration mandates the use of the `DisablePowerOff` feature to ensure soft reboots do not result in the loss of BMC connectivity.
+- **BMC uses a dedicated network interface for management traffic:** This method enhances performance and improves security by isolating the BMC traffic onto a separate physical NIC and network, avoiding the complications and dependencies inherent in NC-SI deployments. This avoids the specific requirement to utilize the `DisablePowerOff` feature.
+
+**Implications**
+
+- **BMC uses Network Controller Sideband Interface (NC-SI) for management traffic:** Requires verification that BMCs and NICs support NC-SI. The `BareMetalHost` resource must be explicitly configured with `disablePowerOff: true` to prevent loss of BMC connectivity during host power-off states.
+- **BMC uses a dedicated network interface for management traffic:** This requires additional physical NIC hardware dedicated solely to out-of-band management. If a separate management network is implemented, the provisioner node must have routing access to this network for a successful installer-provisioned installation.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-BM-11
+
+**Title**
 Provisioning Network Strategy for Installer-Provisioned Bare Metal
 
 **Architectural Question**
@@ -424,7 +464,7 @@ Cluster installation method is Installer-Provisioned Infrastructure (IPI).
 
 ---
 
-## OCP-BM-11
+## OCP-BM-12
 
 **Title**
 IPI Provisioning Network DHCP Management Mode
@@ -436,7 +476,7 @@ When utilizing a dedicated provisioning network during Installer-Provisioned Inf
 The default IPI installation attempts to run an Ironic-managed DHCP service (`ironic-dnsmasq`) on the provisioning network. If another DHCP server is already present on this non-routable network, this causes conflicts and installation failure unless the provisioning network mode is explicitly changed to unmanaged.
 
 **Assumption**
-A dedicated provisioning network is configured for IPI deployment (OCP-BM-09).
+A dedicated provisioning network is configured for IPI deployment.
 
 **Alternatives**
 
@@ -465,7 +505,7 @@ A dedicated provisioning network is configured for IPI deployment (OCP-BM-09).
 
 ---
 
-## OCP-BM-12
+## OCP-BM-13
 
 **Title**
 IPI/Assisted Provisioning Boot Mechanism
@@ -506,7 +546,7 @@ Cluster installation method is IPI, Agent-based Installer (ABI), or Assisted Ins
 
 ---
 
-## OCP-BM-13
+## OCP-BM-14
 
 **Title**
 Ironic RHCOS Image Transfer Protocol (Virtual Media)
@@ -518,7 +558,7 @@ When deploying OpenShift Container Platform using virtual media for RHCOS image 
 When omitting the provisioning network, virtual media transfer is required. Using unencrypted HTTP for image transfer introduces a data security risk during the provisioning phase. However, enabling TLS/HTTPS adds operational complexity related to certificate trust management.
 
 **Assumption**
-Installation utilizes Virtual Media BMC addressing (e.g., `redfish-virtualmedia` or `idrac-virtualmedia`) as decided in OCP-BM-11.
+Installation utilizes Virtual Media BMC addressing (e.g., `redfish-virtualmedia` or `idrac-virtualmedia`).
 
 **Alternatives**
 
@@ -544,46 +584,6 @@ Installation utilizes Virtual Media BMC addressing (e.g., `redfish-virtualmedia`
 - Person: #TODO#, Role: Security Expert
 - Person: #TODO#, Role: Network Expert
 - Person: #TODO#, Role: Infra Leader
-
----
-
-## OCP-BM-14
-
-**Title**
-Network Controller Sideband Interface (NC-SI) Support Enforcement
-
-**Architectural Question**
-For OpenShift Container Platform bare metal deployments utilizing hardware where the Baseboard Management Controller (BMC) shares a system Network Interface Card (NIC) via NC-SI, how must the cluster ensure continuous BMC connectivity during power events?
-
-**Issue or Problem**
-OpenShift Container Platform require NC-SI compliant hardware when the BMC shares a system NIC. Without the correct configuration, powering down the host can cause the loss of BMC connectivity (NC-SI connection loss), interrupting bare metal provisioning or management operations.
-
-**Assumption**
-Bare Metal Operator is enabled.
-
-**Alternatives**
-
-- BMC uses Network Controller Sideband Interface (NC-SI) for management traffic
-- BMC uses a dedicated network interface for management traffic
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **BMC uses Network Controller Sideband Interface (NC-SI) for management traffic:** This approach reduces the overall physical network port requirement per server by allowing the BMC to share a system NIC with the host for management traffic. This method is supported on OpenShift Container Platform if the hardware is NC-SI compliant. However, this configuration mandates the use of the `DisablePowerOff` feature to ensure soft reboots do not result in the loss of BMC connectivity.
-- **BMC uses a dedicated network interface for management traffic:** This method enhances performance and improves security by isolating the BMC traffic onto a separate physical NIC and network, avoiding the complications and dependencies inherent in NC-SI deployments. This avoids the specific requirement to utilize the `DisablePowerOff` feature.
-
-**Implications**
-
-- **BMC uses Network Controller Sideband Interface (NC-SI) for management traffic:** Requires verification that BMCs and NICs support NC-SI. The `BareMetalHost` resource must be explicitly configured with `disablePowerOff: true` to prevent loss of BMC connectivity during host power-off states.
-- **BMC uses a dedicated network interface for management traffic:** This requires additional physical NIC hardware dedicated solely to out-of-band management. If a separate management network is implemented, the provisioner node must have routing access to this network for a successful installer-provisioned installation.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Infra Leader
-- Person: #TODO#, Role: Network Expert
 
 ---
 
@@ -1042,6 +1042,47 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 ## OCP-BM-26
 
 **Title**
+Host Network Bonding Mode for High Availability (OVS)
+
+**Architectural Question**
+When configuring high availability for bare metal node network interfaces, should the solution rely on standard kernel bonding methods or utilize the specialized OVS balance-slb mode?
+
+**Issue or Problem**
+When provisioning bare metal nodes for high-performance workloads (like OpenShift Virtualization), standard bonding modes (like active-backup or LACP) may not effectively distribute traffic for OVN-Kubernetes pods or VMs that share the same physical link characteristics (MAC/VLAN). A mode is needed to ensure true load balancing for this traffic.
+
+**Assumption**
+The cluster hosts performance-sensitive workloads (e.g., virtualization) that rely on OVS-based networking for High Availability.
+
+**Alternatives**
+
+- Standard NetworkManager/Kernel Bonding
+- Open vSwitch (OVS) balance-slb Mode
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Standard NetworkManager/Kernel Bonding:** Relies on the host OS/NetworkManager for bonding implementation (e.g., active-backup). While simpler to configure, it does not guarantee load distribution for OVN-Kubernetes traffic which uses consistent MAC/VLAN combinations.
+- **Open vSwitch (OVS) balance-slb Mode:** This mode is specifically designed and supported for virtualization workloads on bare metal. It natively supports source load balancing for OVN-Kubernetes CNI plugin traffic, ensuring that traffic from different VM ports is balanced over the physical interface links.
+
+**Implications**
+
+- **Standard NetworkManager/Kernel Bonding:** May lead to sub-optimal performance or lack of true load balancing for OVN-Kubernetes/VM traffic, impacting HA and resource utilization.
+- **Open vSwitch (OVS) balance-slb Mode:** Requires complex network configuration, potentially involving OVS bonding modes like `balance-slb`, managed via MachineConfig/NMState configuration during installation.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader
+
+--
+
+## OCP-BM-27
+
+**Title**
 Bare Metal Node Secure Boot Strategy
 
 **Architectural Question**
@@ -1082,7 +1123,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-27
+## OCP-BM-28
 
 **Title**
 Bare Metal Host Firmware Configuration Management
@@ -1123,7 +1164,7 @@ Provisioning workflow is GitOps ZTP.
 
 ---
 
-## OCP-BM-28
+## OCP-BM-29
 
 **Title**
 RHCOS Node Console Access Strategy
@@ -1163,7 +1204,7 @@ N/A
 
 ---
 
-## OCP-BM-29
+## OCP-BM-30
 
 **Title**
 RHCOS Installation Boot Device Selection
@@ -1204,7 +1245,7 @@ N/A
 
 ---
 
-## OCP-BM-30
+## OCP-BM-31
 
 **Title**
 iSCSI Boot Configuration Method for RHCOS
@@ -1245,7 +1286,7 @@ iSCSI boot device is used
 
 ---
 
-## OCP-BM-31
+## OCP-BM-32
 
 **Title**
 RHCOS Multipathing Enablement Strategy (Boot and Secondary Disks)
@@ -1290,7 +1331,7 @@ Installation Boot Device or Secondary Storage is a SAN device.
 
 ---
 
-## OCP-BM-32
+## OCP-BM-33
 
 **Title**
 RHCOS Multipath Installation Target Naming
@@ -1332,7 +1373,7 @@ Multipathing to be enabled.
 
 ---
 
-## OCP-BM-33
+## OCP-BM-34
 
 **Title**
 RHCOS Installation Drive Identification Strategy
@@ -1372,7 +1413,7 @@ Installation target is a local disk or single-path SAN LUN.
 
 ---
 
-## OCP-BM-34
+## OCP-BM-35
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -1412,7 +1453,7 @@ Installation Boot Device is Local Device.
 
 ---
 
-## OCP-BM-35
+## OCP-BM-36
 
 **Title**
 Control Plane Storage Performance Validation Strategy
@@ -1452,7 +1493,7 @@ N/A
 
 ---
 
-## OCP-BM-36
+## OCP-BM-37
 
 **Title**
 RHCOS /var Partitioning Strategy (General Data Isolation)
@@ -1492,7 +1533,7 @@ The cluster will utilize large disk sizes (e.g., > 100GB) and may host applicati
 
 ---
 
-## OCP-BM-37
+## OCP-BM-38
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -1532,7 +1573,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-38
+## OCP-BM-39
 
 **Title**
 Control Plane Etcd Storage Partitioning Strategy
@@ -1573,7 +1614,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-39
+## OCP-BM-40
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -1613,7 +1654,7 @@ N/A
 
 ---
 
-## OCP-BM-40
+## OCP-BM-41
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1656,7 +1697,48 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-41
+## OCP-BM-42
+
+**Title**
+Internal Image Registry Management State on Bare Metal UPI
+
+**Architectural Question**
+Should the built-in Image Registry Operator's default `Removed` state on bare metal User-Provisioned Infrastructure (UPI) clusters be explicitly switched to `Managed` post-installation, or should the platform rely exclusively on an external image registry?
+
+**Issue or Problem**
+On bare metal UPI environments that do not provide default shared storage, the OpenShift Image Registry Operator bootstraps itself in a `Removed` management state to allow installation to complete. If the registry remains `Removed`, image building and pushing of application images are disabled. A decision is required to determine the long-term image hosting strategy (internal or external) and mandate the necessary post-installation operational steps.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- Switch Internal Registry to Managed State Post-Install
+- Maintain Removed State (Rely Exclusively on External Registry)
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Switch Internal Registry to Managed State Post-Install:** This enables the use of the built-in, cluster-managed image registry. This simplifies integration with OpenShift builds and standard platform services once appropriate persistent storage is provisioned.
+- **Maintain Removed State (Rely Exclusively on External Registry):** This approach minimizes the cluster footprint and ensures that all core OCP components and applications rely on an existing external corporate image registry (e.g., Quay, Artifactory, Nexus), leveraging existing security and management infrastructure.
+
+**Implications**
+
+- **Switch Internal Registry to Managed State Post-Install:** Requires manual intervention by the cluster administrator to edit the `configs.imageregistry/cluster` resource to change `managementState: Removed` to `Managed` after installation. Subsequently, persistent storage must be configured (RWX is required for high availability).
+- **Maintain Removed State (Rely Exclusively on External Registry):** Disables the ability to use the cluster’s internal image building capabilities, requiring all image dependencies (including custom RHOAI notebook images) to be pulled from the external registry. The cluster network must allow external pull access for all nodes and application namespaces must be configured with pull secrets.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Storage Expert
+
+---
+
+## OCP-BM-43
 
 **Title**
 Storage Architecture for the Internal Image Registry
@@ -1704,48 +1786,7 @@ N/A
 
 ---
 
-## OCP-BM-42
-
-**Title**
-Internal Image Registry Management State on Bare Metal UPI
-
-**Architectural Question**
-Should the built-in Image Registry Operator's default `Removed` state on bare metal User-Provisioned Infrastructure (UPI) clusters be explicitly switched to `Managed` post-installation, or should the platform rely exclusively on an external image registry?
-
-**Issue or Problem**
-On bare metal UPI environments that do not provide default shared storage, the OpenShift Image Registry Operator bootstraps itself in a `Removed` management state to allow installation to complete. If the registry remains `Removed`, image building and pushing of application images are disabled. A decision is required to determine the long-term image hosting strategy (internal or external) and mandate the necessary post-installation operational steps.
-
-**Assumption**
-Cluster installation method is User-Provisioned Infrastructure (UPI).
-
-**Alternatives**
-
-- Switch Internal Registry to Managed State Post-Install
-- Maintain Removed State (Rely Exclusively on External Registry)
-
-**Decision**
-#TODO: Document decision.#
-
-**Justification**
-
-- **Switch Internal Registry to Managed State Post-Install:** This enables the use of the built-in, cluster-managed image registry. This simplifies integration with OpenShift builds and standard platform services once appropriate persistent storage is provisioned (as defined in OCP-BM-32).
-- **Maintain Removed State (Rely Exclusively on External Registry):** This approach minimizes the cluster footprint and ensures that all core OCP components and applications rely on an existing external corporate image registry (e.g., Quay, Artifactory, Nexus), leveraging existing security and management infrastructure.
-
-**Implications**
-
-- **Switch Internal Registry to Managed State Post-Install:** Requires manual intervention by the cluster administrator to edit the `configs.imageregistry/cluster` resource to change `managementState: Removed` to `Managed` after installation. Subsequently, persistent storage must be configured (RWX is required for high availability).
-- **Maintain Removed State (Rely Exclusively on External Registry):** Disables the ability to use the cluster’s internal image building capabilities, requiring all image dependencies (including custom RHOAI notebook images) to be pulled from the external registry. The cluster network must allow external pull access for all nodes and application namespaces must be configured with pull secrets.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: Storage Expert
-
----
-
-## OCP-BM-43
+## OCP-BM-44
 
 **Title**
 Internal Image Registry Persistent Volume Claim (PVC) Provisioning Strategy
@@ -1787,7 +1828,7 @@ The Internal Image Registry will be switched to the Managed management state pos
 
 ---
 
-## OCP-BM-44
+## OCP-BM-45
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1799,7 +1840,7 @@ Should the OpenShift Container Platform nodes leverage the Real-Time Kernel for 
 Bare metal deployments for demanding workloads, such as virtual Distributed Unit (vDU) applications in Telco environments, require guaranteed low latency and high performance. The standard RHCOS kernel may introduce unacceptable jitter or delay, necessitating the use of the Real-Time (RT) kernel.
 
 **Assumption**
-Low-latency workloads are required.
+Low-latency workloads are required, consistent with the Hardware Acceleration Strategy.
 
 **Alternatives**
 
@@ -1828,7 +1869,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-45
+## OCP-BM-46
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1869,7 +1910,7 @@ N/A
 
 ---
 
-## OCP-BM-46
+## OCP-BM-47
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1910,7 +1951,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-47
+## OCP-BM-48
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -1951,7 +1992,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-48
+## OCP-BM-49
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -1992,47 +2033,6 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 - Person: #TODO#, Role: Operations Expert
 
 ---
-
-## OCP-BM-49
-
-**Title**
-Host Network Bonding Mode for High Availability (OVS)
-
-**Architectural Question**
-When configuring high availability for bare metal node network interfaces, should the solution rely on standard kernel bonding methods or utilize the specialized OVS balance-slb mode?
-
-**Issue or Problem**
-When provisioning bare metal nodes for high-performance workloads (like OpenShift Virtualization), standard bonding modes (like active-backup or LACP) may not effectively distribute traffic for OVN-Kubernetes pods or VMs that share the same physical link characteristics (MAC/VLAN). A mode is needed to ensure true load balancing for this traffic.
-
-**Assumption**
-The cluster hosts performance-sensitive workloads (e.g., virtualization) that rely on OVS-based networking for High Availability.
-
-**Alternatives**
-
-- Standard NetworkManager/Kernel Bonding
-- Open vSwitch (OVS) balance-slb Mode
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Standard NetworkManager/Kernel Bonding:** Relies on the host OS/NetworkManager for bonding implementation (e.g., active-backup). While simpler to configure, it does not guarantee load distribution for OVN-Kubernetes traffic which uses consistent MAC/VLAN combinations.
-- **Open vSwitch (OVS) balance-slb Mode:** This mode is specifically designed and supported for virtualization workloads on bare metal. It natively supports source load balancing for OVN-Kubernetes CNI plugin traffic, ensuring that traffic from different VM ports is balanced over the physical interface links.
-
-**Implications**
-
-- **Standard NetworkManager/Kernel Bonding:** May lead to sub-optimal performance or lack of true load balancing for OVN-Kubernetes/VM traffic, impacting HA and resource utilization.
-- **Open vSwitch (OVS) balance-slb Mode:** Requires complex network configuration, potentially involving OVS bonding modes like `balance-slb`, managed via MachineConfig/NMState configuration during installation.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: Infra Leader
-
---
 
 ## OCP-BM-50
 

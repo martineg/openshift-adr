@@ -133,88 +133,6 @@ An appropriate OpenShift IdP must be configured.
 ## RHOAI-SM-04
 
 **Title**
-User/Group Dashboard Access Configuration
-
-**Architectural Question**
-How will access to the OpenShift AI dashboard be controlled based on user groups?
-
-**Issue or Problem**
-By default, any authenticated OpenShift user can access the RHOAI dashboard. A mechanism is needed to restrict access to specific administrator and standard user groups defined in OpenShift, aligning with RBAC best practices.
-
-**Assumption**
-Access to the OpenShift AI dashboard must be restricted based on OpenShift user groups. OpenShift groups are synchronized or defined. RHOAI IdP integration is confirmed.
-
-**Alternatives**
-
-- Configure Access via `Auth` Resource (Recommended)
-- Use Default Unrestricted Access (Not Recommended for Production)
-
-**Decision**
-#TODO#
-
-**Justification**
-
-- **Configure Access via `Auth` Resource:** To manage RHOAI dashboard administrator and standard user access by defining the corresponding OpenShift group names in the dedicated `Auth` custom resource (`dscinitialization_odscustomizations_console_auth`). This is the standard, supported method.
-- **Use Default Unrestricted Access:** To allow any authenticated OpenShift user to access the OpenShift AI dashboard without explicit group membership checks. Simplifies initial setup but lacks role separation.
-
-**Implications**
-
-- **Configure Access via `Auth` Resource:** Requires identifying or creating appropriate OpenShift groups (e.g., `rhods-admins`, `rhods-users`) and configuring the `Auth` resource (typically via GitOps overlay) to reference them. Enforces role separation (admins see admin settings, users see user view). Requires group sync or manual group management in OpenShift.
-- **Use Default Unrestricted Access:** Simplest setup, no group configuration needed. Provides limited security segmentation; all authenticated users can log in, potentially seeing inappropriate options or consuming resources without oversight. Not suitable for multi-tenant or production environments.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: AI/ML Platform Owner
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Security Expert
-
----
-
-## RHOAI-SM-05
-
-**Title**
-OpenShift AI Namespace Strategy (Core Components)
-
-**Architectural Question**
-What namespace strategy will be used for deploying OpenShift AI core components?
-
-**Issue or Problem**
-Red Hat OpenShift AI Self-Managed uses default projects (`redhat-ods-operator`, `redhat-ods-applications`), but enterprise environments often require custom names for standardization or compliance. This decision focuses on the core platform namespaces, distinct from user workload namespaces.
-
-**Assumption**
-N/A
-
-**Alternatives**
-
-- Use Default RHOAI Namespaces (Core Components)
-- Configure Custom Namespaces for RHOAI Core Components
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Use Default RHOAI Namespaces:** To simplify installation and maintenance by accepting the standard naming (`redhat-ods-*`). Aligns directly with documentation and default operator behavior.
-- **Configure Custom Namespaces for RHOAI Core:** To adhere to strict organizational naming conventions by specifying custom project names for the core RHOAI operator and application components during installation via the `DataScienceCluster` CR.
-
-**Implications**
-
-- **Use Default Namespaces:** Easiest setup. May not meet strict naming policies.
-- **Configure Custom Core Namespaces:** Requires defining custom names via `DataScienceCluster` CR _before_ initial installation. Ensures compliance with naming standards for platform components but adds configuration steps. Does not affect the default `rhods-notebooks` namespace unless also customized.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: AI/ML Platform Owner
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Security Expert
-
----
-
-## RHOAI-SM-06
-
-**Title**
 Data science project allocation strategy (User Namespaces)
 
 **Architectural Question**
@@ -258,6 +176,88 @@ Data science workloads need namespace isolation beyond the core RHOAI components
 - Person: #TODO#, Role: AI/ML Platform Owner
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Operations Expert
+
+---
+
+## RHOAI-SM-05
+
+**Title**
+User/Group Dashboard Access Configuration
+
+**Architectural Question**
+How will access to the OpenShift AI dashboard be controlled based on user groups?
+
+**Issue or Problem**
+By default, any authenticated OpenShift user can access the RHOAI dashboard. A mechanism is needed to restrict access to specific administrator and standard user groups defined in OpenShift, aligning with RBAC best practices.
+
+**Assumption**
+OpenShift groups are synchronized or defined (Identity Provider Group Synchronization) and RHOAI IdP integration is confirmed.
+
+**Alternatives**
+
+- Configure Access via `Auth` Resource (Recommended)
+- Use Default Unrestricted Access (Not Recommended for Production)
+
+**Decision**
+#TODO#
+
+**Justification**
+
+- **Configure Access via `Auth` Resource:** To manage RHOAI dashboard administrator and standard user access by defining the corresponding OpenShift group names in the dedicated `Auth` custom resource (`dscinitialization_odscustomizations_console_auth`). This is the standard, supported method.
+- **Use Default Unrestricted Access:** To allow any authenticated OpenShift user to access the OpenShift AI dashboard without explicit group membership checks. Simplifies initial setup but lacks role separation.
+
+**Implications**
+
+- **Configure Access via `Auth` Resource:** Requires identifying or creating appropriate OpenShift groups (e.g., `rhods-admins`, `rhods-users`) and configuring the `Auth` resource (typically via GitOps overlay) to reference them. Enforces role separation (admins see admin settings, users see user view). Requires group sync or manual group management in OpenShift.
+- **Use Default Unrestricted Access:** Simplest setup, no group configuration needed. Provides limited security segmentation; all authenticated users can log in, potentially seeing inappropriate options or consuming resources without oversight. Not suitable for multi-tenant or production environments.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Security Expert
+
+---
+
+## RHOAI-SM-06
+
+**Title**
+OpenShift AI Namespace Strategy (Core Components)
+
+**Architectural Question**
+What namespace strategy will be used for deploying OpenShift AI core components?
+
+**Issue or Problem**
+Red Hat OpenShift AI Self-Managed uses default projects (`redhat-ods-operator`, `redhat-ods-applications`), but enterprise environments often require custom names for standardization or compliance. This decision focuses on the core platform namespaces, distinct from user workload namespaces.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Use Default RHOAI Namespaces (Core Components)
+- Configure Custom Namespaces for RHOAI Core Components
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Use Default RHOAI Namespaces:** To simplify installation and maintenance by accepting the standard naming (`redhat-ods-*`). Aligns directly with documentation and default operator behavior.
+- **Configure Custom Namespaces for RHOAI Core:** To adhere to strict organizational naming conventions by specifying custom project names for the core RHOAI operator and application components during installation via the `DataScienceCluster` CR.
+
+**Implications**
+
+- **Use Default Namespaces:** Easiest setup. May not meet strict naming policies.
+- **Configure Custom Core Namespaces:** Requires defining custom names via `DataScienceCluster` CR _before_ initial installation. Ensures compliance with naming standards for platform components but adds configuration steps. Does not affect the default `rhods-notebooks` namespace unless also customized.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Security Expert
 
 ---
 
@@ -360,7 +360,7 @@ Which default storage class (StorageClass) will be configured for use by Red Hat
 Components like workbenches automatically create PVCs and rely on a cluster-defined default `StorageClass`. The selected default affects performance, access modes (RWO/RWX), and capacity management for these components.
 
 **Assumption**
-Dynamic volume provisioning is used. Components like Workbenches will require PVCs.
+Dynamic volume provisioning is available via the chosen Storage provider.
 
 **Alternatives**
 
@@ -881,7 +881,7 @@ Will NVIDIA GPUs be utilized by Red Hat OpenShift AI workloads?
 OpenShift AI supports NVIDIA GPUs for compute-intensive tasks (training, inference). Enabling them impacts hardware requirements, cost, installation complexity (NVIDIA GPU Operator), versus potential performance gains.
 
 **Assumption**
-Workloads potentially require GPU acceleration. Hardware Acceleration Strategy and Cluster Topology established.
+Hardware Acceleration Strategy and Cluster Topology are established.
 
 **Alternatives**
 
@@ -925,7 +925,7 @@ Will Intel HPUs (e.g., Gaudi) be utilized by Red Hat OpenShift AI workloads?
 OpenShift AI supports Intel HPUs for cost-effective deep learning performance. Enabling them impacts hardware needs, cost, and complexity versus potential gains.
 
 **Assumption**
-Workloads potentially require GPU acceleration. Hardware Acceleration Strategy and Cluster Topology established.
+Hardware Acceleration Strategy and Cluster Topology are established.
 
 **Alternatives**
 
@@ -969,7 +969,7 @@ Will AMD GPUs (ROCm) be utilized by Red Hat OpenShift AI workloads?
 Enabling AMD GPUs supports high-performance AI/ML using ROCm but impacts hardware, complexity, and has limitations (e.g., disconnected environments).
 
 **Assumption**
-Workloads potentially require GPU acceleration. Hardware Acceleration Strategy and Cluster Topology established.
+Hardware Acceleration Strategy and Cluster Topology are established.
 
 **Alternatives**
 
@@ -1088,6 +1088,49 @@ Orchestration of ML workflows is required.
 ## RHOAI-SM-25
 
 **Title**
+Model Serving Platform Selection
+
+**Architectural Question**
+Which model serving platform architecture will be used in Red Hat OpenShift AI?
+
+**Issue or Problem**
+A decision is needed on the technology for deploying models as scalable endpoints, affecting dependencies, resources, complexity, and features (e.g., scale-to-zero).
+
+**Assumption**
+Model deployment capabilities are required.
+
+**Alternatives**
+
+- KServe (Single Model Serving / RawDeployment Mode)
+- Custom Application Deployment (OpenShift Deployments)
+
+**Decision**
+#TODO#
+
+**Justification**
+
+- **KServe (RawDeployment Mode):** Deploy each model as a separate, scalable endpoint optimized for AI/ML using integrated KServe. Leverages standardized inference protocols, model management, observability. RawDeployment avoids reliance on OpenShift Serverless.
+- **Custom Application Deployment:** Use standard OpenShift methods (`Deployment`, `Service`) for model endpoints, wrapping model in custom container. Max control over Kubernetes primitives but requires building more infrastructure manually.
+
+**Implications**
+
+- **KServe (RawDeployment Mode):** Requires KServe components (Operator, Controller). Relies on Istio Service Mesh for advanced traffic management. Provides standardized MLOps workflow but abstracts some K8s details. RawDeployment ensures compatibility/avoids deprecated Serverless dependencies.
+- **Custom Application Deployment:** Requires developers to build container images with serving logic (Flask/FastAPI) and manually create K8s resources (`Deployment`, `Service`, `Route`, `HPA`). Lacks specialized KServe features (standardized metrics, easy canary) unless implemented manually.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Lead Data Scientist
+- Person: #TODO#, Role: MLOps Engineer
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## RHOAI-SM-26
+
+**Title**
 Pipelines in JupyterLab (Elyra) usage
 
 **Architectural Question**
@@ -1126,7 +1169,7 @@ Data Science Pipelines component is enabled. Users primarily use JupyterLab.
 
 ---
 
-## RHOAI-SM-26
+## RHOAI-SM-27
 
 **Title**
 Pipeline database backend (KFP)
@@ -1169,7 +1212,7 @@ Data Science Pipelines component is enabled.
 
 ---
 
-## RHOAI-SM-27
+## RHOAI-SM-28
 
 **Title**
 Distributed workloads enablement (Ray/CodeFlare)
@@ -1212,7 +1255,7 @@ Workloads might benefit from distributed computation.
 
 ---
 
-## RHOAI-SM-28
+## RHOAI-SM-29
 
 **Title**
 Quota management for distributed workloads (Kueue)
@@ -1253,7 +1296,7 @@ Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 ---
 
-## RHOAI-SM-29
+## RHOAI-SM-30
 
 **Title**
 Authentication Method for Ray Dashboard
@@ -1295,7 +1338,7 @@ Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 ---
 
-## RHOAI-SM-30
+## RHOAI-SM-31
 
 **Title**
 Distributed workloads monitoring (Ray)
@@ -1330,49 +1373,6 @@ Distributed workloads (CodeFlare/KubeRay) are enabled.
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: MLOps Engineer
-- Person: #TODO#, Role: AI/ML Platform Owner
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-
----
-
-## RHOAI-SM-31
-
-**Title**
-Model Serving Platform Selection
-
-**Architectural Question**
-Which model serving platform architecture will be used in Red Hat OpenShift AI?
-
-**Issue or Problem**
-A decision is needed on the technology for deploying models as scalable endpoints, affecting dependencies, resources, complexity, and features (e.g., scale-to-zero).
-
-**Assumption**
-Model deployment capabilities are required.
-
-**Alternatives**
-
-- KServe (Single Model Serving / RawDeployment Mode)
-- Custom Application Deployment (OpenShift Deployments)
-
-**Decision**
-#TODO#
-
-**Justification**
-
-- **KServe (RawDeployment Mode):** Deploy each model as a separate, scalable endpoint optimized for AI/ML using integrated KServe. Leverages standardized inference protocols, model management, observability. RawDeployment avoids reliance on OpenShift Serverless.
-- **Custom Application Deployment:** Use standard OpenShift methods (`Deployment`, `Service`) for model endpoints, wrapping model in custom container. Max control over Kubernetes primitives but requires building more infrastructure manually.
-
-**Implications**
-
-- **KServe (RawDeployment Mode):** Requires KServe components (Operator, Controller). Relies on Istio Service Mesh for advanced traffic management. Provides standardized MLOps workflow but abstracts some K8s details. RawDeployment ensures compatibility/avoids deprecated Serverless dependencies.
-- **Custom Application Deployment:** Requires developers to build container images with serving logic (Flask/FastAPI) and manually create K8s resources (`Deployment`, `Service`, `Route`, `HPA`). Lacks specialized KServe features (standardized metrics, easy canary) unless implemented manually.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Lead Data Scientist
 - Person: #TODO#, Role: MLOps Engineer
 - Person: #TODO#, Role: AI/ML Platform Owner
 - Person: #TODO#, Role: OCP Platform Owner

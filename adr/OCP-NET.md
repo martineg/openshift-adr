@@ -448,6 +448,90 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 ## OCP-NET-12
 
 **Title**
+Ingress Controller Strategy
+
+**Architectural Question**
+How will ingress controllers be deployed and managed for routing external traffic to applications?
+
+**Issue or Problem**
+Strategy impacts multi-tenancy, performance isolation, security, custom domain usage, and resource consumption.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Default OpenShift Ingress Controller (Shared)
+- Dedicated OpenShift Ingress Controllers (Per Tenant/App Group)
+- Third-Party Ingress Controller (e.g., Nginx Ingress Operator)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Default:** Simplest, uses out-of-the-box controller for all routes under the default apps domain (`*.apps.cluster.domain`).
+- **Dedicated:** Creates separate controllers for different apps/tenants using `IngressController` CR. Allows custom domains, performance/security isolation.
+- **Third-Party:** Integrates vendor-specific controller for advanced features or existing expertise.
+
+**Implications**
+
+- **Default:** All routes share one controller. Risk of "noisy neighbor" performance issues. Limits domain flexibility. Least resource usage.
+- **Dedicated:** Increases cluster resource consumption (CPU, RAM per controller replica). Requires config for new controller and route scoping (custom domains, route labels/selectors). Provides isolation.
+- **Third-Party:** Org responsible for full lifecycle management. Domain flexibility but requires manual integration and potentially different operational model.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: AI/ML Platform Owner
+
+---
+
+## OCP-NET-13
+
+**Title**
+Ingress Controller Replica Count
+
+**Architectural Question**
+How many replicas will be deployed for each ingress controller instance (default and dedicated)?
+
+**Issue or Problem**
+Replica count determines HA and traffic handling capacity. Insufficient replicas cause bottlenecks or outages.
+
+**Assumption**
+N/A
+**Alternatives**
+
+- Default Replica Count (Typically 2)
+- Custom Replica Count (Scaled based on load/HA needs)
+
+**Decision**
+#TODO: Document the decision for each cluster and each ingress controller pool.#
+
+**Justification**
+
+- **Default (2):** Baseline HA, suitable for non-prod or low traffic.
+- **Custom:** Scale replicas up (or down) to match expected load and meet specific HA requirements (e.g., survive node/AZ failure) for production.
+
+**Implications**
+
+- **Default (2):** Basic redundancy. May not handle high volume or survive multi-node/AZ failure without degradation.
+- **Custom:** Allows scaling for production loads (including bursty AI inference traffic). Each replica consumes additional CPU/memory. Requires monitoring to determine appropriate count.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-NET-14
+
+**Title**
 CNI Plugin Selection (Platform Specific)
 
 **Architectural Question**
@@ -486,7 +570,7 @@ N/A
 
 ---
 
-## OCP-NET-13
+## OCP-NET-15
 
 **Title**
 Pod Network CIDR Selection
@@ -526,7 +610,7 @@ N/A
 
 ---
 
-## OCP-NET-14
+## OCP-NET-16
 
 **Title**
 Service Network CIDR Selection
@@ -566,7 +650,7 @@ N/A
 
 ---
 
-## OCP-NET-15
+## OCP-NET-17
 
 **Title**
 Advanced CNI Parameter Configuration Strategy (Install-Config vs Custom Manifest)
@@ -606,7 +690,7 @@ Advanced network configuration (e.g., OVN-Kubernetes customization) is required.
 
 ---
 
-## OCP-NET-16
+## OCP-NET-18
 
 **Title**
 OVN-Kubernetes Overlay Network Parameter Configuration
@@ -646,7 +730,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-17
+## OCP-NET-19
 
 **Title**
 OVN-Kubernetes Internal Subnet Configuration Strategy
@@ -686,7 +770,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-18
+## OCP-NET-20
 
 **Title**
 OVN-Kubernetes Internal Masquerade Subnet Configuration
@@ -726,7 +810,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-19
+## OCP-NET-21
 
 **Title**
 OVN-Kubernetes Egress Traffic Routing Via Host Network Stack
@@ -766,7 +850,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-20
+## OCP-NET-22
 
 **Title**
 OVN-Kubernetes IPsec Encryption Mode
@@ -810,7 +894,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-21
+## OCP-NET-23
 
 **Title**
 OVN-Kubernetes Cluster Route Advertisement Strategy
@@ -851,7 +935,7 @@ N/A
 
 ---
 
-## OCP-NET-22
+## OCP-NET-24
 
 **Title**
 OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
@@ -892,7 +976,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-23
+## OCP-NET-25
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
@@ -930,90 +1014,6 @@ N/A
 - Person: #TODO#, Role: Operations Expert
 - Person: #TODO#, Role: Network Expert
 - Person: #TODO#, Role: OCP Platform Owner
-
----
-
-## OCP-NET-24
-
-**Title**
-Ingress Controller Strategy
-
-**Architectural Question**
-How will ingress controllers be deployed and managed for routing external traffic to applications?
-
-**Issue or Problem**
-Strategy impacts multi-tenancy, performance isolation, security, custom domain usage, and resource consumption.
-
-**Assumption**
-N/A
-
-**Alternatives**
-
-- Default OpenShift Ingress Controller (Shared)
-- Dedicated OpenShift Ingress Controllers (Per Tenant/App Group)
-- Third-Party Ingress Controller (e.g., Nginx Ingress Operator)
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Default:** Simplest, uses out-of-the-box controller for all routes under the default apps domain (`*.apps.cluster.domain`).
-- **Dedicated:** Creates separate controllers for different apps/tenants using `IngressController` CR. Allows custom domains, performance/security isolation.
-- **Third-Party:** Integrates vendor-specific controller for advanced features or existing expertise.
-
-**Implications**
-
-- **Default:** All routes share one controller. Risk of "noisy neighbor" performance issues. Limits domain flexibility. Least resource usage.
-- **Dedicated:** Increases cluster resource consumption (CPU, RAM per controller replica). Requires config for new controller and route scoping (custom domains, route labels/selectors). Provides isolation.
-- **Third-Party:** Org responsible for full lifecycle management. Domain flexibility but requires manual integration and potentially different operational model.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: AI/ML Platform Owner
-
----
-
-## OCP-NET-25
-
-**Title**
-Ingress Controller Replica Count
-
-**Architectural Question**
-How many replicas will be deployed for each ingress controller instance (default and dedicated)?
-
-**Issue or Problem**
-Replica count determines HA and traffic handling capacity. Insufficient replicas cause bottlenecks or outages.
-
-**Assumption**
-N/A
-**Alternatives**
-
-- Default Replica Count (Typically 2)
-- Custom Replica Count (Scaled based on load/HA needs)
-
-**Decision**
-#TODO: Document the decision for each cluster and each ingress controller pool.#
-
-**Justification**
-
-- **Default (2):** Baseline HA, suitable for non-prod or low traffic.
-- **Custom:** Scale replicas up (or down) to match expected load and meet specific HA requirements (e.g., survive node/AZ failure) for production.
-
-**Implications**
-
-- **Default (2):** Basic redundancy. May not handle high volume or survive multi-node/AZ failure without degradation.
-- **Custom:** Allows scaling for production loads (including bursty AI inference traffic). Each replica consumes additional CPU/memory. Requires monitoring to determine appropriate count.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: AI/ML Platform Owner
-- Person: #TODO#, Role: Operations Expert
 
 ---
 

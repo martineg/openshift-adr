@@ -12,7 +12,7 @@ What is the deployment strategy for OpenShift Data Foundation on the OpenStack c
 On OpenStack, ODF is deployed on top of virtual block devices (Cinder volumes) attached to the ODF worker nodes. A strategy is needed to select the correct Cinder backend and volume type to meet ODF's performance and HA requirements.
 
 **Assumption**
-ODF will be deployed on the OpenStack cluster (see OCP-STOR-01).
+OpenShift Data Foundation (ODF) has been selected as the Storage provider.
 
 **Alternatives**
 

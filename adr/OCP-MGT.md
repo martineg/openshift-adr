@@ -58,7 +58,7 @@ What is the strategy for delegating project-level administration and resource ma
 Defining the RBAC strategy balances centralized platform governance (security) with development team autonomy and velocity.
 
 **Assumption**
-Project Allocation Strategy (OCP-MGT-01) is defined. Identity Provider and Groups (OCP-SEC-03, OCP-SEC-04) are configured.
+Project Allocation Strategy is defined. Identity Provider and Groups are configured.
 
 **Alternatives**
 
@@ -121,7 +121,7 @@ Internal applications/images will be built and deployed. Custom RHOAI images mig
 
 **Implications**
 
-- **Internal Registry:** Lifecycle tied to cluster. Requires persistent storage config (ODF RWO/RWX or other PVs, OCP-STOR-01). Storage must be sized appropriately. May need extra security hardening if exposed externally. Lacks advanced features of dedicated registries.
+- **Internal Registry:** Lifecycle tied to cluster. Requires persistent storage config (ODF RWO/RWX or other PVs). Storage must be sized appropriately. May need extra security hardening if exposed externally. Lacks advanced features of dedicated registries.
 - **Existing Registry:** Requires network connectivity and pull secrets in app namespaces. Build pipelines need push credentials. May need `ImageContentSourcePolicy`. Relies on external system availability/management and registry team support.
 - **New Dedicated Registry:** Provides most features but adds another critical HA component to deploy/manage. Requires dedicated infrastructure or significant OCP resources if run internally. May require separate subscription/license (e.g., Quay).
 
@@ -147,7 +147,7 @@ What strategy will enforce resource consumption limits (CPU, memory, storage, GP
 Without quotas, a single project could monopolize cluster resources, impacting stability and availability for all tenants.
 
 **Assumption**
-Multi-tenancy or resource contention is expected. Project Allocation (OCP-MGT-01) is defined.
+Multi-tenancy or resource contention is expected. Project Allocation is defined.
 
 **Alternatives**
 
