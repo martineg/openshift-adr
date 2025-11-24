@@ -133,6 +133,48 @@ N/A
 ## OCP-BASE-04
 
 **Title**
+Mirrored images registry (Disconnected Environments)
+
+**Architectural Question**
+In a disconnected environment, which mirrored images registry solution will be used to provide required container images to the cluster?
+
+**Issue or Problem**
+In a disconnected environment, the cluster needs access to Red Hat software (release images, operators) via a local mirror registry for installation and updates.
+
+**Assumption**
+Environment is disconnected.
+
+**Alternatives**
+
+- Filesystem-based Mirror (using `oc mirror` or `oc adm release mirror`)
+- Dedicated Mirror Registry Server (e.g., Quay, Nexus, Artifactory)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Filesystem-based Mirror:** Uses oc mirror (preferred) to create a simple mirror (filesystem or basic registry push). Minimum requirement for mirroring essential OCP software.
+- **Dedicated Mirror Registry Server:** Leverages a full-featured registry (existing or new) as the single source for both mirrored Red Hat content and internal application images. This is the preferred enterprise approach.
+
+**Implications**
+
+- **Filesystem-based Mirror:** Primarily for Red Hat content, not a full registry (no UI, advanced RBAC, scanning unless paired). Simpler setup for core content, less suitable for applications. Requires manual sync.
+- **Dedicated Mirror Registry Server:** Preferred enterprise approach. Requires ensuring the registry supports OCP content formats (Operator catalogs) and the mirroring process. Leverages existing HA, security, and management features.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BASE-05
+
+**Title**
 Fleet Management
 
 **Architectural Question**
@@ -171,7 +213,7 @@ N/A
 
 ---
 
-## OCP-BASE-05
+## OCP-BASE-06
 
 **Title**
 Platform Configuration & Deployment Engine Selection
@@ -215,7 +257,7 @@ Declarative infrastructure-as-code is the desired operating model.
 
 ---
 
-## OCP-BASE-06
+## OCP-BASE-07
 
 **Title**
 Multiple site deployment mode.
@@ -265,7 +307,7 @@ N/A
 
 ---
 
-## OCP-BASE-07
+## OCP-BASE-08
 
 **Title**
 Intra-Site Availability Zone / Failure Domain Strategy
@@ -307,7 +349,7 @@ N/A
 
 ---
 
-## OCP-BASE-08
+## OCP-BASE-09
 
 **Title**
 Platform infrastructure
@@ -351,7 +393,7 @@ Cloud model has been selected.
 
 ---
 
-## OCP-BASE-09
+## OCP-BASE-10
 
 **Title**
 Cluster Topology
@@ -404,7 +446,7 @@ Platform infrastructure supports the chosen topology.
 
 ---
 
-## OCP-BASE-10
+## OCP-BASE-11
 
 **Title**
 Control Plane Schedulability Configuration
@@ -445,7 +487,7 @@ Cluster topology is defined.
 
 ---
 
-## OCP-BASE-11
+## OCP-BASE-12
 
 **Title**
 Infrastructure nodes
@@ -487,7 +529,7 @@ Cluster has a standard HA topology.
 
 ---
 
-## OCP-BASE-12
+## OCP-BASE-13
 
 **Title**
 Dedicated Infrastructure Node Count for HA
@@ -528,7 +570,7 @@ Dedicated Infrastructure Nodes strategy has been selected.
 
 ---
 
-## OCP-BASE-13
+## OCP-BASE-14
 
 **Title**
 Boot disks encryption
@@ -571,48 +613,6 @@ Platform infrastructure is vSphere or baremetal.
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: Security Expert
 - Person: #TODO#, Role: Storage Expert
-
----
-
-## OCP-BASE-14
-
-**Title**
-Mirrored images registry (Disconnected Environments)
-
-**Architectural Question**
-In a disconnected environment, which mirrored images registry solution will be used to provide required container images to the cluster?
-
-**Issue or Problem**
-In a disconnected environment, the cluster needs access to Red Hat software (release images, operators) via a local mirror registry for installation and updates.
-
-**Assumption**
-Environment is disconnected.
-
-**Alternatives**
-
-- Filesystem-based Mirror (using `oc mirror` or `oc adm release mirror`)
-- Dedicated Mirror Registry Server (e.g., Quay, Nexus, Artifactory)
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Filesystem-based Mirror:** Uses oc mirror (preferred) to create a simple mirror (filesystem or basic registry push). Minimum requirement for mirroring essential OCP software.
-- **Dedicated Mirror Registry Server:** Leverages a full-featured registry (existing or new) as the single source for both mirrored Red Hat content and internal application images. This is the preferred enterprise approach.
-
-**Implications**
-
-- **Filesystem-based Mirror:** Primarily for Red Hat content, not a full registry (no UI, advanced RBAC, scanning unless paired). Simpler setup for core content, less suitable for applications. Requires manual sync.
-- **Dedicated Mirror Registry Server:** Preferred enterprise approach. Requires ensuring the registry supports OCP content formats (Operator catalogs) and the mirroring process. Leverages existing HA, security, and management features.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Security Expert
-- Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: Operations Expert
 
 ---
 

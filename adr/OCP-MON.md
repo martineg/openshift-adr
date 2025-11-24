@@ -3,7 +3,7 @@
 ## OCP-MON-01
 
 **Title**
-Monitoring
+Monitoring Strategy
 
 **Architectural Question**
 What is the strategy for monitoring cluster and application metrics?

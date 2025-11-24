@@ -133,6 +133,53 @@ An appropriate OpenShift IdP must be configured.
 ## RHOAI-SM-04
 
 **Title**
+Red Hat OpenShift AI Capabilities Enablement Strategy
+
+**Architectural Question**
+Which high-level functional components (Workbenches, Data Science Pipelines, Model Serving, Distributed Workloads) will be enabled within the `DataScienceCluster` to define the scope of the AI platform?
+
+**Issue or Problem**
+OpenShift AI provides a modular suite of tools. Enabling all components increases the cluster resource footprint (CPU, Memory, CRDs) and operational surface area. A strategic decision is needed to define whether the platform acts as a full end-to-end MLOps suite or a specialized environment (e.g., Serving-only or Exploration-only).
+
+**Assumption**
+**Red Hat OpenShift AI instances** have been defined.
+
+**Alternatives**
+
+- **Full MLOps Platform (All Capabilities):** Enable Workbenches, Pipelines, Model Serving (KServe), and Distributed Workloads.
+- **Exploration & Training Only:** Enable Workbenches and Distributed Workloads; disable Model Serving.
+- **Production Serving Only:** Enable Model Serving; disable Workbenches and Pipelines.
+- **Custom/Selective Enablement:** Granular selection based on specific use case requirements.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Full MLOps Platform (All Capabilities):** Provides a complete end-to-end workflow from experimentation (Workbenches) to automation (Pipelines) and production inference (Model Serving). This is the standard configuration for general-purpose Data Science teams.
+- **Exploration & Training Only:** Optimizes the cluster for model development and heavy computation (Ray/CodeFlare). Suitable for "Dev" clusters where models are trained but not served for production traffic.
+- **Production Serving Only:** Reduces the attack surface and resource overhead by removing interactive components (Workbenches, Dashboard). Ideal for strictly controlled "Prod" inference clusters where artifacts are promoted via GitOps.
+- **Custom/Selective Enablement:** Allows precise resource optimization (e.g., enabling Workbenches but disabling Pipelines if an external orchestrator like Airflow is used).
+
+**Implications**
+
+- **Full MLOps Platform:** Requires significant cluster resources (CPU/Memory) to host control plane components for all services. Requires deciding configuration for dependent services like **S3 Object Storage** and **Data Science Pipelines Database**.
+- **Exploration & Training Only:** Eliminates the overhead of Istio/Knative/KServe if inference is not required.
+- **Production Serving Only:** Data Scientists cannot log in to write code. Requires a robust CI/CD pipeline to promote trained models into the serving environment.
+- **Custom/Selective Enablement:** Requires managing the `DataScienceCluster` resource configuration carefully to ensure dependencies (e.g., Kueue for Distributed Workloads) are correctly handled.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## RHOAI-SM-05
+
+**Title**
 Data science project allocation strategy (User Namespaces)
 
 **Architectural Question**
@@ -179,7 +226,7 @@ Data science workloads need namespace isolation beyond the core RHOAI components
 
 ---
 
-## RHOAI-SM-05
+## RHOAI-SM-06
 
 **Title**
 User/Group Dashboard Access Configuration
@@ -220,7 +267,7 @@ OpenShift groups are synchronized or defined (Identity Provider Group Synchroniz
 
 ---
 
-## RHOAI-SM-06
+## RHOAI-SM-07
 
 **Title**
 OpenShift AI Namespace Strategy (Core Components)
@@ -261,7 +308,7 @@ N/A
 
 ---
 
-## RHOAI-SM-07
+## RHOAI-SM-08
 
 **Title**
 CA Certificate management
@@ -303,7 +350,7 @@ Secure communication using TLS is required.
 
 ---
 
-## RHOAI-SM-08
+## RHOAI-SM-09
 
 **Title**
 S3 Object Storage Location
@@ -348,7 +395,7 @@ Model serving and/or Data Science Pipelines capabilities are required.
 
 ---
 
-## RHOAI-SM-09
+## RHOAI-SM-10
 
 **Title**
 Default storage class for Red Hat OpenShift AI components
@@ -390,7 +437,7 @@ Dynamic volume provisioning is available via the chosen Storage provider.
 
 ---
 
-## RHOAI-SM-10
+## RHOAI-SM-11
 
 **Title**
 Usage data collection (Telemetry)
@@ -432,7 +479,7 @@ N/A
 
 ---
 
-## RHOAI-SM-11
+## RHOAI-SM-12
 
 **Title**
 Red Hat partner solutions integration
@@ -485,7 +532,53 @@ N/A
 
 ---
 
-## RHOAI-SM-12
+## RHOAI-SM-13
+
+**Title**
+Workbenches provisioning strategy
+
+**Architectural Question**
+How will workbenches (JupyterLab or other IDE environments) be provisioned and managed for data scientists?
+
+**Issue or Problem**
+Workbenches are the primary IDE. The provisioning strategy impacts resource allocation (CPU, memory, PVCs, GPUs), user experience, environment consistency, and cost.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Individual Workbench per User (Self-Service)
+- Shared Team Workbenches
+- Role/Task-Specific Workbench Configurations (e.g., GPU vs. CPU)
+
+**Decision**
+#TODO#
+
+**Justification**
+
+- **Individual Workbench per User:** Max isolation. Users self-select size/image within limits. Most common.
+- **Shared Team Workbenches:** Potential resource savings by sharing larger instances. Requires user coordination.
+- **Role/Task-Specific Configurations:** Pre-defined templates (sizes, images, accelerators) for roles/tasks. Simplifies user choice, enforces standards.
+
+**Implications**
+
+- **Individual:** Can lead to higher resource consumption if users provision large/GPU workbenches. Needs defined profiles/sizes and potentially quotas. Best user autonomy.
+- **Shared:** Difficult to manage contention/interference. Impractical for sensitive data. Less common.
+- **Role/Task-Specific:** Simplifies user choice with curated options. Requires admin definition/maintenance. Helps control resource usage.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Lead Data Scientist
+- Person: #TODO#, Role: MLOps Engineer
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## RHOAI-SM-14
 
 **Title**
 Notebook images for data scientists
@@ -537,7 +630,7 @@ Workbenches will be used.
 
 ---
 
-## RHOAI-SM-13
+## RHOAI-SM-15
 
 **Title**
 Required Python packages (for Custom Notebook Images)
@@ -586,53 +679,7 @@ Custom notebook images will be built.
 
 ---
 
-## RHOAI-SM-14
-
-**Title**
-Workbenches provisioning strategy
-
-**Architectural Question**
-How will workbenches (JupyterLab or other IDE environments) be provisioned and managed for data scientists?
-
-**Issue or Problem**
-Workbenches are the primary IDE. The provisioning strategy impacts resource allocation (CPU, memory, PVCs, GPUs), user experience, environment consistency, and cost.
-
-**Assumption**
-N/A
-
-**Alternatives**
-
-- Individual Workbench per User (Self-Service)
-- Shared Team Workbenches
-- Role/Task-Specific Workbench Configurations (e.g., GPU vs. CPU)
-
-**Decision**
-#TODO#
-
-**Justification**
-
-- **Individual Workbench per User:** Max isolation. Users self-select size/image within limits. Most common.
-- **Shared Team Workbenches:** Potential resource savings by sharing larger instances. Requires user coordination.
-- **Role/Task-Specific Configurations:** Pre-defined templates (sizes, images, accelerators) for roles/tasks. Simplifies user choice, enforces standards.
-
-**Implications**
-
-- **Individual:** Can lead to higher resource consumption if users provision large/GPU workbenches. Needs defined profiles/sizes and potentially quotas. Best user autonomy.
-- **Shared:** Difficult to manage contention/interference. Impractical for sensitive data. Less common.
-- **Role/Task-Specific:** Simplifies user choice with curated options. Requires admin definition/maintenance. Helps control resource usage.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Lead Data Scientist
-- Person: #TODO#, Role: MLOps Engineer
-- Person: #TODO#, Role: AI/ML Platform Owner
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-
----
-
-## RHOAI-SM-15
+## RHOAI-SM-16
 
 **Title**
 code-server workbenches enablement
@@ -673,142 +720,7 @@ Red Hat notebook server images are used. Workbenches are provisioned.
 
 ---
 
-## RHOAI-SM-16
-
-**Title**
-Notebook file storage location
-
-**Architectural Question**
-Where will data scientists primarily store their notebook files (`.ipynb`) and associated code/scripts developed within workbenches?
-
-**Issue or Problem**
-Notebook files are core work products. The storage strategy impacts version control, collaboration, reproducibility, backup/recovery, and MLOps practices.
-
-**Assumption**
-Workbenches are used.
-
-**Alternatives**
-
-- Local Workbench Storage (PVC) Only
-- Git Repository (Integrated with Workbench)
-
-**Decision**
-#TODO#
-
-**Justification**
-
-- **Local Workbench Storage (PVC):** Simplicity and immediate persistence within user's workbench environment (on attached PVC).
-- **Git Repository:** Enable version control, collaboration, code reviews, easier integration with CI/CD or MLOps pipelines. Workbenches can clone Git repos. Recommended best practice.
-
-**Implications**
-
-- **Local PVC Only:** Simplest setup. Persists across workbench restarts. Difficult version control/collaboration. Requires PVC backup strategy for resilience. Can lead to data silos.
-- **Git Repository:** Promotes best practices. Requires users to commit/push regularly. Needs network connectivity to Git server. Git credentials management needed (secrets). Enables GitOps workflows. Data resilience relies on Git server backup strategy.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Lead Data Scientist
-- Person: #TODO#, Role: MLOps Engineer
-- Person: #TODO#, Role: AI/ML Platform Owner
-
----
-
 ## RHOAI-SM-17
-
-**Title**
-Cluster Storage (PVC) Sizing for Workbenches
-
-**Architectural Question**
-How will Persistent Volume Claim (PVC) sizing be managed for workbench local storage (/home/jovyan)?
-
-**Issue or Problem**
-Workbench PVC size impacts local data storage capacity and overall cluster storage consumption.
-
-**Assumption**
-Workbenches are configured. Local PVC storage is used.
-
-**Alternatives**
-
-- Fixed Default Size for All Workbenches
-- User-Selectable Size (within pre-defined limits/tiers)
-- Custom Size per Workbench (Admin controlled)
-
-**Decision**
-#TODO#
-
-**Justification**
-
-- **Fixed Default Size:** Simplest administration. Consistent starting point (e.g., 20Gi).
-- **User-Selectable Size:** Flexibility for users to choose based on needs (e.g., Small-20Gi, Medium-50Gi, Large-100Gi).
-- **Custom Size:** Most flexible but requires manual intervention/automation by admins.
-
-**Implications**
-
-- **Fixed Default:** May be insufficient for large local datasets/libraries. Users might hit limits. Easiest capacity planning.
-- **User-Selectable:** Balances flexibility/control. Needs defined tiers and potentially project quotas. Users need guidance.
-- **Custom:** High admin overhead unless automated. Precise allocation but complicates capacity management.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Lead Data Scientist
-- Person: #TODO#, Role: MLOps Engineer
-- Person: #TODO#, Role: AI/ML Platform Owner
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: Storage Expert
-
----
-
-## RHOAI-SM-18
-
-**Title**
-Notebook Git repository structure
-
-**Architectural Question**
-If using Git for notebook storage, how will repositories be structured and managed for data science collaboration?
-
-**Issue or Problem**
-Repository structure/access patterns impact collaboration efficiency, code sharing, version control clarity, MLOps integration.
-
-**Assumption**
-Notebook files/code primarily stored in Git.
-
-**Alternatives**
-
-- Single Shared Mono-Repository (All projects/teams)
-- Repository per Team/Group
-- Repository per Project/Initiative
-- Hybrid Approach (e.g., Shared libs repo + project repos)
-
-**Decision**
-#TODO#
-
-**Justification**
-
-- **Mono-Repo:** Simplify discovery/dependency management. Easier central standards enforcement.
-- **Repo per Team:** Provide autonomy/clear ownership. Align access control with team structure.
-- **Repo per Project:** Isolate work per ML model/business problem. Facilitate project-specific lifecycles.
-- **Hybrid:** Balance central standards/shared code (common lib repo) with project flexibility (dedicated project repos).
-
-**Implications**
-
-- **Mono-Repo:** Can become large/complex. Needs robust branching strategies/CODEOWNERS. CI/CD triggers can be noisy.
-- **Repo per Team:** Can lead to code duplication if sharing needed. Needs mechanisms for cross-team discovery/reuse. Simplifies team access control.
-- **Repo per Project:** Creates many repos. Clear isolation but potentially hinders cross-project collaboration/standardization.
-- **Hybrid:** Flexible but needs clear governance (what belongs where, dependency management).
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Lead Data Scientist
-- Person: #TODO#, Role: MLOps Engineer
-- Person: #TODO#, Role: AI/ML Platform Owner
-
----
-
-## RHOAI-SM-19
 
 **Title**
 Data sources accessibility
@@ -869,7 +781,142 @@ Data scientists will need to access data beyond local workbench storage. S3 Loca
 
 ---
 
+## RHOAI-SM-18
+
+**Title**
+Notebook file storage location
+
+**Architectural Question**
+Where will data scientists primarily store their notebook files (`.ipynb`) and associated code/scripts developed within workbenches?
+
+**Issue or Problem**
+Notebook files are core work products. The storage strategy impacts version control, collaboration, reproducibility, backup/recovery, and MLOps practices.
+
+**Assumption**
+Workbenches are used.
+
+**Alternatives**
+
+- Local Workbench Storage (PVC) Only
+- Git Repository (Integrated with Workbench)
+
+**Decision**
+#TODO#
+
+**Justification**
+
+- **Local Workbench Storage (PVC):** Simplicity and immediate persistence within user's workbench environment (on attached PVC).
+- **Git Repository:** Enable version control, collaboration, code reviews, easier integration with CI/CD or MLOps pipelines. Workbenches can clone Git repos. Recommended best practice.
+
+**Implications**
+
+- **Local PVC Only:** Simplest setup. Persists across workbench restarts. Difficult version control/collaboration. Requires PVC backup strategy for resilience. Can lead to data silos.
+- **Git Repository:** Promotes best practices. Requires users to commit/push regularly. Needs network connectivity to Git server. Git credentials management needed (secrets). Enables GitOps workflows. Data resilience relies on Git server backup strategy.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Lead Data Scientist
+- Person: #TODO#, Role: MLOps Engineer
+- Person: #TODO#, Role: AI/ML Platform Owner
+
+---
+
+## RHOAI-SM-19
+
+**Title**
+Cluster Storage (PVC) Sizing for Workbenches
+
+**Architectural Question**
+How will Persistent Volume Claim (PVC) sizing be managed for workbench local storage (/home/jovyan)?
+
+**Issue or Problem**
+Workbench PVC size impacts local data storage capacity and overall cluster storage consumption.
+
+**Assumption**
+Workbenches are configured. Local PVC storage is used.
+
+**Alternatives**
+
+- Fixed Default Size for All Workbenches
+- User-Selectable Size (within pre-defined limits/tiers)
+- Custom Size per Workbench (Admin controlled)
+
+**Decision**
+#TODO#
+
+**Justification**
+
+- **Fixed Default Size:** Simplest administration. Consistent starting point (e.g., 20Gi).
+- **User-Selectable Size:** Flexibility for users to choose based on needs (e.g., Small-20Gi, Medium-50Gi, Large-100Gi).
+- **Custom Size:** Most flexible but requires manual intervention/automation by admins.
+
+**Implications**
+
+- **Fixed Default:** May be insufficient for large local datasets/libraries. Users might hit limits. Easiest capacity planning.
+- **User-Selectable:** Balances flexibility/control. Needs defined tiers and potentially project quotas. Users need guidance.
+- **Custom:** High admin overhead unless automated. Precise allocation but complicates capacity management.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Lead Data Scientist
+- Person: #TODO#, Role: MLOps Engineer
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Storage Expert
+
+---
+
 ## RHOAI-SM-20
+
+**Title**
+Notebook Git repository structure
+
+**Architectural Question**
+If using Git for notebook storage, how will repositories be structured and managed for data science collaboration?
+
+**Issue or Problem**
+Repository structure/access patterns impact collaboration efficiency, code sharing, version control clarity, MLOps integration.
+
+**Assumption**
+Notebook files/code primarily stored in Git.
+
+**Alternatives**
+
+- Single Shared Mono-Repository (All projects/teams)
+- Repository per Team/Group
+- Repository per Project/Initiative
+- Hybrid Approach (e.g., Shared libs repo + project repos)
+
+**Decision**
+#TODO#
+
+**Justification**
+
+- **Mono-Repo:** Simplify discovery/dependency management. Easier central standards enforcement.
+- **Repo per Team:** Provide autonomy/clear ownership. Align access control with team structure.
+- **Repo per Project:** Isolate work per ML model/business problem. Facilitate project-specific lifecycles.
+- **Hybrid:** Balance central standards/shared code (common lib repo) with project flexibility (dedicated project repos).
+
+**Implications**
+
+- **Mono-Repo:** Can become large/complex. Needs robust branching strategies/CODEOWNERS. CI/CD triggers can be noisy.
+- **Repo per Team:** Can lead to code duplication if sharing needed. Needs mechanisms for cross-team discovery/reuse. Simplifies team access control.
+- **Repo per Project:** Creates many repos. Clear isolation but potentially hinders cross-project collaboration/standardization.
+- **Hybrid:** Flexible but needs clear governance (what belongs where, dependency management).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Lead Data Scientist
+- Person: #TODO#, Role: MLOps Engineer
+- Person: #TODO#, Role: AI/ML Platform Owner
+
+---
+
+## RHOAI-SM-21
 
 **Title**
 NVIDIA GPU Support enablement
@@ -913,7 +960,7 @@ Hardware Acceleration Strategy and Cluster Topology are established.
 
 ---
 
-## RHOAI-SM-21
+## RHOAI-SM-22
 
 **Title**
 Intel HPU Accelerator Usage
@@ -957,7 +1004,7 @@ Hardware Acceleration Strategy and Cluster Topology are established.
 
 ---
 
-## RHOAI-SM-22
+## RHOAI-SM-23
 
 **Title**
 AMD GPU Accelerator Usage
@@ -1001,7 +1048,7 @@ Hardware Acceleration Strategy and Cluster Topology are established.
 
 ---
 
-## RHOAI-SM-23
+## RHOAI-SM-24
 
 **Title**
 Workbenches on Intel hardware
@@ -1042,7 +1089,7 @@ Intel accelerators are available. Intel partner component might be enabled. Note
 
 ---
 
-## RHOAI-SM-24
+## RHOAI-SM-25
 
 **Title**
 Data Science Pipelines enablement (KFP/Tekton)
@@ -1085,7 +1132,7 @@ Orchestration of ML workflows is required.
 
 ---
 
-## RHOAI-SM-25
+## RHOAI-SM-26
 
 **Title**
 Model Serving Platform Selection
@@ -1128,7 +1175,7 @@ Model deployment capabilities are required.
 
 ---
 
-## RHOAI-SM-26
+## RHOAI-SM-27
 
 **Title**
 Pipelines in JupyterLab (Elyra) usage
@@ -1169,7 +1216,7 @@ Data Science Pipelines component is enabled. Users primarily use JupyterLab.
 
 ---
 
-## RHOAI-SM-27
+## RHOAI-SM-28
 
 **Title**
 Pipeline database backend (KFP)
@@ -1212,7 +1259,7 @@ Data Science Pipelines component is enabled.
 
 ---
 
-## RHOAI-SM-28
+## RHOAI-SM-29
 
 **Title**
 Distributed workloads enablement (Ray/CodeFlare)
@@ -1255,7 +1302,7 @@ Workloads might benefit from distributed computation.
 
 ---
 
-## RHOAI-SM-29
+## RHOAI-SM-30
 
 **Title**
 Quota management for distributed workloads (Kueue)
@@ -1296,7 +1343,7 @@ Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 ---
 
-## RHOAI-SM-30
+## RHOAI-SM-31
 
 **Title**
 Authentication Method for Ray Dashboard
@@ -1338,7 +1385,7 @@ Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 ---
 
-## RHOAI-SM-31
+## RHOAI-SM-32
 
 **Title**
 Distributed workloads monitoring (Ray)
@@ -1380,7 +1427,7 @@ Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 ---
 
-## RHOAI-SM-32
+## RHOAI-SM-33
 
 **Title**
 Authorization provider for KServe Model Serving
@@ -1422,7 +1469,7 @@ Single-model serving platform (KServe) is enabled.
 
 ---
 
-## RHOAI-SM-33
+## RHOAI-SM-34
 
 **Title**
 Model-serving runtime for KServe
@@ -1474,7 +1521,7 @@ Single-model serving platform (KServe) is enabled.
 
 ---
 
-## RHOAI-SM-34
+## RHOAI-SM-35
 
 **Title**
 NVIDIA NIM Serving Platform Integration
@@ -1518,7 +1565,7 @@ NVIDIA GPU acceleration is enabled. Single-model serving (KServe) is enabled.
 
 ---
 
-## RHOAI-SM-35
+## RHOAI-SM-36
 
 **Title**
 Distributed Inference with LLM-D (TP)
@@ -1561,7 +1608,7 @@ LLMs requiring distributed processing (multi-GPU/multi-node) are planned for dep
 
 ---
 
-## RHOAI-SM-36
+## RHOAI-SM-37
 
 **Title**
 Single-model serving platform (KServe) monitoring enablement
@@ -1603,7 +1650,7 @@ Single-model serving platform (KServe) is enabled.
 
 ---
 
-## RHOAI-SM-37
+## RHOAI-SM-38
 
 **Title**
 NVIDIA NIM Metrics collection
@@ -1645,7 +1692,7 @@ NVIDIA NIM integration is enabled. User Workload Monitoring (UWM) is enabled.
 
 ---
 
-## RHOAI-SM-38
+## RHOAI-SM-39
 
 **Title**
 TrustyAI Monitoring for Data Science Models
@@ -1689,7 +1736,7 @@ Model serving is enabled.
 
 ---
 
-## RHOAI-SM-39
+## RHOAI-SM-40
 
 **Title**
 Persistent Volume Claim (PVC) Backup Strategy for RHOAI

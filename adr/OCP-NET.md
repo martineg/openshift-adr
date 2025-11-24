@@ -532,47 +532,6 @@ N/A
 ## OCP-NET-14
 
 **Title**
-CNI Plugin Selection (Platform Specific)
-
-**Architectural Question**
-Which Container Network Interface (CNI) plugin will manage Pod networking?
-
-**Issue or Problem**
-The CNI plugin choice impacts network features, performance, and integration with the underlying infrastructure (especially relevant for OpenStack).
-
-**Assumption**
-N/A
-
-**Alternatives**
-
-- **Default:** OVN-Kubernetes CNI (Platform Agnostic)
-- **OpenStack Specific:** Kuryr-Kubernetes CNI
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **OVN-Kubernetes CNI:** Standard, platform-agnostic OCP networking stack. Creates a virtual overlay network independent of underlying infrastructure. Generally recommended for simplicity and consistency.
-- **Kuryr-Kubernetes CNI (OpenStack Only):** Achieves higher network performance on OpenStack by eliminating "double overlay". Creates Neutron ports for pods and uses Octavia LBs for services. Makes pods first-class OpenStack network citizens.
-
-**Implications**
-
-- **OVN-Kubernetes:** Simplest, standard, universally supported. Performance usually sufficient. Traffic traverses OCP SDN overlay.
-- **Kuryr (OpenStack Only):** Significant performance benefits, simplified network tracing (pod IPs visible on OSP network). Consumes Neutron ports rapidly, risking quota exhaustion. More complex configuration, specialized CNI.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: Infra Leader (Especially for OpenStack decision)
-
----
-
-## OCP-NET-15
-
-**Title**
 Pod Network CIDR Selection
 
 **Architectural Question**
@@ -610,7 +569,7 @@ N/A
 
 ---
 
-## OCP-NET-16
+## OCP-NET-15
 
 **Title**
 Service Network CIDR Selection
@@ -647,6 +606,47 @@ N/A
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-NET-16
+
+**Title**
+CNI Plugin Selection (Platform Specific)
+
+**Architectural Question**
+Which Container Network Interface (CNI) plugin will manage Pod networking?
+
+**Issue or Problem**
+The CNI plugin choice impacts network features, performance, and integration with the underlying infrastructure (especially relevant for OpenStack).
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Default:** OVN-Kubernetes CNI (Platform Agnostic)
+- **OpenStack Specific:** Kuryr-Kubernetes CNI
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **OVN-Kubernetes CNI:** Standard, platform-agnostic OCP networking stack. Creates a virtual overlay network independent of underlying infrastructure. Generally recommended for simplicity and consistency.
+- **Kuryr-Kubernetes CNI (OpenStack Only):** Achieves higher network performance on OpenStack by eliminating "double overlay". Creates Neutron ports for pods and uses Octavia LBs for services. Makes pods first-class OpenStack network citizens.
+
+**Implications**
+
+- **OVN-Kubernetes:** Simplest, standard, universally supported. Performance usually sufficient. Traffic traverses OCP SDN overlay.
+- **Kuryr (OpenStack Only):** Significant performance benefits, simplified network tracing (pod IPs visible on OSP network). Consumes Neutron ports rapidly, risking quota exhaustion. More complex configuration, specialized CNI.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader (Especially for OpenStack decision)
 
 ---
 
