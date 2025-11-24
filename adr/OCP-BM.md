@@ -1886,7 +1886,7 @@ Low-latency workloads are required, consistent with the Hardware Acceleration St
 **Alternatives**
 
 - Enable Real-Time Kernel via Performance Profile
-- Enable Workload Partitioning
+- Use Default Standard Kernel
 
 **Decision**
 #TODO: Document the decision for each cluster.#

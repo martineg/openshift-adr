@@ -195,9 +195,9 @@ Disaster recovery and data protection are required.
 
 **Alternatives**
 
-- **OCP Cluster-Level Backup Only (etcd):** Rely solely on built-in control plane snapshots.
-- **Storage-Level Operations Only (Snapshots/Replication):** Use underlying storage provider's capabilities only.
-- **Integrated Container Backup Solution (OADP):** Deploy Kubernetes-native backup solution (OADP operator). Recommended.
+- Etcd Snapshot Only
+- OpenShift Data Protection (OADP/Velero) for PVs and Resources
+- Comprehensive Layered Backup
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -220,6 +220,8 @@ Disaster recovery and data protection are required.
 - Person: #TODO#, Role: Operations Expert
 - Person: #TODO#, Role: Storage Expert
 - Person: #TODO#, Role: OCP Platform Owner
+
+---
 
 ## OCP-MGT-06
 
