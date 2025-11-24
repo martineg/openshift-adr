@@ -83,47 +83,6 @@ N/A
 ## OCP-OSP-03
 
 **Title**
-OpenStack CNI Integration (Kuryr)
-
-**Architectural Question**
-Which CNI plugin will be used for pod networking on OpenStack?
-
-**Issue or Problem**
-When running on OpenStack, there is an option to use the default OVN-Kubernetes CNI (which creates a virtual overlay network) or the Kuryr CNI, which integrates directly with OpenStack Neutron.
-
-**Assumption**
-The OpenStack environment has Neutron and Octavia services available.
-
-**Alternatives**
-
-- Default OVN-Kubernetes CNI
-- Kuryr-Kubernetes CNI
-
-**Decision**
-#TODO: Document the decision for the OpenStack cluster.#
-
-**Justification**
-
-- **Default OVN-Kubernetes CNI:** To use the standard, platform-agnostic OCP networking stack. This creates a pod network that is an overlay, independent of the underlying OpenStack network.
-- **Kuryr-Kubernetes CNI:** To achieve higher network performance by eliminating the "double overlay" (OCP overlay on top of OSP overlay). Kuryr creates OpenStack Neutron ports for pods and uses Octavia LBs for services, making pods first-class citizens on the OpenStack network.
-
-**Implications**
-
-- **Default OVN-Kubernetes CNI:** This is the simplest, most standard, and universally supported option. Performance is generally sufficient, but traffic must traverse the OCP SDN before reaching the OSP network.
-- **Kuryr-Kubernetes CNI:** Can provide significant performance benefits and simplifies network tracing, as pod IPs are visible on the OpenStack network. However, it consumes Neutron ports at a high rate, which can exhaust OpenStack quotas. It also has a more complex configuration and is a specialized CNI.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Network Expert
-- Person: #TODO#, Role: Infra Leader
-
----
-
-## OCP-OSP-04
-
-**Title**
 OpenStack Storage Integration
 
 **Architectural Question**

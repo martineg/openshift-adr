@@ -95,90 +95,6 @@ Red Hat OpenShift AI instances have been defined.
 ## RHOAI-SM-03
 
 **Title**
-Environment connectivity
-
-**Architectural Question**
-Should Red Hat OpenShift AI Self-Managed be deployed in a connected or disconnected environment?
-
-**Issue or Problem**
-The environment’s internet connectivity impacts access to external resources (e.g., container images, updates) and security requirements. A connected environment requires internet access, while a disconnected environment must operate without it.
-
-**Assumption**
-N/A
-
-**Alternatives**
-
-- Connected Environment
-- Disconnected Environment
-
-**Decision**
-#TODO#
-
-**Justification**
-
-- **Connected Environment:** For simplicity in accessing external resources, ideal for rapid deployment.
-- **Disconnected Environment:** To ensure security and compliance, critical for sensitive or isolated setups.
-
-**Implications**
-
-- **Connected Environment:** Increases security monitoring needs; enables direct resource pulls (e.g., images, updates), speeding setup.
-- **Disconnected Environment:** Demands manual update processes and skilled admins; requires mirroring resources (e.g., images to local registry), adding setup time.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: AI/ML Platform Owner
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: Security Expert
-
----
-
-## RHOAI-SM-04
-
-**Title**
-Mirror registry (disconnected environment)
-
-**Architectural Question**
-If deploying in a disconnected environment, what mirror registry will be used for RHOAI components?
-
-**Issue or Problem**
-In a disconnected environment, a mirror registry is essential for providing OpenShift AI with access to container images and operators. The choice of registry impacts availability, scalability, and integration.
-
-**Assumption**
-OpenShift cluster is in a disconnected environment.
-
-**Alternatives**
-
-- Use OCP Mirror Registry (Filesystem-based or Dedicated)
-- Dedicated RHOAI-Specific Mirror (if different from OCP)
-
-**Decision**
-#TODO#
-
-**Justification**
-
-- **Use OCP Mirror Registry:** To leverage the same mirror registry infrastructure used for the underlying OpenShift platform, ensuring consistency and simplifying mirror management.
-- **Dedicated RHOAI-Specific Mirror:** To maintain a separate mirror registry specifically for RHOAI components, potentially for organizational separation or different update cadences. Generally increases complexity.
-
-**Implications**
-
-- **Use OCP Mirror Registry:** Simplifies overall disconnected setup. Requires ensuring the OCP mirror contains all necessary RHOAI images and catalogs. Update process is unified.
-- **Dedicated RHOAI-Specific Mirror:** Increases infrastructure footprint and management overhead. Requires managing two separate mirroring processes and ensuring network connectivity between RHOAI installation sources and its dedicated mirror.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: AI/ML Platform Owner
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: Security Expert
-
----
-
-## RHOAI-SM-05
-
-**Title**
 Identity provider Integration
 
 **Architectural Question**
@@ -214,7 +130,7 @@ An appropriate OpenShift IdP must be configured.
 
 ---
 
-## RHOAI-SM-06
+## RHOAI-SM-04
 
 **Title**
 User/Group Dashboard Access Configuration
@@ -255,7 +171,7 @@ Access to the OpenShift AI dashboard must be restricted based on OpenShift user 
 
 ---
 
-## RHOAI-SM-07
+## RHOAI-SM-05
 
 **Title**
 OpenShift AI Namespace Strategy (Core Components)
@@ -296,7 +212,7 @@ N/A
 
 ---
 
-## RHOAI-SM-08
+## RHOAI-SM-06
 
 **Title**
 Data science project allocation strategy (User Namespaces)
@@ -345,7 +261,7 @@ Data science workloads need namespace isolation beyond the core RHOAI components
 
 ---
 
-## RHOAI-SM-09
+## RHOAI-SM-07
 
 **Title**
 CA Certificate management
@@ -387,7 +303,7 @@ Secure communication using TLS is required.
 
 ---
 
-## RHOAI-SM-10
+## RHOAI-SM-08
 
 **Title**
 S3 Object Storage Location
@@ -432,7 +348,7 @@ Model serving and/or Data Science Pipelines capabilities are required.
 
 ---
 
-## RHOAI-SM-11
+## RHOAI-SM-09
 
 **Title**
 Default storage class for Red Hat OpenShift AI components
@@ -474,7 +390,7 @@ Dynamic volume provisioning is used. Components like Workbenches will require PV
 
 ---
 
-## RHOAI-SM-12
+## RHOAI-SM-10
 
 **Title**
 Usage data collection (Telemetry)
@@ -516,7 +432,7 @@ N/A
 
 ---
 
-## RHOAI-SM-13
+## RHOAI-SM-11
 
 **Title**
 Red Hat partner solutions integration
@@ -569,7 +485,7 @@ N/A
 
 ---
 
-## RHOAI-SM-14
+## RHOAI-SM-12
 
 **Title**
 Notebook images for data scientists
@@ -621,7 +537,7 @@ Workbenches will be used.
 
 ---
 
-## RHOAI-SM-15
+## RHOAI-SM-13
 
 **Title**
 Required Python packages (for Custom Notebook Images)
@@ -670,49 +586,7 @@ Custom notebook images will be built.
 
 ---
 
-## RHOAI-SM-16
-
-**Title**
-Custom notebook images location
-
-**Architectural Question**
-Where will custom-built notebook server images be stored and accessed from?
-
-**Issue or Problem**
-Custom notebook images need hosting in a container registry accessible by the OpenShift cluster. The choice impacts accessibility, security, build pipeline integration, and operational management.
-
-**Assumption**
-Custom notebook images will be built.
-
-**Alternatives**
-
-- Existing HA Corporate Registry (e.g., Quay, Artifactory, Nexus)
-- OpenShift Internal Registry (Image Registry Operator)
-
-**Decision**
-#TODO#
-
-**Justification**
-
-- **Existing HA Corporate Registry:** Leverage existing enterprise registry for central storage, governance (scanning, signing), availability, scalability. Aligns with existing practices.
-- **OpenShift Internal Registry:** Store images within the cluster. Simplifies network access (no external pulls), optimizes pull times, reduces external dependencies.
-
-**Implications**
-
-- **Existing HA Corporate Registry:** Requires network connectivity. Pull secrets needed in workbench namespaces. Build pipelines need push access. Integrates with existing security scanning/signing.
-- **OpenShift Internal Registry:** Requires configuring internal registry with persistent storage (ODF RWO/RWX or other PVs). Lifecycle tied to cluster. Build pipelines within cluster can easily push. May need separate security scanning setup.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: AI/ML Platform Owner
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: Security Expert
-
----
-
-## RHOAI-SM-17
+## RHOAI-SM-14
 
 **Title**
 Workbenches provisioning strategy
@@ -758,7 +632,7 @@ N/A
 
 ---
 
-## RHOAI-SM-18
+## RHOAI-SM-15
 
 **Title**
 code-server workbenches enablement
@@ -799,7 +673,48 @@ Red Hat notebook server images are used. Workbenches are provisioned.
 
 ---
 
-## RHOAI-SM-19
+## RHOAI-SM-16
+
+**Title**
+Notebook file storage location
+
+**Architectural Question**
+Where will data scientists primarily store their notebook files (`.ipynb`) and associated code/scripts developed within workbenches?
+
+**Issue or Problem**
+Notebook files are core work products. The storage strategy impacts version control, collaboration, reproducibility, backup/recovery, and MLOps practices.
+
+**Assumption**
+Workbenches are used.
+
+**Alternatives**
+
+- Local Workbench Storage (PVC) Only
+- Git Repository (Integrated with Workbench)
+
+**Decision**
+#TODO#
+
+**Justification**
+
+- **Local Workbench Storage (PVC):** Simplicity and immediate persistence within user's workbench environment (on attached PVC).
+- **Git Repository:** Enable version control, collaboration, code reviews, easier integration with CI/CD or MLOps pipelines. Workbenches can clone Git repos. Recommended best practice.
+
+**Implications**
+
+- **Local PVC Only:** Simplest setup. Persists across workbench restarts. Difficult version control/collaboration. Requires PVC backup strategy for resilience. Can lead to data silos.
+- **Git Repository:** Promotes best practices. Requires users to commit/push regularly. Needs network connectivity to Git server. Git credentials management needed (secrets). Enables GitOps workflows. Data resilience relies on Git server backup strategy.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Lead Data Scientist
+- Person: #TODO#, Role: MLOps Engineer
+- Person: #TODO#, Role: AI/ML Platform Owner
+
+---
+
+## RHOAI-SM-17
 
 **Title**
 Cluster Storage (PVC) Sizing for Workbenches
@@ -846,48 +761,7 @@ Workbenches are configured. Local PVC storage is used.
 
 ---
 
-## RHOAI-SM-20
-
-**Title**
-Notebook file storage location
-
-**Architectural Question**
-Where will data scientists primarily store their notebook files (`.ipynb`) and associated code/scripts developed within workbenches?
-
-**Issue or Problem**
-Notebook files are core work products. The storage strategy impacts version control, collaboration, reproducibility, backup/recovery, and MLOps practices.
-
-**Assumption**
-Workbenches are used.
-
-**Alternatives**
-
-- Local Workbench Storage (PVC) Only
-- Git Repository (Integrated with Workbench)
-
-**Decision**
-#TODO#
-
-**Justification**
-
-- **Local Workbench Storage (PVC):** Simplicity and immediate persistence within user's workbench environment (on attached PVC).
-- **Git Repository:** Enable version control, collaboration, code reviews, easier integration with CI/CD or MLOps pipelines. Workbenches can clone Git repos. Recommended best practice.
-
-**Implications**
-
-- **Local PVC Only:** Simplest setup. Persists across workbench restarts. Difficult version control/collaboration. Requires PVC backup strategy for resilience. Can lead to data silos.
-- **Git Repository:** Promotes best practices. Requires users to commit/push regularly. Needs network connectivity to Git server. Git credentials management needed (secrets). Enables GitOps workflows. Data resilience relies on Git server backup strategy.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Lead Data Scientist
-- Person: #TODO#, Role: MLOps Engineer
-- Person: #TODO#, Role: AI/ML Platform Owner
-
----
-
-## RHOAI-SM-21
+## RHOAI-SM-18
 
 **Title**
 Notebook Git repository structure
@@ -934,7 +808,7 @@ Notebook files/code primarily stored in Git.
 
 ---
 
-## RHOAI-SM-22
+## RHOAI-SM-19
 
 **Title**
 Data sources accessibility
@@ -995,7 +869,7 @@ Data scientists will need to access data beyond local workbench storage. S3 Loca
 
 ---
 
-## RHOAI-SM-23
+## RHOAI-SM-20
 
 **Title**
 NVIDIA GPU Support enablement
@@ -1039,7 +913,7 @@ Workloads potentially require GPU acceleration. Hardware Acceleration Strategy a
 
 ---
 
-## RHOAI-SM-24
+## RHOAI-SM-21
 
 **Title**
 Intel HPU Accelerator Usage
@@ -1083,7 +957,7 @@ Workloads potentially require GPU acceleration. Hardware Acceleration Strategy a
 
 ---
 
-## RHOAI-SM-25
+## RHOAI-SM-22
 
 **Title**
 AMD GPU Accelerator Usage
@@ -1127,7 +1001,7 @@ Workloads potentially require GPU acceleration. Hardware Acceleration Strategy a
 
 ---
 
-## RHOAI-SM-26
+## RHOAI-SM-23
 
 **Title**
 Workbenches on Intel hardware
@@ -1168,7 +1042,7 @@ Intel accelerators are available. Intel partner component might be enabled. Note
 
 ---
 
-## RHOAI-SM-27
+## RHOAI-SM-24
 
 **Title**
 Data Science Pipelines enablement (KFP/Tekton)
@@ -1211,7 +1085,7 @@ Orchestration of ML workflows is required.
 
 ---
 
-## RHOAI-SM-28
+## RHOAI-SM-25
 
 **Title**
 Pipelines in JupyterLab (Elyra) usage
@@ -1252,7 +1126,7 @@ Data Science Pipelines component is enabled. Users primarily use JupyterLab.
 
 ---
 
-## RHOAI-SM-29
+## RHOAI-SM-26
 
 **Title**
 Pipeline database backend (KFP)
@@ -1295,7 +1169,7 @@ Data Science Pipelines component is enabled.
 
 ---
 
-## RHOAI-SM-30
+## RHOAI-SM-27
 
 **Title**
 Distributed workloads enablement (Ray/CodeFlare)
@@ -1338,7 +1212,7 @@ Workloads might benefit from distributed computation.
 
 ---
 
-## RHOAI-SM-31
+## RHOAI-SM-28
 
 **Title**
 Quota management for distributed workloads (Kueue)
@@ -1379,7 +1253,7 @@ Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 ---
 
-## RHOAI-SM-32
+## RHOAI-SM-29
 
 **Title**
 Authentication Method for Ray Dashboard
@@ -1421,7 +1295,7 @@ Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 ---
 
-## RHOAI-SM-33
+## RHOAI-SM-30
 
 **Title**
 Distributed workloads monitoring (Ray)
@@ -1463,7 +1337,7 @@ Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 ---
 
-## RHOAI-SM-34
+## RHOAI-SM-31
 
 **Title**
 Model Serving Platform Selection
@@ -1506,7 +1380,7 @@ Model deployment capabilities are required.
 
 ---
 
-## RHOAI-SM-35
+## RHOAI-SM-32
 
 **Title**
 Authorization provider for KServe Model Serving
@@ -1548,7 +1422,7 @@ Single-model serving platform (KServe) is enabled.
 
 ---
 
-## RHOAI-SM-36
+## RHOAI-SM-33
 
 **Title**
 Model-serving runtime for KServe
@@ -1600,7 +1474,7 @@ Single-model serving platform (KServe) is enabled.
 
 ---
 
-## RHOAI-SM-37
+## RHOAI-SM-34
 
 **Title**
 NVIDIA NIM Serving Platform Integration
@@ -1644,7 +1518,7 @@ NVIDIA GPU acceleration is enabled. Single-model serving (KServe) is enabled.
 
 ---
 
-## RHOAI-SM-38
+## RHOAI-SM-35
 
 **Title**
 Distributed Inference with LLM-D (TP)
@@ -1687,7 +1561,7 @@ LLMs requiring distributed processing (multi-GPU/multi-node) are planned for dep
 
 ---
 
-## RHOAI-SM-39
+## RHOAI-SM-36
 
 **Title**
 Single-model serving platform (KServe) monitoring enablement
@@ -1729,7 +1603,7 @@ Single-model serving platform (KServe) is enabled.
 
 ---
 
-## RHOAI-SM-40
+## RHOAI-SM-37
 
 **Title**
 NVIDIA NIM Metrics collection
@@ -1771,7 +1645,7 @@ NVIDIA NIM integration is enabled. User Workload Monitoring (UWM) is enabled.
 
 ---
 
-## RHOAI-SM-41
+## RHOAI-SM-38
 
 **Title**
 TrustyAI Monitoring for Data Science Models
@@ -1815,7 +1689,7 @@ Model serving is enabled.
 
 ---
 
-## RHOAI-SM-42
+## RHOAI-SM-39
 
 **Title**
 Persistent Volume Claim (PVC) Backup Strategy for RHOAI
