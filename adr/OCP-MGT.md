@@ -102,7 +102,7 @@ Which image registry will be used for storing internally built application image
 An image registry is needed to store, scan, and distribute container images for CI/CD and deployments. This is separate from the disconnected mirror registry which primarily holds Red Hat content.
 
 **Assumption**
-Internal applications/images will be built and deployed. Custom RHOAI images might be needed (RHOAI-SM-14).
+Internal applications or custom container images will be built and deployed on the platform.
 
 **Alternatives**
 

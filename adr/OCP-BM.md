@@ -1750,7 +1750,7 @@ How should storage be architected for the OpenShift Internal Image Registry, bal
 OpenShift Container Platform's internal image registry requires high-availability storage (supporting multiple replicas) for production clusters. On bare metal, achieving native ReadWriteMany (RWX) access is challenging. A decision must be made between deploying complex RWX solutions, utilizing dedicated Object Storage (S3 API), settling for low-resilience ReadWriteOnce (RWO) storage, or utilizing ephemeral storage for non-critical environments.
 
 **Assumption**
-N/A
+Internal Image Registry Management State is set to "Managed".
 
 **Alternatives**
 
