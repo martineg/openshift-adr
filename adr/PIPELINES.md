@@ -33,7 +33,7 @@ A CI/CD solution is required for building and deploying applications.
 
 - **OpenShift Pipelines (Tekton):**
   - Requires learning Tekton primitives (Task, Pipeline, Workspace).
-  - Stateless execution requires external storage (PVC/S3) for artifact persistence between steps (see PIPELINES-02).
+  - Stateless execution requires external storage (PVC/S3) for artifact persistence between steps.
   - Native support for "Pipelines as Code" workflows.
 - **OpenShift Jenkins:**
   - Requires managing a "Pet" Jenkins server (plugins, updates, memory scaling).

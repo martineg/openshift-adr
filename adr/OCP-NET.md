@@ -448,6 +448,86 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 ## OCP-NET-12
 
 **Title**
+Pod Network CIDR Selection
+
+**Architectural Question**
+Which internal IP address range will be used for Pod networking?
+
+**Issue or Problem**
+The Pod network CIDR provides IPs for pods within the cluster's SDN. It must not overlap with any existing network reachable from the cluster (including Machine and Service networks) to avoid routing failures.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Default Pod Network CIDR (e.g., 10.128.0.0/14)
+- Custom Pod Network CIDR
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Default Pod Network CIDR:** Use defaults for simplicity when confirmed not to overlap.
+- **Custom Pod Network CIDR:** Specify a custom range when the default overlaps with existing networks, ensuring correct pod routing to/from external services.
+
+**Implications**
+
+- **Default:** Simplifies installation but requires enterprise-wide network validation to prevent conflicts.
+- **Custom:** Requires pre-planning and coordination with network admins to select an appropriate unused IP range.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-NET-13
+
+**Title**
+Service Network CIDR Selection
+
+**Architectural Question**
+Which IP address range will be used for the Cluster Service network?
+
+**Issue or Problem**
+A dedicated, non-overlapping IP range is needed for ClusterIP Services. Conflicts with existing networks will make cluster services unreachable.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Default Service Network CIDR (e.g., 172.30.0.0/16)
+- Custom Service Network CIDR
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Default Service Network CIDR:** Use defaults for simplicity when confirmed not to overlap.
+- **Custom Service Network CIDR:** Specify a custom range when the default overlaps, preventing routing conflicts and ensuring service reachability.
+
+**Implications**
+
+- **Default:** Simplifies installation. Failure to verify non-overlap leads to service connectivity issues.
+- **Custom:** Requires coordination with the network team to select and reserve a suitable IP range provided during installation.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-NET-14
+
+**Title**
 Ingress Controller Strategy
 
 **Architectural Question**
@@ -489,7 +569,7 @@ N/A
 
 ---
 
-## OCP-NET-13
+## OCP-NET-15
 
 **Title**
 Ingress Controller Replica Count
@@ -526,86 +606,6 @@ N/A
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: AI/ML Platform Owner
 - Person: #TODO#, Role: Operations Expert
-
----
-
-## OCP-NET-14
-
-**Title**
-Pod Network CIDR Selection
-
-**Architectural Question**
-Which internal IP address range will be used for Pod networking?
-
-**Issue or Problem**
-The Pod network CIDR provides IPs for pods within the cluster's SDN. It must not overlap with any existing network reachable from the cluster (including Machine and Service networks) to avoid routing failures.
-
-**Assumption**
-N/A
-
-**Alternatives**
-
-- Default Pod Network CIDR (e.g., 10.128.0.0/14)
-- Custom Pod Network CIDR
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Default Pod Network CIDR:** Use defaults for simplicity when confirmed not to overlap.
-- **Custom Pod Network CIDR:** Specify a custom range when the default overlaps with existing networks, ensuring correct pod routing to/from external services.
-
-**Implications**
-
-- **Default:** Simplifies installation but requires enterprise-wide network validation to prevent conflicts.
-- **Custom:** Requires pre-planning and coordination with network admins to select an appropriate unused IP range.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Network Expert
-
----
-
-## OCP-NET-15
-
-**Title**
-Service Network CIDR Selection
-
-**Architectural Question**
-Which IP address range will be used for the Cluster Service network?
-
-**Issue or Problem**
-A dedicated, non-overlapping IP range is needed for ClusterIP Services. Conflicts with existing networks will make cluster services unreachable.
-
-**Assumption**
-N/A
-
-**Alternatives**
-
-- Default Service Network CIDR (e.g., 172.30.0.0/16)
-- Custom Service Network CIDR
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **Default Service Network CIDR:** Use defaults for simplicity when confirmed not to overlap.
-- **Custom Service Network CIDR:** Specify a custom range when the default overlaps, preventing routing conflicts and ensuring service reachability.
-
-**Implications**
-
-- **Default:** Simplifies installation. Failure to verify non-overlap leads to service connectivity issues.
-- **Custom:** Requires coordination with the network team to select and reserve a suitable IP range provided during installation.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Network Expert
 
 ---
 

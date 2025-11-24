@@ -180,6 +180,92 @@ OpenShift AI provides a modular suite of tools. Enabling all components increase
 ## RHOAI-SM-05
 
 **Title**
+Data Science Pipelines enablement (KFP/Tekton)
+
+**Architectural Question**
+Will the Data Science Pipelines component (based on Kubeflow Pipelines with Tekton backend) be enabled within RHOAI?
+
+**Issue or Problem**
+Enabling Data Science Pipelines provides a framework for orchestrating multi-step ML workflows. It requires specific configuration (database, object storage) and impacts the tools available to MLOps engineers.
+
+**Assumption**
+Orchestration of ML workflows is required.
+
+**Alternatives**
+
+- Enable Data Science Pipelines Component
+- Disable Data Science Pipelines Component (Rely on OpenShift Pipelines/Tekton or external orchestrators)
+
+**Decision**
+#TODO#
+
+**Justification**
+
+- **Enable Data Science Pipelines:** To provide an integrated, UI-driven (via RHOAI dashboard and Elyra) and SDK-driven platform specifically designed for defining, running, and managing ML pipelines within OpenShift AI. Uses Kubeflow Pipelines API standard with Tekton execution.
+- **Disable Data Science Pipelines:** To simplify the RHOAI deployment if ML pipeline orchestration is handled by other tools (e.g., standard OpenShift Pipelines/Tekton for simpler CI/CD-like tasks, external orchestrators like Airflow, or if not required initially).
+
+**Implications**
+
+- **Enable Data Science Pipelines:** Installs KFP/Tekton components. Requires configuring a database backend and S3 object storage. Enables Elyra usage. Consumes additional cluster resources. Provides ML-specific pipeline features (artifact tracking, metadata).
+- **Disable Data Science Pipelines:** Reduces RHOAI footprint and dependencies. Users needing pipeline orchestration must use alternative tools. Elyra extension in JupyterLab will not function for pipeline submission.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Lead Data Scientist
+- Person: #TODO#, Role: MLOps Engineer
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## RHOAI-SM-06
+
+**Title**
+Model Serving Platform Selection
+
+**Architectural Question**
+Which model serving platform architecture will be used in Red Hat OpenShift AI?
+
+**Issue or Problem**
+A decision is needed on the technology for deploying models as scalable endpoints, affecting dependencies, resources, complexity, and features (e.g., scale-to-zero).
+
+**Assumption**
+Model deployment capabilities are required.
+
+**Alternatives**
+
+- KServe (Single Model Serving / RawDeployment Mode)
+- Custom Application Deployment (OpenShift Deployments)
+
+**Decision**
+#TODO#
+
+**Justification**
+
+- **KServe (RawDeployment Mode):** Deploy each model as a separate, scalable endpoint optimized for AI/ML using integrated KServe. Leverages standardized inference protocols, model management, observability. RawDeployment avoids reliance on OpenShift Serverless.
+- **Custom Application Deployment:** Use standard OpenShift methods (`Deployment`, `Service`) for model endpoints, wrapping model in custom container. Max control over Kubernetes primitives but requires building more infrastructure manually.
+
+**Implications**
+
+- **KServe (RawDeployment Mode):** Requires KServe components (Operator, Controller). Relies on Istio Service Mesh for advanced traffic management. Provides standardized MLOps workflow but abstracts some K8s details. RawDeployment ensures compatibility/avoids deprecated Serverless dependencies.
+- **Custom Application Deployment:** Requires developers to build container images with serving logic (Flask/FastAPI) and manually create K8s resources (`Deployment`, `Service`, `Route`, `HPA`). Lacks specialized KServe features (standardized metrics, easy canary) unless implemented manually.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Lead Data Scientist
+- Person: #TODO#, Role: MLOps Engineer
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## RHOAI-SM-07
+
+**Title**
 Data science project allocation strategy (User Namespaces)
 
 **Architectural Question**
@@ -226,7 +312,7 @@ Data science workloads need namespace isolation beyond the core RHOAI components
 
 ---
 
-## RHOAI-SM-06
+## RHOAI-SM-08
 
 **Title**
 User/Group Dashboard Access Configuration
@@ -267,7 +353,7 @@ OpenShift groups are synchronized or defined (Identity Provider Group Synchroniz
 
 ---
 
-## RHOAI-SM-07
+## RHOAI-SM-09
 
 **Title**
 OpenShift AI Namespace Strategy (Core Components)
@@ -308,7 +394,7 @@ N/A
 
 ---
 
-## RHOAI-SM-08
+## RHOAI-SM-10
 
 **Title**
 CA Certificate management
@@ -350,7 +436,7 @@ Secure communication using TLS is required.
 
 ---
 
-## RHOAI-SM-09
+## RHOAI-SM-11
 
 **Title**
 S3 Object Storage Location
@@ -395,7 +481,7 @@ Model serving and/or Data Science Pipelines capabilities are required.
 
 ---
 
-## RHOAI-SM-10
+## RHOAI-SM-12
 
 **Title**
 Default storage class for Red Hat OpenShift AI components
@@ -437,7 +523,7 @@ Dynamic volume provisioning is available via the chosen Storage provider.
 
 ---
 
-## RHOAI-SM-11
+## RHOAI-SM-13
 
 **Title**
 Usage data collection (Telemetry)
@@ -479,7 +565,7 @@ N/A
 
 ---
 
-## RHOAI-SM-12
+## RHOAI-SM-14
 
 **Title**
 Red Hat partner solutions integration
@@ -532,7 +618,7 @@ N/A
 
 ---
 
-## RHOAI-SM-13
+## RHOAI-SM-15
 
 **Title**
 Workbenches provisioning strategy
@@ -578,7 +664,7 @@ N/A
 
 ---
 
-## RHOAI-SM-14
+## RHOAI-SM-16
 
 **Title**
 Notebook images for data scientists
@@ -630,7 +716,7 @@ Workbenches will be used.
 
 ---
 
-## RHOAI-SM-15
+## RHOAI-SM-17
 
 **Title**
 Required Python packages (for Custom Notebook Images)
@@ -679,7 +765,7 @@ Custom notebook images will be built.
 
 ---
 
-## RHOAI-SM-16
+## RHOAI-SM-18
 
 **Title**
 code-server workbenches enablement
@@ -720,7 +806,7 @@ Red Hat notebook server images are used. Workbenches are provisioned.
 
 ---
 
-## RHOAI-SM-17
+## RHOAI-SM-19
 
 **Title**
 Data sources accessibility
@@ -781,7 +867,7 @@ Data scientists will need to access data beyond local workbench storage. S3 Loca
 
 ---
 
-## RHOAI-SM-18
+## RHOAI-SM-20
 
 **Title**
 Notebook file storage location
@@ -822,7 +908,7 @@ Workbenches are used.
 
 ---
 
-## RHOAI-SM-19
+## RHOAI-SM-21
 
 **Title**
 Cluster Storage (PVC) Sizing for Workbenches
@@ -869,7 +955,7 @@ Workbenches are configured. Local PVC storage is used.
 
 ---
 
-## RHOAI-SM-20
+## RHOAI-SM-22
 
 **Title**
 Notebook Git repository structure
@@ -916,7 +1002,7 @@ Notebook files/code primarily stored in Git.
 
 ---
 
-## RHOAI-SM-21
+## RHOAI-SM-23
 
 **Title**
 NVIDIA GPU Support enablement
@@ -960,7 +1046,7 @@ Hardware Acceleration Strategy and Cluster Topology are established.
 
 ---
 
-## RHOAI-SM-22
+## RHOAI-SM-24
 
 **Title**
 Intel HPU Accelerator Usage
@@ -1004,7 +1090,7 @@ Hardware Acceleration Strategy and Cluster Topology are established.
 
 ---
 
-## RHOAI-SM-23
+## RHOAI-SM-25
 
 **Title**
 AMD GPU Accelerator Usage
@@ -1048,7 +1134,7 @@ Hardware Acceleration Strategy and Cluster Topology are established.
 
 ---
 
-## RHOAI-SM-24
+## RHOAI-SM-26
 
 **Title**
 Workbenches on Intel hardware
@@ -1086,92 +1172,6 @@ Intel accelerators are available. Intel partner component might be enabled. Note
 - Person: #TODO#, Role: Lead Data Scientist
 - Person: #TODO#, Role: MLOps Engineer
 - Person: #TODO#, Role: AI/ML Platform Owner
-
----
-
-## RHOAI-SM-25
-
-**Title**
-Data Science Pipelines enablement (KFP/Tekton)
-
-**Architectural Question**
-Will the Data Science Pipelines component (based on Kubeflow Pipelines with Tekton backend) be enabled within RHOAI?
-
-**Issue or Problem**
-Enabling Data Science Pipelines provides a framework for orchestrating multi-step ML workflows. It requires specific configuration (database, object storage) and impacts the tools available to MLOps engineers.
-
-**Assumption**
-Orchestration of ML workflows is required.
-
-**Alternatives**
-
-- Enable Data Science Pipelines Component
-- Disable Data Science Pipelines Component (Rely on OpenShift Pipelines/Tekton or external orchestrators)
-
-**Decision**
-#TODO#
-
-**Justification**
-
-- **Enable Data Science Pipelines:** To provide an integrated, UI-driven (via RHOAI dashboard and Elyra) and SDK-driven platform specifically designed for defining, running, and managing ML pipelines within OpenShift AI. Uses Kubeflow Pipelines API standard with Tekton execution.
-- **Disable Data Science Pipelines:** To simplify the RHOAI deployment if ML pipeline orchestration is handled by other tools (e.g., standard OpenShift Pipelines/Tekton for simpler CI/CD-like tasks, external orchestrators like Airflow, or if not required initially).
-
-**Implications**
-
-- **Enable Data Science Pipelines:** Installs KFP/Tekton components. Requires configuring a database backend and S3 object storage. Enables Elyra usage. Consumes additional cluster resources. Provides ML-specific pipeline features (artifact tracking, metadata).
-- **Disable Data Science Pipelines:** Reduces RHOAI footprint and dependencies. Users needing pipeline orchestration must use alternative tools. Elyra extension in JupyterLab will not function for pipeline submission.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Lead Data Scientist
-- Person: #TODO#, Role: MLOps Engineer
-- Person: #TODO#, Role: AI/ML Platform Owner
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
-
----
-
-## RHOAI-SM-26
-
-**Title**
-Model Serving Platform Selection
-
-**Architectural Question**
-Which model serving platform architecture will be used in Red Hat OpenShift AI?
-
-**Issue or Problem**
-A decision is needed on the technology for deploying models as scalable endpoints, affecting dependencies, resources, complexity, and features (e.g., scale-to-zero).
-
-**Assumption**
-Model deployment capabilities are required.
-
-**Alternatives**
-
-- KServe (Single Model Serving / RawDeployment Mode)
-- Custom Application Deployment (OpenShift Deployments)
-
-**Decision**
-#TODO#
-
-**Justification**
-
-- **KServe (RawDeployment Mode):** Deploy each model as a separate, scalable endpoint optimized for AI/ML using integrated KServe. Leverages standardized inference protocols, model management, observability. RawDeployment avoids reliance on OpenShift Serverless.
-- **Custom Application Deployment:** Use standard OpenShift methods (`Deployment`, `Service`) for model endpoints, wrapping model in custom container. Max control over Kubernetes primitives but requires building more infrastructure manually.
-
-**Implications**
-
-- **KServe (RawDeployment Mode):** Requires KServe components (Operator, Controller). Relies on Istio Service Mesh for advanced traffic management. Provides standardized MLOps workflow but abstracts some K8s details. RawDeployment ensures compatibility/avoids deprecated Serverless dependencies.
-- **Custom Application Deployment:** Requires developers to build container images with serving logic (Flask/FastAPI) and manually create K8s resources (`Deployment`, `Service`, `Route`, `HPA`). Lacks specialized KServe features (standardized metrics, easy canary) unless implemented manually.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Lead Data Scientist
-- Person: #TODO#, Role: MLOps Engineer
-- Person: #TODO#, Role: AI/ML Platform Owner
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operations Expert
 
 ---
 
