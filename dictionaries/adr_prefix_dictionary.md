@@ -55,4 +55,5 @@ This file maps workshop topics and products to their official Architecture Decis
 | RHOAI-SM       | Red Hat OpenShift AI Self Managed                                      |
 | SERVERLESS     | OpenShift Serverless                                                   |
 | TRACING        | Red Hat OpenShift Distributed Tracing Platform                         |
+| VIRT           | OpenShift Virtualization                                               |
 | WIN            | Windows Containers                                                     |
