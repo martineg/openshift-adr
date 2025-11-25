@@ -2228,7 +2228,7 @@ N/A.
 
 - **No Automated Remediation:** High operational burden and slow recovery times. Not recommended for a production cluster.
 - **Node Health Check (NHC) with Self Node Remediation:** Provides software-level remediation. It ensures workloads are moved but does not fix the underlying node, which will remain unavailable until manually repaired.
-- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** This requires a reliable IPI installation and stable Redfish/IPMI connectivity. Furthermore, the BMO facilitates the **Cluster API management of compute nodes (TP)** for dynamic lifecycle management. Advanced operational features, such as performing **live updates to HostFirmwareSettings (TP)** or **HostFirmwareComponents (TP)**, are available through BMO, but utilizing live updates requires setting the **HostUpdatePolicy (TP)** resource to `onReboot`.
+- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** This requires a reliable IPI installation and stable Redfish/IPMI connectivity. The BMO facilitates the Cluster API management of compute nodes (TP) for dynamic lifecycle management. It also enables access to advanced operational features, such as firmware management via HostFirmwareSettings/HostFirmwareComponents, including live updates (TP).
 
 **Agreeing Parties**
 

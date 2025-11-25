@@ -380,8 +380,8 @@ Cloud model has been selected.
 
 **Implications**
 
-- **Self-Managed Public Cloud:** IPI mode abstracts infrastructure management via the Machine API, simplifying cluster scaling and node lifecycle. Requires cloud credentials and IAM setup. UPI requires manual management of underlying resources and does not support the Machine API post-installation.
-- **Bare Metal / On-Premise Virtualized:** For UPI deployment, administrators must manually manage all underlying infrastructure components. IPI and Assisted/Agent Installer automate provisioning of infrastructure. For Bare Metal IPI, core infrastructure resources (networking, load balancing, storage, bootstrap machine) must be provided by the user.
+- **Self-Managed Public Cloud:** IPI mode abstracts infrastructure management via the Machine API, simplifying cluster scaling and node lifecycle. Requires cloud credentials and IAM setup. UPI requires manual management of underlying resources.
+- **Bare Metal / On-Premise Virtualized:** For UPI deployment, administrators must manually manage all underlying infrastructure components. IPI and Assisted/Agent Installer automate provisioning of infrastructure. UPI deployments on Bare Metal can enable the Bare Metal Operator (BMO) post-installation to gain access to Day 2 automation benefits, such as node remediation and scaling capabilities provided by the Machine API.
 
 **Agreeing Parties**
 
