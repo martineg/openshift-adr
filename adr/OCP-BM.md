@@ -1702,6 +1702,47 @@ The cluster will utilize large disk sizes (e.g., > 100GB) and may host applicati
 ## OCP-BM-42
 
 **Title**
+Minimum Partition Offset for Custom RHCOS Partitioning
+
+**Architectural Question**
+When manually configuring disk partitions on Red Hat Enterprise Linux CoreOS (RHCOS) boot devices to include separate data partitions (e.g., for `/var`), what minimum offset must be enforced for the data partition start point?
+
+**Issue or Problem**
+If a custom data partition (such as a separate `/var` partition) is created with a small starting offset, the root file system may be too small, or subsequent RHCOS reinstallations might overwrite the beginning of the data partition, risking configuration or data loss.
+
+**Assumption**
+The cluster utilizes custom disk partitioning during RHCOS installation (User-Provisioned Infrastructure).
+
+**Alternatives**
+
+- Utilize the Recommended Minimum Offset (25000 MiB)
+- Utilize an Unrestricted or Smaller Offset
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Utilize the Recommended Minimum Offset (25000 MiB):** A minimum offset value of 25000 mebibytes is recommended when adding a data partition to the boot disk. This ensures the root file system is automatically resized correctly and prevents future reinstalls from overwriting the data partition.
+- **Utilize an Unrestricted or Smaller Offset:** This approach allows for maximum space allocation to the custom partition immediately.
+
+**Implications**
+
+- **Utilize the Recommended Minimum Offset (25000 MiB):** Requires careful planning and configuration to specify the partition start offset during the installation phase (e.g., in a Butane config).
+- **Utilize an Unrestricted or Smaller Offset:** The resulting root file system might be too small, and future reinstalls of RHCOS might overwrite the beginning of the data partition.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-BM-43
+
+**Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
 
 **Architectural Question**
@@ -1739,7 +1780,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-43
+## OCP-BM-44
 
 **Title**
 Control Plane Etcd Storage Partitioning Strategy
@@ -1780,7 +1821,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-44
+## OCP-BM-45
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -1820,7 +1861,7 @@ N/A
 
 ---
 
-## OCP-BM-45
+## OCP-BM-46
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1863,7 +1904,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-46
+## OCP-BM-47
 
 **Title**
 Internal Image Registry Management State on Bare Metal UPI
@@ -1904,7 +1945,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-47
+## OCP-BM-48
 
 **Title**
 Storage Architecture for the Internal Image Registry
@@ -1952,7 +1993,7 @@ Internal Image Registry Management State is set to "Managed".
 
 ---
 
-## OCP-BM-48
+## OCP-BM-49
 
 **Title**
 Internal Image Registry Persistent Volume Claim (PVC) Provisioning Strategy
@@ -1994,7 +2035,7 @@ The Internal Image Registry will be switched to the Managed management state pos
 
 ---
 
-## OCP-BM-49
+## OCP-BM-50
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -2035,7 +2076,7 @@ Low-latency workloads are required, consistent with the Hardware Acceleration St
 
 ---
 
-## OCP-BM-50
+## OCP-BM-51
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -2076,7 +2117,7 @@ N/A
 
 ---
 
-## OCP-BM-51
+## OCP-BM-52
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -2117,7 +2158,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-52
+## OCP-BM-53
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -2158,7 +2199,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-53
+## OCP-BM-54
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -2200,7 +2241,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-54
+## OCP-BM-55
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -2240,7 +2281,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-55
+## OCP-BM-56
 
 **Title**
 Bare Metal Node Firmware Management
@@ -2280,7 +2321,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-56
+## OCP-BM-57
 
 **Title**
 Bare Metal Firmware Update Application Timing Policy
@@ -2320,7 +2361,7 @@ The Bare Metal Operator (BMO) is enabled and managing node firmware configuratio
 
 ---
 
-## OCP-BM-57
+## OCP-BM-58
 
 **Title**
 Bare Metal Node Remediation

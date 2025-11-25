@@ -409,6 +409,47 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 ## OCP-NET-11
 
 **Title**
+Application Ingress Load Balancer Session Persistence Mode
+
+**Architectural Question**
+Which session persistence mode should be configured on the Application Ingress load balancer (L4 or L7) to balance performance, feature compatibility, and session reliability?
+
+**Issue or Problem**
+The Application Ingress load balancer requires session persistence to handle application traffic consistently. The chosen persistence method impacts performance, especially for end-to-end encrypted traffic (TLS), and dictates whether the load balancer must be client IP-aware.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- Connection-based or Session-based Persistence (Standard)
+- Source IP-based Session Persistence (Performance Optimized)
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Connection-based or Session-based Persistence (Standard):** This is the recommended approach, chosen based on the options available and the types of applications that will be hosted on the platform.
+- **Source IP-based Session Persistence (Performance Optimized):** This mode should be chosen if the true IP address of the client can be seen by the application Ingress load balancer.
+
+**Implications**
+
+- **Connection-based or Session-based Persistence (Standard):** This method is generally sufficient but may not provide optimal performance for applications utilizing end-to-end TLS encryption.
+- **Source IP-based Session Persistence (Performance Optimized):** This choice can improve performance for applications that utilize end-to-end TLS encryption.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Security Expert
+
+---
+
+## OCP-NET-12
+
+**Title**
 Pod Network CIDR Selection
 
 **Architectural Question**
@@ -446,7 +487,7 @@ N/A
 
 ---
 
-## OCP-NET-12
+## OCP-NET-13
 
 **Title**
 Service Network CIDR Selection
@@ -486,7 +527,7 @@ N/A
 
 ---
 
-## OCP-NET-13
+## OCP-NET-14
 
 **Title**
 Ingress Controller Strategy
@@ -530,7 +571,7 @@ N/A
 
 ---
 
-## OCP-NET-14
+## OCP-NET-15
 
 **Title**
 Ingress Controller Replica Count
@@ -570,7 +611,7 @@ N/A
 
 ---
 
-## OCP-NET-15
+## OCP-NET-16
 
 **Title**
 CNI Plugin Selection (Platform Specific)
@@ -611,7 +652,7 @@ N/A
 
 ---
 
-## OCP-NET-16
+## OCP-NET-17
 
 **Title**
 Advanced CNI Parameter Configuration Strategy (Install-Config vs Custom Manifest)
@@ -651,7 +692,7 @@ Advanced network configuration (e.g., OVN-Kubernetes customization) is required.
 
 ---
 
-## OCP-NET-17
+## OCP-NET-18
 
 **Title**
 OVN-Kubernetes Overlay Network Parameter Configuration
@@ -691,7 +732,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-18
+## OCP-NET-19
 
 **Title**
 OVN-Kubernetes Internal Subnet Configuration Strategy
@@ -731,7 +772,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-19
+## OCP-NET-20
 
 **Title**
 OVN-Kubernetes Internal Masquerade Subnet Configuration
@@ -771,7 +812,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-20
+## OCP-NET-21
 
 **Title**
 OVN-Kubernetes Egress Traffic Routing Via Host Network Stack
@@ -811,7 +852,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-21
+## OCP-NET-22
 
 **Title**
 OVN-Kubernetes IPsec Encryption Mode
@@ -855,7 +896,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-22
+## OCP-NET-23
 
 **Title**
 OVN-Kubernetes Cluster Route Advertisement Strategy
@@ -896,7 +937,7 @@ N/A
 
 ---
 
-## OCP-NET-23
+## OCP-NET-24
 
 **Title**
 OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
@@ -937,7 +978,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-24
+## OCP-NET-25
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
@@ -978,7 +1019,7 @@ N/A
 
 ---
 
-## OCP-NET-25
+## OCP-NET-26
 
 **Title**
 SSL/TLS Termination Strategy
@@ -1021,7 +1062,7 @@ N/A
 
 ---
 
-## OCP-NET-26
+## OCP-NET-27
 
 **Title**
 Access Control for Cluster Metrics Port (TCP 1936)
@@ -1062,7 +1103,7 @@ N/A
 
 ---
 
-## OCP-NET-27
+## OCP-NET-28
 
 **Title**
 Default Network Policy (Pod Isolation)
@@ -1106,7 +1147,7 @@ N/A
 
 ---
 
-## OCP-NET-28
+## OCP-NET-29
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -1149,7 +1190,7 @@ Cluster uses OVN-Kubernetes CNI.
 
 ---
 
-## OCP-NET-29
+## OCP-NET-30
 
 **Title**
 OVN-Kubernetes Network Policy Audit Log Destination
@@ -1193,7 +1234,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-30
+## OCP-NET-31
 
 **Title**
 Egress IP Address Strategy
@@ -1237,7 +1278,7 @@ N/A
 
 ---
 
-## OCP-NET-31
+## OCP-NET-32
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -1282,7 +1323,7 @@ N/A
 
 ---
 
-## OCP-NET-32
+## OCP-NET-33
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection
@@ -1323,7 +1364,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-33
+## OCP-NET-34
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy
@@ -1364,7 +1405,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-34
+## OCP-NET-35
 
 **Title**
 SR-IOV Virtual Function Bonding Mechanism
