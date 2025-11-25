@@ -5,13 +5,14 @@ Dict: `adr_prefix_dictionary.md`. Exclusions: `adr_exclusions.md`.
 
 Task: Suggest NEW ADs from PDFs. **Strictly apply these filters first:**
 
-1.  **DUPLICATE Check:** Check Baseline. DISCARD if the core concept exists (even with different phrasing) or is a detail (e.g. config param) of an existing ADR.
+1.  **DUPLICATE Check:** Check Baseline. DISCARD if the core concept exists (even with different phrasing).
 2.  **EXCLUSION Check:** Check `adr_exclusions.md`. DISCARD matches.
 3.  **QUALITY Check:**
     - **Valid:** Alts must be explicitly documented (GA/TP).
-    - **Forbidden:** NO "Unsupported", "Deprecated", "Not Recommended", or "Misconfiguration" options.
-    - **Exclusive:** NO "Mandatory" vs "Optional". If only one valid option exists (due to constraints), **DISCARD**.
+    - **Forbidden:** NO "Unsupported", "Deprecated", "Not Recommended", or "Misconfiguration".
+    - **Exclusive:** NO "Mandatory" vs "Optional". If only one valid option exists, **DISCARD**.
     - **Hierarchy:** `OCP-BASE`=Cross-Cutting. Domain=Specific. Day 0/Physical=OCP-BM.
+    - **Constraint:** If a topic is a **technical constraint** (e.g. specific offset, timeout) derived from a parent decision, **DISCARD** it. It belongs in the parent's Implications, not as a new ADR.
 
 If no new topics pass these filters, respond ONLY: "No new relevant ADRs found."
 
