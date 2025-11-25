@@ -658,31 +658,31 @@ N/A
 Advanced CNI Parameter Configuration Strategy (Install-Config vs Custom Manifest)
 
 **Architectural Question**
-Should critical, Container Network Interface (CNI)-specific network parameters (e.g., IPsec mode, MTU, Geneve port, internal OVN subnets) be configured directly in the primary installation configuration file or via subsequent custom Cluster Network Operator manifests?
+Which configuration phase—Phase 1 (Install-Config) or Phase 2 (Custom Manifest)—must be used to define highly specialized Container Network Interface (CNI) parameters that are unavailable in the initial installation file?
 
 **Issue or Problem**
-OpenShift installation splits network configuration into two phases: Phase 1 (pre-manifest creation, via `install-config.yaml`) and Phase 2 (post-manifest creation, via custom manifest files). Relying solely on Phase 1 limits access to specialized CNI settings (like OVN-Kubernetes parameters), while relying on Phase 2 requires creating extra files, and crucially, Phase 2 configurations cannot override conflicting settings already defined in Phase 1.
+OpenShift installation splits network configuration into two phases. Phase 1 is limited to high-level network fields, forcing reliance on Phase 2 for specialized CNI parameters (e.g., MTU, IPsec mode). Relying on Phase 2 requires creating extra files, and critically, Phase 2 configurations cannot override conflicting settings already defined in Phase 1.
 
 **Assumption**
 Advanced network configuration (e.g., OVN-Kubernetes customization) is required.
 
 **Alternatives**
 
-- Configure CNI Parameters via Install-Config (Phase 1)
-- Configure CNI Parameters via Custom Manifests (Phase 2)
+- Configure CNI Parameters via Install-Config (Phase 1 - High-Level Fields Only)
+- Configure CNI Parameters via Custom Manifests (Phase 2 - Specialized/Advanced Fields Only)
 
 **Decision**
 #TODO: Document decision.#
 
 **Justification**
 
-- **Configure CNI Parameters via Install-Config (Phase 1):** This phase defines high-level network fields like `networking.networkType`, `networking.clusterNetwork`, and `networking.serviceNetwork`. This approach simplifies the overall setup as these values are managed directly within the primary installation file.
-- **Configure CNI Parameters via Custom Manifests (Phase 2):** This method is used to specify advanced network configurations that are not directly available in Phase 1. Creating a customized Cluster Network Operator manifest (e.g., `cluster-network-03-config.yml`) allows defining specific CNI settings, such as enabling IPsec for OVN-Kubernetes or overriding OVN overlay parameters like MTU or Geneve Port.
+- **Configure CNI Parameters via Install-Config (Phase 1 - High-Level Fields Only):** This phase defines high-level network fields like `networking.networkType`, `networking.clusterNetwork`, and `networking.serviceNetwork`. This approach simplifies the overall setup as these values are managed directly within the primary installation file.
+- **Configure CNI Parameters via Custom Manifests (Phase 2 - Specialized/Advanced Fields Only):** This method is used to specify advanced network configurations that are not directly available in Phase 1. Creating a customized Cluster Network Operator manifest (e.g., `cluster-network-03-config.yml`) allows defining specific CNI settings, such as enabling IPsec for OVN-Kubernetes or overriding OVN overlay parameters like MTU or Geneve Port.
 
 **Implications**
 
-- **Configure CNI Parameters via Install-Config (Phase 1):** The available configuration options are limited to the high-level network fields present in the initial `install-config.yaml`.
-- **Configure CNI Parameters via Custom Manifests (Phase 2):** Requires manually creating and maintaining a supplementary manifest file (`cluster-network-03-config.yml`). Furthermore, administrators must be aware that the values defined in these custom manifests during Phase 2 cannot override values already specified in the `install-config.yaml` file (Phase 1).
+- **Configure CNI Parameters via Install-Config (Phase 1 - High-Level Fields Only):** The available configuration options are limited to the high-level network fields present in the initial `install-config.yaml`.
+- **Configure CNI Parameters via Custom Manifests (Phase 2 - Specialized/Advanced Fields Only):** Requires manually creating and maintaining a supplementary manifest file (`cluster-network-03-config.yml`). Furthermore, administrators must be aware that the values defined in these custom manifests during Phase 2 cannot override values already specified in the `install-config.yaml` file (Phase 1).
 
 **Agreeing Parties**
 
@@ -781,7 +781,7 @@ OVN-Kubernetes Internal Masquerade Subnet Configuration
 Should the default internal IPv4/IPv6 masquerade subnet used by OVN-Kubernetes for host-to-service traffic be modified from its default values?
 
 **Issue or Problem**
-The internal masquerade subnet (e.g., default IPv4 is `169.254.169.0/29`) is used internally by OVN-Kubernetes to enable host-to-service traffic. This internal range might conflict with other special-purpose CIDRs or restricted network ranges within the corporate environment.
+The internal masquerade subnet is used internally by OVN-Kubernetes to enable host-to-service traffic. This internal range might conflict with other special-purpose CIDRs or restricted network ranges within the corporate environment.
 
 **Assumption**
 CNI Plugin Selection is set to OVN-Kubernetes.
@@ -801,7 +801,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 **Implications**
 
-- **Use Default Internal Masquerade Subnet:** There is a risk of conflict, particularly with the IPv4 range, as the default `169.254.169.0/29` may overlap with the instance metadata endpoint `169.254.169.254` commonly used in cloud/virtualized environments.
+- **Use Default Internal Masquerade Subnet:** This simplifies configuration by relying on the standard, known internal IP ranges used by OVN-Kubernetes. There is a risk of conflict with other special-purpose CIDRs. **Note:** For OCP 4.17 and later versions, new clusters use **`169.254.0.0/17`** as the default IPv4 masquerade subnet (expanded from the previous `169.254.169.0/29` to support User Defined Networks). Upgraded clusters retain the older `/29` range.
 - **Specify Custom Internal Masquerade Subnet:** Requires selecting a new, non-conflicting IP range and providing it via the `gatewayConfig.ipv4` or `gatewayConfig.ipv6` object configurations.
 
 **Agreeing Parties**

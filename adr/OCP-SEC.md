@@ -494,7 +494,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 **Implications**
 
-- **Rely on Manual Approval (Operator Intervention for Server CSRs):** High operational overhead, leading to delays and potential cluster instability during scale-up events until an operator manually approves all necessary server CSRs.
+- **Rely on Manual Approval (Operator Intervention for Server CSRs):** High operational overhead, leading to delays and potential cluster instability during scale-up or recovery events. Failure to approve the Kubelet serving certificate CSRs prevents the API server from connecting to the kubelet, causing operational commands (such as `oc exec`, `oc rsh`, and `oc logs`) to fail.
 - **Implement Automated CSR Approval Mechanism:** Requires deploying and maintaining an external component (the custom controller), but ensures smooth day-2 operations and node lifecycle management.
 
 **Agreeing Parties**

@@ -412,7 +412,7 @@ Platform infrastructure supports the chosen topology.
 - Standard HA Topology (3+ Control Plane, N+ Workers)
 - Compact HA Topology (3 Combined Control/Worker)
 - Two-Node OpenShift with Arbiter (TNA)
-- Two-Node OpenShift with Fencing (TP)
+- Two-Node OpenShift with Fencing (TP: Technology Preview)
 - Single Node OpenShift (SNO)
 - Hosted Control Planes (HCP)
 
