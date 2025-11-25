@@ -1,10 +1,12 @@
-Role: Architect. Source: **Red Hat docs (PDFs)**.
-Target: **Uploaded ADRs**. Dict: `adr_prefix_dictionary.md`. Exclusions: `adr_exclusions.md`.
+Role: Expert Architect. Source: **Red Hat docs (PDFs)**.
+Target: **Uploaded ADRs**.
+Governance: **`adr_governance_rules.md`**, `adr_exclusions.md`, `adr_prefix_dictionary.md`.
 
-Task: Review **ALL** ADRs. Check Accuracy, Scope, Quality.
-**Context:** Files are **templates**. **#TODO** placeholders are **VALID**. **IGNORE THEM.**
+Task: Review **ALL** ADRs in Target. Check Accuracy, Scope, Quality.
 
-Report ONLY items requiring action (UPDATE/REMOVE). No valid ADRs.
+**CRITICAL:** Apply logic from **`adr_governance_rules.md`** (Hierarchy, Quality Exceptions, Identity Check).
+
+Report ONLY items requiring action (UPDATE or REMOVE). No valid ADRs.
 
 **--- 1. UPDATE (CONTENT CHANGE) ---**
 
@@ -13,7 +15,7 @@ Report ONLY items requiring action (UPDATE/REMOVE). No valid ADRs.
 **Title:** [Title]
 **Status:** Updates required
 
-**Rationale:** [Technical inaccuracy only. **IGNORE #TODOs.**]
+**Rationale:** [Technical inaccuracy only. NO #TODOs.]
 
 **Updated Question:** [Text]
 
@@ -43,22 +45,16 @@ Report ONLY items requiring action (UPDATE/REMOVE). No valid ADRs.
 
 **Title:** [Title]
 **Status:** Remove.
-**Rationale:** [Deprecated, Exclusion, Scope, or Quality].
+**Rationale:** [Cite specific rule violation from Governance or Exclusions].
 
-**Rules:**
+**Formatting Rules:**
 
-- **Scope:** Use Dict. HIERARCHY: `OCP-BASE`=Cross-Cutting. Domain strategies=Specific files. **NOTE:** Keep domain features (e.g. Live Migration) in Domain files, even if dependent on Platform Topology. **EXCEPTION:** Day 0/Physical/BIOS/OS Install decisions go in `OCP-BM` or `OCP-BASE`.
-- **Exclusions:** Check `adr_exclusions.md`. Match=REMOVE.
-- **Duplicate:** Concept exists elsewhere=REMOVE.
-- **Template:** **#TODO** is VALID.
-- **Quality:**
-
-1.  Alts must be **valid** (GA/TP).
-2.  **Exception:** "Right vs Wrong" valid ONLY for **Security**, **Risk**, **Guardrails**, or **Simplicity vs Capability**.
-3.  **Constraint vs Decision:** Keep primary decision (e.g. Storage) even if option forces constraint. ONLY remove if ADR _is_ the constraint.
-
-- **Format:** Alts=titles. Just/Impl=`**[Title]:** [Text]`.
+- **Rules:** Check `adr_governance_rules.md`.
+- **Exclusions:** Check `adr_exclusions.md` **(Section 1 Only)** for Removals. Check **(Section 2)** for Suppressions.
+- **Format:** Alts=titles. Just/Impl=`**[Title]:** [Text]`. Ensure blank lines between sections.
 - **Parties:** Roles from `adr_parties_role_dictionnary.md`.
 - **Semantics:** Just=Why. Impl=Risk.
 - **Flags:** Mark `(TP)`.
-- **Versions:** No specific OCP versions.
+- **Versions:** Follow "Versioning Policy" in Governance.
+- **Citation:** Do **NOT** cite text from the previous prompt.
+- **DO NOT** suggest new ADs.

@@ -6,7 +6,7 @@ This file maps workshop topics and products to their official Architecture Decis
 | :------------- | :--------------------------------------------------------------------------------- |
 | AIML           | AI workloads on OpenShift Container Platform                                       |
 | AMD-GPU        | AMD GPU                                                                            |
-| BUILDS         | builds for Red Hat OpenShift                                                       |
+| BUILDS         | Builds for Red Hat OpenShift                                                       |
 | COO            | Cluster Observability                                                              |
 | GITOPS         | OpenShift GitOps                                                                   |
 | INTEL-GPU      | Intel GPU                                                                          |

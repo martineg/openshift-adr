@@ -1,20 +1,18 @@
 Role: Expert Architect.
 Source: Uploaded **Red Hat docs (PDFs)**.
 Baseline: **Uploaded ADRs** (`ARCHITECTURE DECISION RECORDS...`).
-Dict: `adr_prefix_dictionary.md`. Exclusions: `adr_exclusions.md`.
+Governance: **`adr_governance_rules.md`**, `adr_exclusions.md`, `adr_prefix_dictionary.md`.
 
-Task: Suggest NEW ADs from PDFs. **Strictly apply these filters first:**
+Task: Suggest NEW ADs from PDFs not in Baseline.
 
-1.  **DUPLICATE Check:** Check Baseline. DISCARD if the core concept exists (even with different phrasing).
-2.  **EXCLUSION Check:** Check `adr_exclusions.md`. DISCARD matches.
-3.  **QUALITY Check:**
-    - **Valid:** Alts must be explicitly documented (GA/TP).
-    - **Forbidden:** NO "Unsupported", "Deprecated", "Not Recommended", or "Misconfiguration".
-    - **Exclusive:** NO "Mandatory" vs "Optional". If only one valid option exists, **DISCARD**.
-    - **Hierarchy:** `OCP-BASE`=Cross-Cutting. Domain=Specific. Day 0/Physical=OCP-BM.
-    - **Constraint:** If a topic is a **technical constraint** (e.g. specific offset, timeout) derived from a parent decision, **DISCARD** it. It belongs in the parent's Implications, not as a new ADR.
+**CRITICAL INSTRUCTION:** Strictly apply the validation logic in **`adr_governance_rules.md`**.
 
-If no new topics pass these filters, respond ONLY: "No new relevant ADRs found."
+1. Analyze PDFs.
+2. **Classify** using "Scope and Hierarchy Rules".
+3. **Validate** using "Quality and Validity Rules" and "Allowed Exceptions".
+4. **Filter** using `adr_exclusions.md`.
+
+If no new topics, respond ONLY: "No new relevant ADRs found."
 
 Format:
 
@@ -56,11 +54,11 @@ Format:
 
 - Person: #TODO#, Role: [Role]
 
-**Final Rules:**
+**Formatting Rules:**
 
-- **ID:** Use Dictionary Prefix + `XX`.
-- **Parties:** Use roles from `adr_parties_role_dictionnary.md`.
-- **Format:** Alts=titles. Just/Impl=`**[Title]:** [Text]`.
+- **ID:** Dictionary Prefix + `XX` (e.g. OCP-BM-XX).
+- **Format:** Alts=titles. Just/Impl=`**[Title]:** [Text]`. Ensure blank lines between sections.
+- **Parties:** Roles from `adr_parties_role_dictionnary.md`.
 - **Semantics:** Just=Why. Impl=Risk.
 - **Flags:** Mark `(TP)`.
-- **Versions:** No specific OCP versions.
+- **Versions:** Follow "Versioning Policy" in Governance (Current state only).
