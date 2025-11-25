@@ -1080,6 +1080,47 @@ N/A
 ## OCP-BM-27
 
 **Title**
+NMState Configuration Scope for Provisioning
+
+**Architectural Question**
+Should NMState configuration, embedded via MachineConfig during bare metal provisioning, be applied using a single cluster-wide file or separated into node-specific files?
+
+**Issue or Problem**
+When defining customized network configurations via NMState embedded in MachineConfig, a standard methodology is required to manage configuration scope, balancing the simplicity of a global file against the need for node-specific overrides.
+
+**Assumption**
+Network configuration requires NMState (OCP-BM-26) and is delivered via MachineConfig.
+
+**Alternatives**
+
+- Cluster-wide Global Configuration
+- Node-specific Configuration Files
+
+**Decision**
+#TODO: Document decision.#
+
+**Justification**
+
+- **Cluster-wide Global Configuration:** Minimizes complexity by applying the same configuration (e.g., `/etc/nmstate/openshift/cluster.yml`) to all nodes. This approach simplifies configuration management when the hardware profile is homogeneous.
+- **Node-specific Configuration Files:** Allows for configuration overrides and specific tailoring for individual nodes by defining separate files keyed by the short hostname (e.g., `/etc/nmstate/openshift/worker-0.yml`).
+
+**Implications**
+
+- **Cluster-wide Global Configuration:** Less suitable if nodes have heterogeneous network interfaces or need per-host variations.
+- **Node-specific Configuration Files:** Increases the manifest complexity by requiring explicit configuration entries for each node in the cluster.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## OCP-BM-28
+
+**Title**
 Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
 
 **Architectural Question**
@@ -1118,7 +1159,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-28
+## OCP-BM-29
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1159,7 +1200,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-29
+## OCP-BM-30
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -1202,7 +1243,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-30
+## OCP-BM-31
 
 **Title**
 Boot disks encryption
@@ -1248,7 +1289,7 @@ Platform infrastructure is vSphere or baremetal. The cluster installation method
 
 ---
 
-## OCP-BM-31
+## OCP-BM-32
 
 **Title**
 Bare Metal Host Firmware Configuration Management
@@ -1289,7 +1330,7 @@ Provisioning workflow is GitOps ZTP.
 
 ---
 
-## OCP-BM-32
+## OCP-BM-33
 
 **Title**
 RHCOS Node Console Access Strategy
@@ -1329,7 +1370,7 @@ N/A
 
 ---
 
-## OCP-BM-33
+## OCP-BM-34
 
 **Title**
 RHCOS Installation Boot Device Selection
@@ -1370,7 +1411,7 @@ N/A
 
 ---
 
-## OCP-BM-34
+## OCP-BM-35
 
 **Title**
 iSCSI Boot Configuration Method for RHCOS
@@ -1411,7 +1452,7 @@ iSCSI boot device is used
 
 ---
 
-## OCP-BM-35
+## OCP-BM-36
 
 **Title**
 RHCOS Multipathing Enablement Strategy (Boot and Secondary Disks)
@@ -1456,7 +1497,7 @@ Installation Boot Device or Secondary Storage is a SAN device.
 
 ---
 
-## OCP-BM-36
+## OCP-BM-37
 
 **Title**
 RHCOS Multipath Installation Target Naming
@@ -1498,7 +1539,7 @@ Multipathing to be enabled.
 
 ---
 
-## OCP-BM-37
+## OCP-BM-38
 
 **Title**
 RHCOS Installation Drive Identification Strategy
@@ -1538,7 +1579,7 @@ Installation target is a local disk or single-path SAN LUN.
 
 ---
 
-## OCP-BM-38
+## OCP-BM-39
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -1578,7 +1619,7 @@ Installation Boot Device is Local Device.
 
 ---
 
-## OCP-BM-39
+## OCP-BM-40
 
 **Title**
 Control Plane Storage Performance Validation Strategy
@@ -1618,7 +1659,7 @@ N/A
 
 ---
 
-## OCP-BM-40
+## OCP-BM-41
 
 **Title**
 Bare Metal Minimum Boot Disk Capacity Strategy
@@ -1659,7 +1700,7 @@ While OpenShift supports small boot drives (e.g., 120GB for SNO), advanced confi
 
 ---
 
-## OCP-BM-41
+## OCP-BM-42
 
 **Title**
 RHCOS /var Partitioning Strategy (General Data Isolation)
@@ -1688,53 +1729,14 @@ The cluster will utilize large disk sizes (e.g., > 100GB) and may host applicati
 
 **Implications**
 
-- **Dedicated Partition for /var:** This configuration increases complexity during the installation process, as it requires setting up a custom MachineConfig manifest (e.g., using a Butane config). Additionally, when a separate `/var` partition is created, mixing different instance types for compute nodes is not supported if those instance types do not have the same storage device name.
+- **Dedicated Partition for /var:** This configuration increases complexity during the installation process, as it requires setting up a custom MachineConfig manifest (e.g., using a Butane config).
+  - **CRITICAL CONSTRAINT:** When creating this partition, you **must enforce a minimum start offset of 25000 MiB**. Failure to use this offset will result in the root filesystem being too small and risks future RHCOS upgrades/reinstalls overwriting the beginning of your data partition, leading to catastrophic data loss.
+  - Additionally, mixing different instance types for compute nodes is not supported if those instance types do not have the same storage device name.
 - **Co-locate /var on the Root Partition (Default):** This configuration carries a high risk of disk exhaustion affecting system stability if container usage, logs, or other system data within `/var` is heavy or unpredictable.
 
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Storage Expert
-- Person: #TODO#, Role: Operations Expert
-
----
-
-## OCP-BM-42
-
-**Title**
-Minimum Partition Offset for Custom RHCOS Partitioning
-
-**Architectural Question**
-When manually configuring disk partitions on Red Hat Enterprise Linux CoreOS (RHCOS) boot devices to include separate data partitions (e.g., for `/var`), what minimum offset must be enforced for the data partition start point?
-
-**Issue or Problem**
-If a custom data partition (such as a separate `/var` partition) is created with a small starting offset, the root file system may be too small, or subsequent RHCOS reinstallations might overwrite the beginning of the data partition, risking configuration or data loss.
-
-**Assumption**
-The cluster utilizes custom disk partitioning during RHCOS installation (User-Provisioned Infrastructure).
-
-**Alternatives**
-
-- Utilize the Recommended Minimum Offset (25000 MiB)
-- Utilize an Unrestricted or Smaller Offset
-
-**Decision**
-#TODO: Document decision.#
-
-**Justification**
-
-- **Utilize the Recommended Minimum Offset (25000 MiB):** A minimum offset value of 25000 mebibytes is recommended when adding a data partition to the boot disk. This ensures the root file system is automatically resized correctly and prevents future reinstalls from overwriting the data partition.
-- **Utilize an Unrestricted or Smaller Offset:** This approach allows for maximum space allocation to the custom partition immediately.
-
-**Implications**
-
-- **Utilize the Recommended Minimum Offset (25000 MiB):** Requires careful planning and configuration to specify the partition start offset during the installation phase (e.g., in a Butane config).
-- **Utilize an Unrestricted or Smaller Offset:** The resulting root file system might be too small, and future reinstalls of RHCOS might overwrite the beginning of the data partition.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Infra Leader
 - Person: #TODO#, Role: Storage Expert
 - Person: #TODO#, Role: Operations Expert
 
