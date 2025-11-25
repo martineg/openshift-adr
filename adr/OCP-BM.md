@@ -144,9 +144,8 @@ How will large-scale, distributed bare metal cluster updates (OCP version upgrad
 Managing simultaneous upgrades across a large fleet of bare metal clusters, particularly Single Node OpenShift (SNO) clusters at the edge, requires a robust orchestration mechanism that can handle sequencing, image consistency, and minimal disruption. A choice must be made between the currently supported policy-driven approach and the image-based method designed for rapid edge updates.
 
 **Assumption**
-
-- Cluster topology is Single-Node (SNO)
-- Provisioning workflow is GitOps ZTP.
+Cluster topology is Single-Node (SNO).
+Provisioning workflow is GitOps ZTP.
 
 **Alternatives**
 
@@ -603,7 +602,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 **Alternatives**
 
-- Install RHCOS using ISO (via Virtual Media or USB)
+- Install RHCOS using ISO (Customized Virtual Media or USB)
 - Install RHCOS using PXE (Network Boot)
 
 **Decision**
@@ -611,13 +610,13 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 **Justification**
 
-- **Install RHCOS using ISO:** This is straightforward for a small number of nodes. The administrator must manually provide the Ignition configuration file during installation.
-- **Install RHCOS using PXE (Network Boot):** To enable highly automated, "zero-touch" provisioning of RHCOS for a large number of UPI nodes. This method is preferred when scalable provisioning with network infrastructure support is available.
+- **Install RHCOS using ISO (Customized Virtual Media or USB):** This method is viable for deployments of any size. When customized via `coreos-installer iso customize`, it allows the embedding of the Ignition config and installation device, enabling an automated, zero-touch boot-to-install cycle without relying on complex external PXE/TFTP infrastructure.
+- **Install RHCOS using PXE (Network Boot):** This method is highly desirable for full, scalable automation in large data centers where a dedicated network boot infrastructure (DHCP, TFTP) is already robustly managed.
 
 **Implications**
 
-- **Install RHCOS using ISO:** Requires minimal-to-no additional network infrastructure. High operational overhead. Requires manual intervention (or complex scripting) on every node's BMC for large-scale UPI deployments.
-- **Install RHCOS using PXE (Network Boot):** Enables full, scalable, "zero-touch" provisioning, which is ideal for large-scale UPI deployments. Requires significant prerequisite infrastructure (DHCP, TFTP, Web servers) and network configuration (IP helpers, etc.), adding complexity.
+- **Install RHCOS using ISO (Customized Virtual Media or USB):** Requires a pre-processing step to create the customized media (ISO/USB). It relies on BMC/KVM access to mount the image, but significantly reduces Day 1 network prerequisites compared to PXE.
+- **Install RHCOS using PXE (Network Boot):** Enables full, scalable, "zero-touch" provisioning, which is ideal for large-scale UPI deployments. Requires significant prerequisite infrastructure (DHCP, TFTP, Web servers) and detailed network configuration.
 
 **Agreeing Parties**
 
@@ -1277,9 +1276,9 @@ Platform infrastructure is vSphere or baremetal. The cluster installation method
 **Implications**
 
 - **No disk encryption (Default):** Simplest and fastest provisioning. No external dependencies for boot. Fails to meet many security and compliance standards for data-at-rest encryption.
-- **TPM v2 Only Unlock:** High security, as the key is bound to the hardware state. No external infrastructure (like Tang) is needed. Node recovery after expected changes (like a BIOS or firmware update) can be complex. This is the only disk encryption method supported by Installer-Provisioned Infrastructure (IPI), Agent-based Installer (ABI), and Assisted Installer methods.
-- **Tang Server Only Unlock:** Decouples the key from the hardware state (TPM PCRs), making firmware updates non-disruptive. Creates a hard dependency on the network and the Tang servers. This option is supported only by User-Provisioned Infrastructure (UPI) deployments.
-- **TPM v2 and Tang Server Combination:** Provides the "best of both worlds": high security (TPM) and operational flexibility (Tang). This option is supported only by User-Provisioned Infrastructure (UPI) deployments.
+- **TPM v2 Only Unlock:** High security, as the key is bound to the hardware state. No external infrastructure (like Tang) is needed. Node recovery after expected changes (like a BIOS or firmware update) can be complex. This is the only disk encryption method supported by Installer-Provisioned Infrastructure (IPI), Agent-based Installer (ABI), and Assisted Installer methods. **The Image-based Installer (IBI) does not support disk encryption.**
+- **Tang Server Only Unlock:** Decouples the key from the hardware state (TPM PCRs), making firmware updates non-disruptive. Creates a hard dependency on the network and the Tang servers. This option is supported only by User-Provisioned Infrastructure (UPI) deployments. **The Image-based Installer (IBI) does not support disk encryption.**
+- **TPM v2 and Tang Server Combination:** Provides the "best of both worlds": high security (TPM) and operational flexibility (Tang). This option is supported only by User-Provisioned Infrastructure (UPI) deployments. **The Image-based Installer (IBI) does not support disk encryption.**
 
 **Agreeing Parties**
 
@@ -1730,7 +1729,7 @@ The cluster will utilize large disk sizes (e.g., > 100GB) and may host applicati
 **Implications**
 
 - **Dedicated Partition for /var:** This configuration increases complexity during the installation process, as it requires setting up a custom MachineConfig manifest (e.g., using a Butane config).
-  - **CRITICAL CONSTRAINT:** When creating this partition, you **must enforce a minimum start offset of 25000 MiB**. Failure to use this offset will result in the root filesystem being too small and risks future RHCOS upgrades/reinstalls overwriting the beginning of your data partition, leading to catastrophic data loss.
+  - **CONSTRAINT NOTE:** When adding a data partition to the boot disk, a minimum offset value of **25000 mebibytes is recommended**; if the offset is smaller than this minimum, the resulting root file system will be too small, risking future reinstalls of RHCOS overwriting the data partition.
   - Additionally, mixing different instance types for compute nodes is not supported if those instance types do not have the same storage device name.
 - **Co-locate /var on the Root Partition (Default):** This configuration carries a high risk of disk exhaustion affecting system stability if container usage, logs, or other system data within `/var` is heavy or unpredictable.
 
@@ -1998,48 +1997,6 @@ Internal Image Registry Management State is set to "Managed".
 ## OCP-BM-49
 
 **Title**
-Internal Image Registry Persistent Volume Claim (PVC) Provisioning Strategy
-
-**Architectural Question**
-Should the Persistent Volume Claim (PVC) required for the OpenShift Internal Image Registry storage be instantiated automatically using cluster defaults, or manually pre-provisioned for explicit configuration control?
-
-**Issue or Problem**
-The image registry must have persistent storage to operate in a managed/production state. Relying solely on the cluster default storage configuration (automatic PVC creation) may result in inadequate size, performance, or access mode configuration necessary for HA production registries (which typically require ReadWriteMany access).
-
-**Assumption**
-The Internal Image Registry will be switched to the Managed management state post-installation.
-
-**Alternatives**
-
-- Rely on Default Automatic PVC Creation
-- Manually Pre-provision Custom PVC
-
-**Decision**
-#TODO: Document decision.#
-
-**Justification**
-
-- **Rely on Default Automatic PVC Creation:** This approach minimizes configuration complexity as the default OpenShift setting creates an `image-registry-storage` PVC automatically when the `claim` field is left blank in the registry configuration.
-- **Manually Pre-provision Custom PVC:** This method allows administrators to define explicit storage parameters, such as access mode (RWX is required for two or more replicas/HA) and capacity, and ensures compatibility if specialized requirements exist, such as using block storage with a `Recreate` rollout strategy.
-
-**Implications**
-
-- **Rely on Default Automatic PVC Creation:** The resulting storage configuration is bound by the cluster's default StorageClass, which may not meet the high-availability requirements (e.g., if the default StorageClass only provides ReadWriteOnce access).
-- **Manually Pre-provision Custom PVC:** Requires creating a PersistentVolumeClaim object (e.g., via a `pvc.yaml` file) and explicitly editing the registry configuration to reference the custom PVC, adding manual complexity to the installation and setup process.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Storage Expert
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: Security Expert
-
----
-
-## OCP-BM-50
-
-**Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
 
 **Architectural Question**
@@ -2078,7 +2035,7 @@ Low-latency workloads are required, consistent with the Hardware Acceleration St
 
 ---
 
-## OCP-BM-51
+## OCP-BM-50
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -2119,7 +2076,7 @@ N/A
 
 ---
 
-## OCP-BM-52
+## OCP-BM-51
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -2160,7 +2117,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-53
+## OCP-BM-52
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -2201,7 +2158,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-54
+## OCP-BM-53
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -2243,7 +2200,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-55
+## OCP-BM-54
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -2283,7 +2240,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-56
+## OCP-BM-55
 
 **Title**
 Bare Metal Node Firmware Management
@@ -2323,7 +2280,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-57
+## OCP-BM-56
 
 **Title**
 Bare Metal Firmware Update Application Timing Policy
@@ -2363,7 +2320,7 @@ The Bare Metal Operator (BMO) is enabled and managing node firmware configuratio
 
 ---
 
-## OCP-BM-58
+## OCP-BM-57
 
 **Title**
 Bare Metal Node Remediation

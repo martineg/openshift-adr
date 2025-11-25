@@ -796,12 +796,12 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 **Justification**
 
-- **Use Default Internal Masquerade Subnet (/17 for IPv4):** This simplifies configuration by relying on the standard, known internal IP ranges used by OVN-Kubernetes. For new OCP 4.17 and later clusters, the IPv4 default is `169.254.0.0/17` (expanded from the previous `/29`).
+- **Use Default Internal Masquerade Subnet (/17 for IPv4):** This simplifies configuration by relying on the standard, known internal IP ranges used by OVN-Kubernetes.
 - **Specify Custom Internal Masquerade Subnet:** This is required if the default range conflicts with existing infrastructure to ensure stable host-to-service communication.
 
 **Implications**
 
-- **Use Default Internal Masquerade Subnet (/17 for IPv4):** This simplifies configuration by relying on the standard, known internal IP ranges used by OVN-Kubernetes. There is a risk of conflict with other special-purpose CIDRs.
+- **Use Default Internal Masquerade Subnet (/17 for IPv4):** This simplifies configuration by relying on the standard, known internal IP ranges used by OVN-Kubernetes. There is a risk of conflict with other special-purpose CIDRs. Note that clusters deployed with modern installation programs use a larger, expanded default IPv4 masquerade subnet (`169.254.0.0/17`) than clusters that have been upgraded, which retain their original smaller subnet (`/29`).
 - **Specify Custom Internal Masquerade Subnet:** Requires selecting a new, non-conflicting IP range and providing it via the `gatewayConfig.ipv4` or `gatewayConfig.ipv6` object configurations.
 
 **Agreeing Parties**
