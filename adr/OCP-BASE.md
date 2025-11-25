@@ -281,7 +281,7 @@ N/A
 
 **Justification**
 
-- **Stretched Cluster Across Sites:** Deploys a **single OpenShift cluster** with control plane nodes distributed across multiple logical or physical locations. For OpenShift 4.x, this typically involves **exactly three control plane nodes**, with the Red Hat recommendation being one node in each of **three sites**. This allows the cluster to maintain quorum and remain operational if one site fails. However, Red Hat warns this configuration extends the cluster as a **single failure domain** and should **not** be considered a replacement for a disaster recovery plan.
+- **Stretched Cluster Across Sites:** Deploys a **single OpenShift cluster** with control plane nodes distributed across multiple logical or physical locations. This typically involves **exactly three control plane nodes**, with the Red Hat recommendation being one node in each of **three sites**. This allows the cluster to maintain quorum and remain operational if one site fails. However, Red Hat warns this configuration extends the cluster as a **single failure domain** and should **not** be considered a replacement for a disaster recovery plan.
 - **Multi-Cluster (Independent Cluster per Site):** Deploys a separate, independent OpenShift cluster in each site (e.g., one cluster per region/site). This is Red Hat's **strongly recommended** alternative to a stretched deployment. This model provides clear failure domain isolation. Tools like **Red Hat Advanced Cluster Management (ACM)** are then used to manage the clusters, application deployments, and disaster recovery policies from a single point of control.
 
 **Implications**
