@@ -714,6 +714,46 @@ The cluster installation method is User-Provisioned Infrastructure (UPI) or PXE/
 ## OCP-BM-18
 
 **Title**
+RHCOS Image Signature Verification Policy for UPI Installation
+
+**Architectural Question**
+Should Red Hat Enterprise Linux CoreOS (RHCOS) installer images (used for UPI installation) require cryptographic signature verification, or should verification be explicitly disabled?
+
+**Issue or Problem**
+Supply chain integrity requires ensuring the OS image used for provisioning nodes has not been tampered with. The `coreos-installer` defaults to enforcing signatures, but specific bare metal installation paths or troubleshooting steps may require using the `--insecure` flag or `coreos.inst.insecure` kernel argument, which bypasses validation of the OS image.
+
+**Assumption**
+Cluster installation method is User-Provisioned Infrastructure (UPI).
+
+**Alternatives**
+
+- Enforce Image Signature Verification (Secure Default)
+- Disable Image Signature Verification (Insecure Mode)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Enforce Image Signature Verification (Secure Default):** This option ensures the cluster only installs RHCOS images that have been cryptographically signed and verified, maintaining supply chain integrity. This is the recommended secure posture.
+- **Disable Image Signature Verification (Insecure Mode):** This is intended for debugging or installing a version of RHCOS that does not match the live media, especially since bare-metal media for OCP are not GPG-signed. Choosing this provides installation flexibility but removes a critical security barrier.
+
+**Implications**
+
+- **Enforce Image Signature Verification (Secure Default):** Requires the use of supported installation media and methods that allow verification. Unauthorized or modified images will fail to install, enhancing security.
+- **Disable Image Signature Verification (Insecure Mode):** Leaves the cluster vulnerable to compromise if the installation media or the RHCOS image itself is tampered with prior to node installation.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-BM-19
+
+**Title**
 RHCOS Artifact Sourcing Strategy
 
 **Architectural Question**
@@ -752,7 +792,7 @@ N/A
 
 ---
 
-## OCP-BM-19
+## OCP-BM-20
 
 **Title**
 RHCOS Day-1 Customization and Network Configuration Strategy
@@ -792,7 +832,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-20
+## OCP-BM-21
 
 **Title**
 RHCOS Customization Timing Strategy (Live vs Permanent Ignition)
@@ -833,7 +873,7 @@ Custom Day-0 tasks requiring non-MCO methods are needed (e.g., advanced partitio
 
 ---
 
-## OCP-BM-21
+## OCP-BM-22
 
 **Title**
 RHCOS Live Network Configuration Persistence Strategy (UPI)
@@ -874,7 +914,46 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-22
+## OCP-BM-23
+
+**Title**
+Node IP Address Management
+
+**Architectural Question**
+How will the cluster nodes (Control Plane and Compute) obtain their IP addresses from the Machine IP Range?
+
+**Issue or Problem**
+IP Address Management (IPAM) affects node address predictability, critical for setup, security policies, and installation method compatibility.
+
+**Assumption**
+N/A
+**Alternatives**
+
+- DHCP
+- Static IP Configuration
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **DHCP:** Simplifies node provisioning by automatically assigning IPs. Reduces manual configuration.
+- **Static IP Configuration:** Ensures persistent, predictable node IPs, often required by enterprise network/security policies, especially in production.
+
+**Implications**
+
+- **DHCP:** Requires a highly available DHCP server, ideally with reservations. Simplifies node scaling/replacement.
+- **Static IP Configuration:** Increases manual configuration effort during install and scaling. Requires a robust external IPAM process to avoid conflicts.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-BM-24
 
 **Title**
 RHCOS Node Day-1 DNS Resolver Redundancy Strategy
@@ -916,7 +995,7 @@ The cluster machines are configured with static IP addresses during RHCOS instal
 
 ---
 
-## OCP-BM-23
+## OCP-BM-25
 
 **Title**
 Multi-NIC Strategy for RHCOS Core Network (UPI)
@@ -956,7 +1035,7 @@ Cluster uses User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-24
+## OCP-BM-26
 
 **Title**
 Bare Metal Network Bridge Configuration Tooling Strategy
@@ -998,7 +1077,7 @@ N/A
 
 ---
 
-## OCP-BM-25
+## OCP-BM-27
 
 **Title**
 Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
@@ -1039,7 +1118,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-26
+## OCP-BM-28
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1080,7 +1159,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-27
+## OCP-BM-29
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -1123,7 +1202,53 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-28
+## OCP-BM-30
+
+**Title**
+Boot disks encryption
+
+**Architectural Question**
+Will the RHCOS boot disks be encrypted, and which key management mechanism will be used for automated unlocking upon node boot?
+
+**Issue or Problem**
+Servers often require full disk encryption (LUKS) for security compliance. A decision must be made on whether to encrypt, and if so, how to manage the decryption keys to allow for automated, unattended reboots. The feasibility of using network-bound keys (Tang) versus hardware-bound keys (TPM) is constrained by the choice of OpenShift installer.
+
+**Assumption**
+Platform infrastructure is vSphere or baremetal. The cluster installation method has been determined.
+
+**Alternatives**
+
+- No disk encryption (Default)
+- TPM v2 Only Unlock
+- Tang Server Only Unlock
+- TPM v2 and Tang Server Combination
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **No disk encryption (Default):** This is the default behavior. It simplifies installation and node provisioning, as no additional key management infrastructure (TPM, Tang) or configuration is required. It relies solely on physical data center security for data-at-rest protection.
+- **TPM v2 Only Unlock:** This method uses the on-board TPM v2 chip to seal the decryption key. The key is only released if the boot measurements (PCRs) are correct, ensuring the system's boot chain has not been tampered with. This is a high-security, self-contained solution.
+- **Tang Server Only Unlock:** This method uses a network-bound key release. The node fetches its decryption key from a highly available Tang server on the network during boot. This decouples the key from the hardware state, simplifying operational events like firmware updates.
+- **TPM v2 and Tang Server Combination:** This is the most resilient automated method. The node can be configured to unlock if either the TPM measurements are correct or it can successfully contact the Tang server. This provides the security of TPM binding while adding the operational flexibility of Tang.
+
+**Implications**
+
+- **No disk encryption (Default):** Simplest and fastest provisioning. No external dependencies for boot. Fails to meet many security and compliance standards for data-at-rest encryption.
+- **TPM v2 Only Unlock:** High security, as the key is bound to the hardware state. No external infrastructure (like Tang) is needed. Node recovery after expected changes (like a BIOS or firmware update) can be complex. This is the only disk encryption method supported by Installer-Provisioned Infrastructure (IPI), Agent-based Installer (ABI), and Assisted Installer methods.
+- **Tang Server Only Unlock:** Decouples the key from the hardware state (TPM PCRs), making firmware updates non-disruptive. Creates a hard dependency on the network and the Tang servers. This option is supported only by User-Provisioned Infrastructure (UPI) deployments.
+- **TPM v2 and Tang Server Combination:** Provides the "best of both worlds": high security (TPM) and operational flexibility (Tang). This option is supported only by User-Provisioned Infrastructure (UPI) deployments.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Storage Expert
+
+---
+
+## OCP-BM-31
 
 **Title**
 Bare Metal Host Firmware Configuration Management
@@ -1164,7 +1289,7 @@ Provisioning workflow is GitOps ZTP.
 
 ---
 
-## OCP-BM-29
+## OCP-BM-32
 
 **Title**
 RHCOS Node Console Access Strategy
@@ -1204,7 +1329,7 @@ N/A
 
 ---
 
-## OCP-BM-30
+## OCP-BM-33
 
 **Title**
 RHCOS Installation Boot Device Selection
@@ -1245,7 +1370,7 @@ N/A
 
 ---
 
-## OCP-BM-31
+## OCP-BM-34
 
 **Title**
 iSCSI Boot Configuration Method for RHCOS
@@ -1286,7 +1411,7 @@ iSCSI boot device is used
 
 ---
 
-## OCP-BM-32
+## OCP-BM-35
 
 **Title**
 RHCOS Multipathing Enablement Strategy (Boot and Secondary Disks)
@@ -1331,7 +1456,7 @@ Installation Boot Device or Secondary Storage is a SAN device.
 
 ---
 
-## OCP-BM-33
+## OCP-BM-36
 
 **Title**
 RHCOS Multipath Installation Target Naming
@@ -1373,7 +1498,7 @@ Multipathing to be enabled.
 
 ---
 
-## OCP-BM-34
+## OCP-BM-37
 
 **Title**
 RHCOS Installation Drive Identification Strategy
@@ -1413,13 +1538,13 @@ Installation target is a local disk or single-path SAN LUN.
 
 ---
 
-## OCP-BM-35
+## OCP-BM-38
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
 
 **Architectural Question**
-How should hardware RAID be configured for the OpenShift Container Platform installation drive on bare metal nodes, ensuring compatibility with supported BMCs and adhering to Red Hat requirements?
+On bare metal nodes, how should hardware RAID be configured for the installation drive, ensuring compatibility with supported BMCs and adhering to Red Hat requirements?
 
 **Issue or Problem**
 The choice of hardware RAID must align with Red Hat requirements: only specific Hardware RAID volumes (e.g., Dell iDRAC, Fujitsu iRMC) are supported on the installation drive, and software RAID is not supported. This decision determines whether to utilize supported hardware RAID features or configure nodes without RAID for the installation drive.
@@ -1442,7 +1567,7 @@ Installation Boot Device is Local Device.
 
 **Implications**
 
-- **Configure and use supported Hardware RAID volumes for the installation drive:** Requires ensuring the hardware, BMC firmware, and RAID levels match the supported configurations (e.g., Dell iDRAC firmware 6.10.30.20+ for levels 0, 1, 5).
+- **Configure and use supported Hardware RAID volumes for the installation drive:** Requires ensuring the hardware, BMC firmware, and RAID levels match the specific configurations officially supported for use as the installation drive.
 - **Configure the installation drive without using Hardware RAID:** Simplifies the underlying storage configuration, avoiding configuration complexities, but relies solely on software volumes for redundancy (e.g., etcd).
 
 **Agreeing Parties**
@@ -1453,7 +1578,7 @@ Installation Boot Device is Local Device.
 
 ---
 
-## OCP-BM-36
+## OCP-BM-39
 
 **Title**
 Control Plane Storage Performance Validation Strategy
@@ -1493,7 +1618,7 @@ N/A
 
 ---
 
-## OCP-BM-37
+## OCP-BM-40
 
 **Title**
 Bare Metal Minimum Boot Disk Capacity Strategy
@@ -1534,7 +1659,7 @@ While OpenShift supports small boot drives (e.g., 120GB for SNO), advanced confi
 
 ---
 
-## OCP-BM-38
+## OCP-BM-41
 
 **Title**
 RHCOS /var Partitioning Strategy (General Data Isolation)
@@ -1574,7 +1699,7 @@ The cluster will utilize large disk sizes (e.g., > 100GB) and may host applicati
 
 ---
 
-## OCP-BM-39
+## OCP-BM-42
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -1614,7 +1739,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-40
+## OCP-BM-43
 
 **Title**
 Control Plane Etcd Storage Partitioning Strategy
@@ -1655,7 +1780,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-41
+## OCP-BM-44
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -1695,7 +1820,7 @@ N/A
 
 ---
 
-## OCP-BM-42
+## OCP-BM-45
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1738,7 +1863,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-43
+## OCP-BM-46
 
 **Title**
 Internal Image Registry Management State on Bare Metal UPI
@@ -1779,7 +1904,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-44
+## OCP-BM-47
 
 **Title**
 Storage Architecture for the Internal Image Registry
@@ -1827,7 +1952,7 @@ Internal Image Registry Management State is set to "Managed".
 
 ---
 
-## OCP-BM-45
+## OCP-BM-48
 
 **Title**
 Internal Image Registry Persistent Volume Claim (PVC) Provisioning Strategy
@@ -1869,7 +1994,7 @@ The Internal Image Registry will be switched to the Managed management state pos
 
 ---
 
-## OCP-BM-46
+## OCP-BM-49
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -1910,7 +2035,7 @@ Low-latency workloads are required, consistent with the Hardware Acceleration St
 
 ---
 
-## OCP-BM-47
+## OCP-BM-50
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -1951,7 +2076,7 @@ N/A
 
 ---
 
-## OCP-BM-48
+## OCP-BM-51
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -1992,7 +2117,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-49
+## OCP-BM-52
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -2033,7 +2158,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-50
+## OCP-BM-53
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -2075,7 +2200,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-51
+## OCP-BM-54
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -2115,7 +2240,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-52
+## OCP-BM-55
 
 **Title**
 Bare Metal Node Firmware Management
@@ -2155,7 +2280,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-53
+## OCP-BM-56
 
 **Title**
 Bare Metal Firmware Update Application Timing Policy
@@ -2195,7 +2320,7 @@ The Bare Metal Operator (BMO) is enabled and managing node firmware configuratio
 
 ---
 
-## OCP-BM-54
+## OCP-BM-57
 
 **Title**
 Bare Metal Node Remediation

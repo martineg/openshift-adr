@@ -574,52 +574,6 @@ Dedicated Infrastructure Nodes strategy has been selected.
 ## OCP-BASE-14
 
 **Title**
-Boot disks encryption
-
-**Architectural Question**
-Will the RHCOS boot disks be encrypted, and which key management mechanism will be used for automated unlocking upon node boot?
-
-**Issue or Problem**
-Servers often require full disk encryption (LUKS) for security compliance. A decision must be made on whether to encrypt, and if so, how to manage the decryption keys to allow for automated, unattended reboots.
-
-**Assumption**
-Platform infrastructure is vSphere or baremetal.
-
-**Alternatives**
-
-- No disk encryption (Default)
-- TPM v2 Only Unlock
-- Tang Server Only Unlock
-- TPM v2 and Tang Server Combination
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **No disk encryption (Default):** This is the default behavior. It simplifies installation and node provisioning, as no additional key management infrastructure (TPM, Tang) or configuration is required. It relies solely on physical data center security for data-at-rest protection.
-- **TPM v2 Only Unlock:** This method uses the on-board TPM v2 chip to seal the decryption key. The key is only released if the boot measurements (PCRs) are correct, ensuring the system's boot chain has not been tampered with. This is a high-security, self-contained solution.
-- **Tang Server Only Unlock:** This method uses a network-bound key release. The node fetches its decryption key from a highly available Tang server on the network during boot. This decouples the key from the hardware state, simplifying operational events like firmware updates.
-- **TPM v2 and Tang Server Combination:** This is the most resilient automated method. The node can be configured to unlock if either the TPM measurements are correct or it can successfully contact the Tang server. This provides the security of TPM binding while adding the operational flexibility of Tang.
-
-**Implications**
-
-- **No disk encryption (Default):** Simplest and fastest provisioning. No external dependencies for boot. Fails to meet many security and compliance standards for data-at-rest encryption.
-- **TPM v2 Only Unlock:** High security, as the key is bound to the hardware state. No external infrastructure (like Tang) is needed. Node recovery after expected changes (like a BIOS or firmware update) can be complex.
-- **Tang Server Only Unlock:** Decouples the key from the hardware state (TPM PCRs), making firmware updates non-disruptive. Creates a hard dependency on the network and the Tang servers.
-- **TPM v2 and Tang Server Combination:** Provides the "best of both worlds": high security (TPM) and operational flexibility (Tang).
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Security Expert
-- Person: #TODO#, Role: Storage Expert
-
----
-
-## OCP-BASE-15
-
-**Title**
 Hardware Acceleration Strategy
 
 **Architectural Question**
@@ -658,7 +612,7 @@ N/A
 
 ---
 
-## OCP-BASE-16
+## OCP-BASE-15
 
 **Title**
 Virtualization Strategy

@@ -43,45 +43,6 @@ N/A
 ## OCP-NET-02
 
 **Title**
-Node IP Address Management
-
-**Architectural Question**
-How will the cluster nodes (Control Plane and Compute) obtain their IP addresses from the Machine IP Range?
-
-**Issue or Problem**
-IP Address Management (IPAM) affects node address predictability, critical for setup, security policies, and installation method compatibility.
-
-**Assumption**
-N/A
-**Alternatives**
-
-- DHCP
-- Static IP Configuration
-
-**Decision**
-#TODO: Document the decision for each cluster.#
-
-**Justification**
-
-- **DHCP:** Simplifies node provisioning by automatically assigning IPs. Reduces manual configuration.
-- **Static IP Configuration:** Ensures persistent, predictable node IPs, often required by enterprise network/security policies, especially in production.
-
-**Implications**
-
-- **DHCP:** Requires a highly available DHCP server, ideally with reservations. Simplifies node scaling/replacement.
-- **Static IP Configuration:** Increases manual configuration effort during install and scaling. Requires a robust external IPAM process to avoid conflicts.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Network Expert
-
----
-
-## OCP-NET-03
-
-**Title**
 DNS Forwarding Configuration
 
 **Architectural Question**
@@ -119,7 +80,7 @@ N/A
 
 ---
 
-## OCP-NET-04
+## OCP-NET-03
 
 **Title**
 Node Name Resolution Strategy (DNS Search Zone vs FQDN)
@@ -159,7 +120,7 @@ Nodes might be distributed across different network zones/failure domains.
 
 ---
 
-## OCP-NET-05
+## OCP-NET-04
 
 **Title**
 Cluster Core Time Synchronization Source
@@ -199,7 +160,7 @@ N/A
 
 ---
 
-## OCP-NET-06
+## OCP-NET-05
 
 **Title**
 Outbound Connectivity (External Firewall/Proxy)
@@ -240,7 +201,7 @@ Cluster is in a connected environment.
 
 ---
 
-## OCP-NET-07
+## OCP-NET-06
 
 **Title**
 Outbound HTTPS Trust Management Strategy (Proxy/Custom CA)
@@ -281,7 +242,7 @@ Outbound Connectivity utilizes an HTTPS proxy or connects to external services r
 
 ---
 
-## OCP-NET-08
+## OCP-NET-07
 
 **Title**
 Custom CA Trust Bundle Application Policy
@@ -322,7 +283,7 @@ A trust bundle via additionalTrustBundle configuration is used to configure Cert
 
 ---
 
-## OCP-NET-09
+## OCP-NET-08
 
 **Title**
 External Firewall Rule Granularity (Connected Environments)
@@ -363,7 +324,7 @@ Cluster is in a connected environment and outbound connectivity is set to Direct
 
 ---
 
-## OCP-NET-10
+## OCP-NET-09
 
 **Title**
 Load Balancer Strategy (API & Ingress)
@@ -404,7 +365,7 @@ N/A
 
 ---
 
-## OCP-NET-11
+## OCP-NET-10
 
 **Title**
 API and Application Ingress Load Balancer Topology Strategy
@@ -445,7 +406,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-NET-12
+## OCP-NET-11
 
 **Title**
 Pod Network CIDR Selection
@@ -485,7 +446,7 @@ N/A
 
 ---
 
-## OCP-NET-13
+## OCP-NET-12
 
 **Title**
 Service Network CIDR Selection
@@ -525,7 +486,7 @@ N/A
 
 ---
 
-## OCP-NET-14
+## OCP-NET-13
 
 **Title**
 Ingress Controller Strategy
@@ -569,7 +530,7 @@ N/A
 
 ---
 
-## OCP-NET-15
+## OCP-NET-14
 
 **Title**
 Ingress Controller Replica Count
@@ -609,7 +570,7 @@ N/A
 
 ---
 
-## OCP-NET-16
+## OCP-NET-15
 
 **Title**
 CNI Plugin Selection (Platform Specific)
@@ -650,7 +611,7 @@ N/A
 
 ---
 
-## OCP-NET-17
+## OCP-NET-16
 
 **Title**
 Advanced CNI Parameter Configuration Strategy (Install-Config vs Custom Manifest)
@@ -690,7 +651,7 @@ Advanced network configuration (e.g., OVN-Kubernetes customization) is required.
 
 ---
 
-## OCP-NET-18
+## OCP-NET-17
 
 **Title**
 OVN-Kubernetes Overlay Network Parameter Configuration
@@ -730,7 +691,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-19
+## OCP-NET-18
 
 **Title**
 OVN-Kubernetes Internal Subnet Configuration Strategy
@@ -770,7 +731,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-20
+## OCP-NET-19
 
 **Title**
 OVN-Kubernetes Internal Masquerade Subnet Configuration
@@ -810,7 +771,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-21
+## OCP-NET-20
 
 **Title**
 OVN-Kubernetes Egress Traffic Routing Via Host Network Stack
@@ -850,7 +811,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-22
+## OCP-NET-21
 
 **Title**
 OVN-Kubernetes IPsec Encryption Mode
@@ -894,7 +855,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-23
+## OCP-NET-22
 
 **Title**
 OVN-Kubernetes Cluster Route Advertisement Strategy
@@ -935,7 +896,7 @@ N/A
 
 ---
 
-## OCP-NET-24
+## OCP-NET-23
 
 **Title**
 OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
@@ -976,7 +937,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-25
+## OCP-NET-24
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
@@ -1017,7 +978,7 @@ N/A
 
 ---
 
-## OCP-NET-26
+## OCP-NET-25
 
 **Title**
 SSL/TLS Termination Strategy
@@ -1060,7 +1021,7 @@ N/A
 
 ---
 
-## OCP-NET-27
+## OCP-NET-26
 
 **Title**
 Access Control for Cluster Metrics Port (TCP 1936)
@@ -1101,7 +1062,7 @@ N/A
 
 ---
 
-## OCP-NET-28
+## OCP-NET-27
 
 **Title**
 Default Network Policy (Pod Isolation)
@@ -1145,7 +1106,7 @@ N/A
 
 ---
 
-## OCP-NET-29
+## OCP-NET-28
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -1188,7 +1149,7 @@ Cluster uses OVN-Kubernetes CNI.
 
 ---
 
-## OCP-NET-30
+## OCP-NET-29
 
 **Title**
 OVN-Kubernetes Network Policy Audit Log Destination
@@ -1232,7 +1193,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-31
+## OCP-NET-30
 
 **Title**
 Egress IP Address Strategy
@@ -1276,7 +1237,7 @@ N/A
 
 ---
 
-## OCP-NET-32
+## OCP-NET-31
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -1321,7 +1282,7 @@ N/A
 
 ---
 
-## OCP-NET-33
+## OCP-NET-32
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection
@@ -1362,7 +1323,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-34
+## OCP-NET-33
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy
@@ -1403,7 +1364,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-35
+## OCP-NET-34
 
 **Title**
 SR-IOV Virtual Function Bonding Mechanism
