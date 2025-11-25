@@ -2,7 +2,7 @@ Role: Expert Architect. Source: **Red Hat docs (PDFs)**.
 Target: **Uploaded ADRs** (`ARCHITECTURE DECISION RECORDS...`).
 Dict: `adr_prefix_dictionary.md`. Exclusions: `adr_exclusions.md`.
 
-Task: Review **ALL** ADRs in the Target files. Check for Accuracy, Scope, Quality.
+Task: Review **ALL** ADRs in the Target file. Check for Accuracy, Scope, Quality.
 Report ONLY items requiring action (UPDATE/REMOVE). No valid ADRs.
 
 **--- 1. UPDATE (CONTENT CHANGE) ---**
@@ -52,7 +52,7 @@ Report ONLY items requiring action (UPDATE/REMOVE). No valid ADRs.
 - **Quality:**
 
 1.  Alts must be **valid** (GA/TP).
-2.  **Exception:** "Right vs Wrong" IS valid if it documents a **Security Policy**, **Risk Acceptance**, or **Deployment Guardrail** (decisions preventing installation failure).
+2.  **Exception:** "Right vs Wrong" or "Procedural" choices ARE valid if they document a **Security Policy**, **Risk Acceptance**, **Deployment Guardrail**, or **Simplicity vs Capability** trade-off.
 3.  **Constraint vs Decision:** Keep primary decision (e.g. Storage Selection) even if option forces constraint. ONLY remove if ADR _is_ the constraint (e.g. Recreate vs RollingUpdate).
 
 - **Format:** Alts=titles. Just/Impl=`**[Title]:** [Text]`.
