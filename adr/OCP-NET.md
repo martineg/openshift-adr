@@ -433,7 +433,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 **Implications**
 
-- **Consolidated Load Balancer Model:** If session persistence is configured for the API load balancer, it might cause performance issues from excess application traffic. Deploying both on the same infrastructure increases the risk of application traffic impacting the Kubernetes API availability.
+- **Consolidated Load Balancer Model:** The Kubernetes API load balancer (6443) must be configured as Layer 4 (Raw TCP/SSL Passthrough) and **stateless** (using a stateless algorithm, and **must not use session persistence**). Deploying API and Ingress on the same infrastructure increases the risk of application traffic impacting the Kubernetes API availability.
 - **Separate Load Balancer Model (Recommended for Production):** Requires provisioning and managing at least two distinct load balancer instances (or pools of instances), increasing infrastructure complexity and cost.
 
 **Agreeing Parties**
