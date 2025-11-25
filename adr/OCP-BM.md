@@ -1360,7 +1360,7 @@ N/A
 **Implications**
 
 - **Default Console Configuration (Graphical Primary, Serial Disabled):** Requires careful evaluation to ensure troubleshooting capabilities meet disaster recovery requirements if the graphical console is not easily accessible.
-- **Serial Console Configuration (Serial Primary, Graphical Secondary):** Requires adding one or more `console=` arguments (e.g., `console=tty0 console=ttyS0`) to the APPEND line during PXE installation, or using the `--console` option with `coreos-installer` during ISO installation to set the serial port as the primary console.
+- **Serial Console Configuration (Serial Primary, Graphical Secondary):** Requires adding one or more `console=` arguments (e.g., `console=tty0 console=ttyS0`) to the APPEND line during PXE installation, or using the `--console` option with `coreos-installer` during manual ISO installation to set the serial port as the primary console. **Note:** For automated ISO/PXE artifact customization, this setting can be persisted by using the `coreos-installer iso customize` command with the `--dest-console` flag (e.g., `--dest-console ttyS0,115200n8`).
 
 **Agreeing Parties**
 
