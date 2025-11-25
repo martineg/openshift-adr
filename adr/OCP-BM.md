@@ -925,7 +925,7 @@ Multi-NIC Strategy for RHCOS Core Network (UPI)
 Should the core cluster network connectivity for RHCOS nodes leverage a single interface/bond, or multiple distinct, non-aggregated physical network interfaces (NICs)?
 
 **Issue or Problem**
-Utilizing multiple discrete physical network interfaces allows for segmented IP addressing (e.g., combining DHCP and Static IP) directly on the node, but increases the complexity of network bootstrapping compared to a single aggregated interface.
+Utilizing multiple discrete physical network interfaces allows for traffic segmentation at the physical layer, but increases the complexity of network bootstrapping compared to a single aggregated interface.
 
 **Assumption**
 Cluster uses User-Provisioned Infrastructure (UPI).
@@ -940,13 +940,13 @@ Cluster uses User-Provisioned Infrastructure (UPI).
 
 **Justification**
 
-- **Single Interface or Aggregated Interface (Bonding):** This approach simplifies initial configuration and reduces the number of kernel arguments required during installation.
-- **Multiple Discrete Network Interfaces (Configured Separately):** This allows fine-grained control over network addressing per NIC, permitting the configuration of mixed IP methods (DHCP and static) on the same host for different purposes.
+- **Single Interface or Aggregated Interface (Bonding):** This approach simplifies initial configuration and reduces the number of kernel arguments required during installation. It provides redundancy at the link layer while presenting a single logical interface to the OS.
+- **Multiple Discrete Network Interfaces (Configured Separately):** This allows for strict physical isolation of traffic types (e.g., separating management traffic from data traffic on different physical hardware) without relying on VLAN tagging over a shared bond.
 
 **Implications**
 
-- **Single Interface or Aggregated Interface (Bonding):** May limit flexibility if specific network segmentation is required at the host OS level before the CNI takes over.
-- **Multiple Discrete Network Interfaces (Configured Separately):** Requires careful planning and configuration of multiple kernel arguments (e.g., multiple `ip=` entries) during the RHCOS installation process.
+- **Single Interface or Aggregated Interface (Bonding):** May limit flexibility if strict physical air-gapping between network segments is required.
+- **Multiple Discrete Network Interfaces (Configured Separately):** Requires careful planning and configuration of multiple kernel arguments (e.g., multiple `ip=` entries) during the RHCOS installation process. Increases the complexity of the Day 1 configuration.
 
 **Agreeing Parties**
 
