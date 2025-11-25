@@ -2,7 +2,7 @@ Role: Expert Architect. Source: **Red Hat docs (PDFs)**.
 Target: **Uploaded ADRs** (`ARCHITECTURE DECISION RECORDS...`).
 Dict: `adr_prefix_dictionary.md`. Exclusions: `adr_exclusions.md`.
 
-Task: Review **ALL** ADRs. Check Accuracy, Scope, Quality.
+Task: Review **ALL** ADRs in the Target files. Check for Accuracy, Scope, Quality.
 Report ONLY items requiring action (UPDATE/REMOVE). No valid ADRs.
 
 **--- 1. UPDATE (CONTENT CHANGE) ---**
@@ -46,9 +46,9 @@ Report ONLY items requiring action (UPDATE/REMOVE). No valid ADRs.
 
 **Rules:**
 
-- **Scope:** Use Dict. HIERARCHY: General topics (e.g. Sizing) go in `OCP-BASE`. If in specific file, REMOVE.
-- **Exclusions:** Check `adr_exclusions.md`. If match, REMOVE.
-- **Duplicate:** If concept exists elsewhere, REMOVE.
+- **Scope:** Use Dict. HIERARCHY: **Abstract strategies** (e.g. Sizing, Isolation) go in `OCP-BASE`. **Concrete implementation details** (e.g. LB Topology, IPAM, CIDRs) belong in specific files (e.g. `OCP-NET`) even if they apply generally.
+- **Exclusions:** Check `adr_exclusions.md`. If match, mark REMOVE.
+- **Duplicate:** If concept exists elsewhere, mark REMOVE.
 - **Quality:**
 
 1.  Alts must be **valid** (GA/TP).
