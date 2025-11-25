@@ -46,14 +46,14 @@ Report ONLY items requiring action (UPDATE/REMOVE). No valid ADRs.
 
 **Rules:**
 
-- **Scope:** Use Dict. HIERARCHY: **Abstract strategies** (e.g. Sizing, Isolation) go in `OCP-BASE`. **Concrete implementation details** (e.g. LB Topology, IPAM, CIDRs) belong in specific files (e.g. `OCP-NET`) even if they apply generally.
-- **Exclusions:** Check `adr_exclusions.md`. If match, mark REMOVE.
-- **Duplicate:** If concept exists elsewhere, mark REMOVE.
+- **Scope:** Use Dict. HIERARCHY: `OCP-BASE`=**Cross-Cutting** (Topology). **Domain strategies** go in specific files (`OCP-NET`). **EXCEPTION:** If a Network/Storage/Security decision is tied to **Physical Hardware, BIOS, or OS Installation (Day 0)**, it belongs in `OCP-BM` or `OCP-BASE`, NOT the domain file.
+- **Exclusions:** Check `adr_exclusions.md`. If match, REMOVE.
+- **Duplicate:** If concept exists elsewhere, REMOVE.
 - **Quality:**
 
 1.  Alts must be **valid** (GA/TP).
-2.  **Exception:** "Right vs Wrong" or "Procedural" choices ARE valid if they document a **Security Policy**, **Risk Acceptance**, **Deployment Guardrail**, or **Simplicity vs Capability** trade-off.
-3.  **Constraint vs Decision:** Keep primary decision (e.g. Storage Selection) even if option forces constraint. ONLY remove if ADR _is_ the constraint (e.g. Recreate vs RollingUpdate).
+2.  **Exception:** "Right vs Wrong" valid ONLY for **Security**, **Risk**, **Deployment Guardrails**, or **Simplicity vs Capability**.
+3.  **Constraint vs Decision:** Keep primary decision (e.g. Storage) even if option forces constraint. ONLY remove if ADR _is_ the constraint (e.g. Recreate vs RollingUpdate).
 
 - **Format:** Alts=titles. Just/Impl=`**[Title]:** [Text]`.
 - **Parties:** Roles from `adr_parties_role_dictionnary.md`.
