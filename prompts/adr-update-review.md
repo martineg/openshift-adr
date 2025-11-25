@@ -47,14 +47,14 @@ Report ONLY items requiring action (UPDATE/REMOVE). No valid ADRs.
 
 **Rules:**
 
-- **Scope:** Use Dict. HIERARCHY: `OCP-BASE`=Cross-Cutting. Domain strategies=Specific files. **EXCEPTION:** Day 0/Physical/BIOS/OS Install decisions belong in `OCP-BM` or `OCP-BASE`, NOT the domain file.
+- **Scope:** Use Dict. HIERARCHY: `OCP-BASE`=Cross-Cutting. Domain strategies=Specific files. **NOTE:** Keep domain features (e.g. Live Migration) in Domain files, even if dependent on Platform Topology. **EXCEPTION:** Day 0/Physical/BIOS/OS Install decisions go in `OCP-BM` or `OCP-BASE`.
 - **Exclusions:** Check `adr_exclusions.md`. Match=REMOVE.
 - **Duplicate:** Concept exists elsewhere=REMOVE.
 - **Template:** **#TODO** is VALID.
 - **Quality:**
 
 1.  Alts must be **valid** (GA/TP).
-2.  **Exception:** "Right vs Wrong" valid ONLY for **Security**, **Risk**, **Deployment Guardrails**, or **Simplicity vs Capability**.
+2.  **Exception:** "Right vs Wrong" valid ONLY for **Security**, **Risk**, **Guardrails**, or **Simplicity vs Capability**.
 3.  **Constraint vs Decision:** Keep primary decision (e.g. Storage) even if option forces constraint. ONLY remove if ADR _is_ the constraint.
 
 - **Format:** Alts=titles. Just/Impl=`**[Title]:** [Text]`.
