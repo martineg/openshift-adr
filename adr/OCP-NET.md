@@ -1069,7 +1069,7 @@ Access Control for Cluster Metrics Port (TCP 1936)
 Should the Ingress load balancer be configured to expose TCP port 1936, or should access be restricted to prevent external exposure of internal host-level metrics and statistics?
 
 **Issue or Problem**
-TCP port 1936 is used for host level services (Metrics) and is accessible for an OpenShift Container Platform cluster because each control plane node needs access to this port. Avoid using the Ingress load balancer to expose this port, as doing so might result in the exposure of sensitive information related to Ingress Controllers.
+TCP port 1936 exposes sensitive host-level statistics and metrics related to Ingress Controllers and other host services. Exposing this port externally via the Ingress load balancer risks the disclosure of this sensitive information, necessitating a policy decision on access control.
 
 **Assumption**
 N/A
