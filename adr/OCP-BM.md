@@ -2213,7 +2213,7 @@ N/A.
 
 - No Automated Remediation
 - Node Health Check (NHC) with Self Node Remediation
-- Node Health Check (NHC) with BareMetal Operator (BMO) Remediation
+- Node Health Check (NHC) with BareMetal Operator (BMO) Remediation (TP)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -2222,13 +2222,13 @@ N/A.
 
 - **No Automated Remediation:** To rely on manual detection (via monitoring) and manual intervention by an operator to troubleshoot and reboot physical nodes.
 - **Node Health Check (NHC) with Self Node Remediation:** To deploy the Node Health Check operator, which monitors node health. When a node fails, the `SelfNodeRemediation` agent on other nodes will fence the unhealthy node and restart its workloads elsewhere.
-- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** This is the most robust, fully automated solution. It attempts to recover the node by "turning it off and on again" via its BMC.
+- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation (TP):** This is the most robust, fully automated solution. It attempts to recover the node by "turning it off and on again" via its BMC.
 
 **Implications**
 
 - **No Automated Remediation:** High operational burden and slow recovery times. Not recommended for a production cluster.
 - **Node Health Check (NHC) with Self Node Remediation:** Provides software-level remediation. It ensures workloads are moved but does not fix the underlying node, which will remain unavailable until manually repaired.
-- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation:** This requires a reliable IPI installation and stable Redfish/IPMI connectivity. The BMO facilitates the Cluster API management of compute nodes (TP) for dynamic lifecycle management. It also enables access to advanced operational features, such as firmware management via HostFirmwareSettings/HostFirmwareComponents, including live updates (TP).
+- **Node Health Check (NHC) with BareMetal Operator (BMO) Remediation (TP):** This requires a reliable IPI installation and stable Redfish/IPMI connectivity. The BMO facilitates the **Cluster API management of compute nodes (TP)** for dynamic lifecycle management. It also enables access to advanced operational features, such as firmware management via HostFirmwareSettings/HostFirmwareComponents, including live updates (TP).
 
 **Agreeing Parties**
 
