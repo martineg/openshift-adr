@@ -9,7 +9,7 @@ OCP installation method on baremetal infrastructure
 Which OCP installation method will be used to deploy a cluster on baremetal infrastructure?
 
 **Issue or Problem**
-The choice of installation method for Bare Metal impacts the level of automation, network prerequisites (like PXE), and how the cluster interacts with the physical hardware.
+The choice of installation method for Bare Metal impacts the level of automation, network prerequisites (like PXE), and how the cluster interacts with the physical hardware. This choice also dictates which disk encryption methods are technically feasible.
 
 **Assumption**
 N/A
@@ -27,17 +27,17 @@ N/A
 
 **Justification**
 
-- **User-Provisioned Infrastructure (UPI):** Requires the user to manually provision and configure all cluster infrastructure (including networking, DNS, load balancers, and storage) and install Red Hat Enterprise Linux CoreOS (RHCOS) on hosts using generated Ignition configuration files. This approach offers maximum customizability. Required if both TPM and Tang for disk encryption is required.
-- **Installer-Provisioned Infrastructure (IPI):** Delegates the infrastructure bootstrapping and provisioning to the installation program. For bare metal, this process automates provisioning using the host’s Baseboard Management Controller (BMC) by leveraging the Bare Metal Operator (BMO) features.
-- **Agent-based Installer (ABI):** Provides the convenience of the Assisted Installer but enables installation locally for disconnected environments or restricted networks. It uses a lightweight agent booted from a discovery ISO to facilitate provisioning.
-- **Assisted Installer:** A web-based SaaS service designed for connected networks that simplifies deployment by providing a user-friendly interface, smart defaults, and pre-flight validations, generating a discovery image for the bare metal installation.
-- **Image-based Installer (IBI):** Significantly reduces the deployment time of single-node OpenShift clusters by enabling the preinstallation of configured and validated instances on target hosts, supporting rapid reconfiguration and deployment even in disconnected environments.
+- **User-Provisioned Infrastructure (UPI):** Leverages existing data center tools, provides maximum control and customizability over the cluster infrastructure and installation prerequisites.
+- **Installer-Provisioned Infrastructure (IPI):** Delegates the infrastructure bootstrapping and provisioning to the installation program, automating provisioning using the Bare Metal Operator (BMO) features.
+- **Agent-based Installer (ABI):** Provides the convenience of the Assisted Installer but enables installation locally for disconnected environments or restricted networks.
+- **Assisted Installer:** A web-based SaaS service designed for connected networks that simplifies deployment via a user-friendly interface, smart defaults, and pre-flight validations.
+- **Image-based Installer (IBI):** Significantly reduces the deployment time of Single Node OpenShift clusters by enabling the preinstallation of configured and validated instances on target hosts.
 
 **Implications**
 
-- **User-Provisioned Infrastructure (UPI):** Implies the highest operational overhead because the user must manage and maintain all infrastructure resources (Load Balancers, Networking, Storage) throughout the cluster lifecycle. It requires additional validation and configuration to use the Machine API capabilities. Supports No encryption, TPM v2 Only, Tang Server Only, and the TPM v2 and Tang Server Combination for disk encryption.
-- **Installer-Provisioned Infrastructure (IPI):** Requires integration with the BMO and related provisioning infrastructure. Once installed, it allows OpenShift Container Platform to manage the operating system and supports using the Machine API for node lifecycle management. Supports only TPM for disk encryption, excluding Tang Server Only and the combined TPM/Tang method.
-- **Agent-based Installer (ABI):** Ideal for disconnected environments and provides features like integrated tools for configuring nodes. Supports only TPM for disk encryption, excluding Tang Server Only and the combined TPM/Tang method.
+- **User-Provisioned Infrastructure (UPI):** Implies the highest operational overhead because the user must manage and maintain all infrastructure resources. UPI is the only method that supports Tang Server Only and the TPM v2 and Tang Server Combination for disk encryption.
+- **Installer-Provisioned Infrastructure (IPI):** Requires integration with the BMO and related provisioning infrastructure. Supports only TPM for disk encryption, excluding Tang Server Only and the combined TPM/Tang method.
+- **Agent-based Installer (ABI):** Ideal for disconnected environments. Supports only TPM for disk encryption, excluding Tang Server Only and the combined TPM/Tang method.
 - **Assisted Installer:** Requires a working internet connection during the preparation phase. Supports only TPM for disk encryption, excluding Tang Server Only and the combined TPM/Tang method.
 - **Image-based Installer (IBI):** Primarily intended for Single-Node OpenShift (SNO) cluster deployments. Does not support disk encryption.
 
@@ -658,8 +658,8 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 **Implications**
 
 - **Validate using SHA512 Hash over HTTP/S:** Requires the administrator to obtain the SHA512 digest for each Ignition config file and pass it using the `--ignition-hash` option to `coreos-installer`.
-- **Validate using HTTPS TLS/CA Trust (without explicit hash):** If using a custom CA, requires adding the internal certificate authority (CA) to the system trust store via `coreos-installer` before installation.
-- **Disable Integrity Validation (Insecure):** **Not recommended for production.** This leaves the node vulnerable to accepting a compromised Ignition configuration file if the network or download URL is manipulated (Man-in-the-Middle).
+- **Validate using HTTPS TLS/CA Trust (without explicit hash):** If using a custom CA, requires adding the internal certificate authority (CA) to the system trust store via `coreos-installer` before installation to ensure the live installer can securely fetch the configuration.
+- **Disable Integrity Validation (Insecure):** Not recommended for production. This leaves the node vulnerable to accepting a compromised Ignition configuration file if the network or download URL is manipulated (Man-in-the-Middle).
 
 **Agreeing Parties**
 
@@ -941,7 +941,7 @@ N/A
 
 **Implications**
 
-- **DHCP:** Requires a highly available DHCP server, ideally with reservations. Simplifies node scaling/replacement.
+- **DHCP:** Requires a highly available DHCP server, ideally with reservations. It is recommended that the DHCP server be configured to provide persistent IP addresses, DNS server information, and hostnames to all cluster machines for long-term management. Simplifies node scaling/replacement.
 - **Static IP Configuration:** Increases manual configuration effort during install and scaling. Requires a robust external IPAM process to avoid conflicts.
 
 **Agreeing Parties**
@@ -1603,12 +1603,12 @@ Installation Boot Device is Local Device.
 **Justification**
 
 - **Configure and use supported Hardware RAID volumes for the installation drive:** Leveraging hardware RAID provides disk redundancy and potential performance improvements managed entirely by the hardware controller/BMC interface, which is supported for specific configurations.
-- **Configure the installation drive without using Hardware RAID:** This simplifies the underlying storage configuration and avoids potential compatibility issues, focusing solely on software volumes, although internal cluster components like etcd manage their own redundancy.
+- **Configure the installation drive without using Hardware RAID:** This simplifies the underlying storage configuration and avoids potential compatibility issues, focusing solely on single disk volumes. This relies on internal cluster components like etcd managing their own redundancy.
 
 **Implications**
 
 - **Configure and use supported Hardware RAID volumes for the installation drive:** Requires ensuring the hardware, BMC firmware, and RAID levels match the specific configurations officially supported for use as the installation drive.
-- **Configure the installation drive without using Hardware RAID:** Simplifies the underlying storage configuration, avoiding configuration complexities, but relies solely on software volumes for redundancy (e.g., etcd).
+- **Configure the installation drive without using Hardware RAID:** Simplifies the underlying storage configuration, avoiding configuration complexities, but **software RAID is not supported for the installation drive.** This relies solely on redundancy provided by software volumes (e.g., etcd).
 
 **Agreeing Parties**
 
@@ -1729,7 +1729,7 @@ The cluster will utilize large disk sizes (e.g., > 100GB) and may host applicati
 **Implications**
 
 - **Dedicated Partition for /var:** This configuration increases complexity during the installation process, as it requires setting up a custom MachineConfig manifest (e.g., using a Butane config).
-  - **CONSTRAINT NOTE:** When adding a data partition to the boot disk, a minimum offset value of **25000 mebibytes is recommended**; if the offset is smaller than this minimum, the resulting root file system will be too small, risking future reinstalls of RHCOS overwriting the data partition.
+  - **CONSTRAINT NOTE:** When adding a data partition to the boot disk, a **minimum offset value of 25000 mebibytes is recommended**; if the offset is smaller than this minimum, the resulting root file system will be too small, risking future reinstalls of RHCOS overwriting the data partition.
   - Additionally, mixing different instance types for compute nodes is not supported if those instance types do not have the same storage device name.
 - **Co-locate /var on the Root Partition (Default):** This configuration carries a high risk of disk exhaustion affecting system stability if container usage, logs, or other system data within `/var` is heavy or unpredictable.
 
@@ -1965,7 +1965,7 @@ Internal Image Registry Management State is set to "Managed".
 - Dedicated Object Storage (S3 API Compatible)
 - ReadWriteMany (RWX) Access Mode (PVC)
 - ReadWriteOnce (RWO) Access Mode (PVC)
-- Ephemeral Storage (EmptyDir)
+- Ephemeral Storage (EmptyDir) (Non-Production)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -1975,14 +1975,14 @@ Internal Image Registry Management State is set to "Managed".
 - **Dedicated Object Storage (S3 API Compatible):** This approach leverages object storage (such as Red Hat OpenShift Data Foundation's Multicloud Gateway or an external S3 provider) for the image repository. Object storage is highly scalable and natively supports high availability (HA) required for image registries. ODF is the preferred option when Object (MCG) storage capabilities are necessary.
 - **ReadWriteMany (RWX) Access Mode (PVC):** This access mode is required to deploy an image registry that supports high availability with two or more replicas. It is typically implemented using shared file system storage.
 - **ReadWriteOnce (RWO) Access Mode (PVC):** This access mode is supported only when the image registry has one replica and explicitly requires the `Recreate` rollout strategy during upgrades.
-- **Ephemeral Storage (EmptyDir):** This simplifies configuration and is available only for non-production clusters. It minimizes setup complexity as no underlying persistent storage solution is required.
+- **Ephemeral Storage (EmptyDir) (Non-Production):** This simplifies configuration and is available only for non-production clusters. It minimizes setup complexity as no underlying persistent storage solution is required.
 
 **Implications**
 
 - **Dedicated Object Storage (S3 API Compatible):** Requires the installation and maintenance of an Object Storage solution (e.g., ODF/MCG). This decouples image storage scalability from local block or file storage limitations.
 - **ReadWriteMany (RWX) Access Mode (PVC):** Requires coordination to provision storage that supports RWX access mode, which is necessary for HA scaled registries.
 - **ReadWriteOnce (RWO) Access Mode (PVC):** The cluster must accept reduced resiliency, as the registry cannot have more than one replica. Block storage volumes, which typically use RWO, are supported but explicitly not recommended for use with the image registry on production clusters.
-- **Ephemeral Storage (EmptyDir):** **All container images are lost** if the registry pod restarts or the node fails. This configuration must be used for only non-production clusters (e.g., Lab/Sandbox) where image rebuilds are acceptable.
+- **Ephemeral Storage (EmptyDir) (Non-Production):** **All container images are lost** if the registry pod restarts or the node fails. This configuration must be used for only non-production clusters (e.g., Lab/Sandbox) where image rebuilds are acceptable.
 
 **Agreeing Parties**
 

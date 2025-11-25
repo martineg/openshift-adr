@@ -1,3 +1,5 @@
+# ARCHITECTURE DECISION RECORDS FOR: OpenShift Virtualization
+
 ## VIRT-01
 
 **Title**
@@ -22,7 +24,7 @@ OpenShift Virtualization will be used.
 
 **Justification**
 
-- **Live Migration Enabled:** This ensures business continuity for virtualized workloads. It allows VMs to seamlessly move to another node during hardware maintenance, upgrades, or node failures without service interruption.
+- **Live Migration Enabled:** This ensures business continuity for virtualized workloads. It allows VMs to seamlessly move to another node during maintenance, upgrades, or node failures without service interruption. This capability requires that the cluster is installed with **two or more worker nodes**.
 - **Live Migration Disabled:** This simplifies the infrastructure requirements for environments where VM downtime during maintenance is acceptable (e.g., ephemeral labs, edge sites, or cost-constrained environments).
 
 **Implications**

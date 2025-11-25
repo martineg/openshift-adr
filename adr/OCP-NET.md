@@ -778,7 +778,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 OVN-Kubernetes Internal Masquerade Subnet Configuration
 
 **Architectural Question**
-Should the default internal IPv4/IPv6 masquerade subnet used by OVN-Kubernetes for host-to-service traffic be modified from its default values?
+How will the default internal IPv4/IPv6 masquerade subnet used by OVN-Kubernetes for host-to-service traffic be modified from its default values?
 
 **Issue or Problem**
 The internal masquerade subnet is used internally by OVN-Kubernetes to enable host-to-service traffic. This internal range might conflict with other special-purpose CIDRs or restricted network ranges within the corporate environment.
@@ -788,7 +788,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 **Alternatives**
 
-- Use Default Internal Masquerade Subnet (/17 for IPv4)
+- Use Default Internal Masquerade Subnet (169.254.0.0/17 for IPv4)
 - Specify Custom Internal Masquerade Subnet
 
 **Decision**
@@ -796,12 +796,12 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 **Justification**
 
-- **Use Default Internal Masquerade Subnet (/17 for IPv4):** This simplifies configuration by relying on the standard, known internal IP ranges used by OVN-Kubernetes.
+- **Use Default Internal Masquerade Subnet (169.254.0.0/17 for IPv4):** This simplifies configuration by relying on the standard, known internal IP ranges used by OVN-Kubernetes.
 - **Specify Custom Internal Masquerade Subnet:** This is required if the default range conflicts with existing infrastructure to ensure stable host-to-service communication.
 
 **Implications**
 
-- **Use Default Internal Masquerade Subnet (/17 for IPv4):** This simplifies configuration by relying on the standard, known internal IP ranges used by OVN-Kubernetes. There is a risk of conflict with other special-purpose CIDRs. Note that clusters deployed with modern installation programs use a larger, expanded default IPv4 masquerade subnet (`169.254.0.0/17`) than clusters that have been upgraded, which retain their original smaller subnet (`/29`).
+- **Use Default Internal Masquerade Subnet (169.254.0.0/17 for IPv4):** This simplifies configuration by relying on the standard, known internal IP ranges used by OVN-Kubernetes. There is a risk of conflict with other special-purpose CIDRs.
 - **Specify Custom Internal Masquerade Subnet:** Requires selecting a new, non-conflicting IP range and providing it via the `gatewayConfig.ipv4` or `gatewayConfig.ipv6` object configurations.
 
 **Agreeing Parties**
@@ -954,7 +954,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 **Alternatives**
 
 - Restricted IP Forwarding (New Install Default)
-- Global IP Forwarding (Upgrade Default)
+- Global IP Forwarding (Compatibility/Upgrade Default)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -962,12 +962,12 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 **Justification**
 
 - **Restricted IP Forwarding (New Install Default):** Enhances the security posture of new installations by setting IP forwarding to drop all non-Kubernetes related traffic on OVN-Kubernetes managed interfaces. This aligns with the Principle of Least Privilege.
-- **Global IP Forwarding (Upgrade Default):** Allows forwarding of all IP traffic. This may be required for compatibility with legacy services or external components relying on broader host-level routing rules.
+- **Global IP Forwarding (Compatibility/Upgrade Default):** Allows forwarding of all IP traffic. This mode is necessary for compatibility with legacy services or external components relying on broader host-level routing rules.
 
 **Implications**
 
 - **Restricted IP Forwarding (New Install Default):** Requires careful planning to ensure that specialized host traffic that needs IP forwarding is correctly handled outside of OVN-Kubernetes managed interfaces.
-- **Global IP Forwarding (Upgrade Default):** Reduces security isolation compared to the restricted setting.
+- **Global IP Forwarding (Compatibility/Upgrade Default):** Reduces security isolation compared to the restricted setting, as non-Kubernetes traffic is forwarded. This mode is necessary for compatibility with legacy services or external components that rely on broader host-level routing rules being enforced by the node's kernel routing table.
 
 **Agreeing Parties**
 
