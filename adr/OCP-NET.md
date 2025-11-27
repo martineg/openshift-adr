@@ -3,6 +3,47 @@
 ## OCP-NET-01
 
 **Title**
+IP Address Family Selection (IPv4 vs. Dual-Stack)
+
+**Architectural Question**
+Will the OpenShift cluster networking stack operate using IPv4 only, IPv6 only, or Dual-Stack (IPv4/IPv6)?
+
+**Issue or Problem**
+The choice of IP address family dictates the fundamental network architecture. Dual-stack provides future-proofing and supports 5G/Telco use cases but significantly increases configuration complexity and IP address consumption. IPv4-only is the standard for enterprise compatibility.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **IPv4 Only:** The cluster uses standard IPv4 addressing for all node, pod, and service networks.
+- **Dual-Stack (IPv4/IPv6):** The cluster assigns both IPv4 and IPv6 addresses to nodes, pods, and services.
+- **IPv6 Only:** The cluster operates purely on IPv6.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **IPv4 Only:** Simplest configuration with the widest compatibility for existing enterprise tools, firewalls, and auxiliary services.
+- **Dual-Stack (IPv4/IPv6):** Required for modern edge/telco workloads (e.g., 5G RAN) or environments transitioning to IPv6. OpenShift allocates both families to pods, allowing seamless communication with legacy IPv4 and modern IPv6 endpoints.
+- **IPv6 Only:** Use cases are limited to specific environments mandated to eliminate IPv4 entirely.
+
+**Implications**
+
+- **IPv4 Only:** Limited address space (NAT required). No native IPv6 connectivity for pods.
+- **Dual-Stack:** Requires defining CIDRs for **both** families in all network configurations (Machine, Pod, Service, Cluster Network). Underlying physical network must route both protocols.
+- **IPv6 Only:** Requires a fully IPv6-capable environment (DNS, DHCP, Routing). Legacy IPv4-only external services may be unreachable without translation gateways.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+## OCP-NET-02
+
+**Title**
 Machine IP Range
 
 **Architectural Question**
@@ -40,7 +81,7 @@ N/A
 
 ---
 
-## OCP-NET-02
+## OCP-NET-03
 
 **Title**
 DNS Forwarding Configuration
@@ -80,7 +121,7 @@ N/A
 
 ---
 
-## OCP-NET-03
+## OCP-NET-04
 
 **Title**
 Node Name Resolution Strategy (DNS Search Zone vs FQDN)
@@ -120,7 +161,7 @@ Nodes might be distributed across different network zones/failure domains.
 
 ---
 
-## OCP-NET-04
+## OCP-NET-05
 
 **Title**
 Cluster Core Time Synchronization Source
@@ -160,7 +201,7 @@ N/A
 
 ---
 
-## OCP-NET-05
+## OCP-NET-06
 
 **Title**
 Outbound Connectivity (External Firewall/Proxy)
@@ -201,7 +242,7 @@ Cluster is in a connected environment.
 
 ---
 
-## OCP-NET-06
+## OCP-NET-07
 
 **Title**
 Outbound HTTPS Trust Management Strategy (Proxy/Custom CA)
@@ -242,7 +283,7 @@ Outbound Connectivity utilizes an HTTPS proxy or connects to external services r
 
 ---
 
-## OCP-NET-07
+## OCP-NET-08
 
 **Title**
 Custom CA Trust Bundle Application Policy
@@ -283,7 +324,7 @@ A trust bundle via additionalTrustBundle configuration is used to configure Cert
 
 ---
 
-## OCP-NET-08
+## OCP-NET-09
 
 **Title**
 External Firewall Rule Granularity (Connected Environments)
@@ -324,7 +365,7 @@ Cluster is in a connected environment and outbound connectivity is set to Direct
 
 ---
 
-## OCP-NET-09
+## OCP-NET-10
 
 **Title**
 Load Balancer Strategy (API & Ingress)
@@ -365,7 +406,7 @@ N/A
 
 ---
 
-## OCP-NET-10
+## OCP-NET-11
 
 **Title**
 API and Application Ingress Load Balancer Topology Strategy
@@ -406,7 +447,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-NET-11
+## OCP-NET-12
 
 **Title**
 Application Ingress Load Balancer Session Persistence Mode
@@ -447,7 +488,7 @@ N/A
 
 ---
 
-## OCP-NET-12
+## OCP-NET-13
 
 **Title**
 Pod Network CIDR Selection
@@ -487,7 +528,7 @@ N/A
 
 ---
 
-## OCP-NET-13
+## OCP-NET-14
 
 **Title**
 Service Network CIDR Selection
@@ -527,7 +568,7 @@ N/A
 
 ---
 
-## OCP-NET-14
+## OCP-NET-15
 
 **Title**
 Ingress Controller Strategy
@@ -571,7 +612,7 @@ N/A
 
 ---
 
-## OCP-NET-15
+## OCP-NET-16
 
 **Title**
 Ingress Controller Replica Count
@@ -611,7 +652,7 @@ N/A
 
 ---
 
-## OCP-NET-16
+## OCP-NET-17
 
 **Title**
 CNI Plugin Selection (Platform Specific)
@@ -652,7 +693,7 @@ N/A
 
 ---
 
-## OCP-NET-17
+## OCP-NET-18
 
 **Title**
 Advanced CNI Parameter Configuration Strategy (Install-Config vs Custom Manifest)
@@ -693,7 +734,7 @@ Advanced network configuration (e.g., OVN-Kubernetes customization) is required.
 
 ---
 
-## OCP-NET-18
+## OCP-NET-19
 
 **Title**
 OVN-Kubernetes Overlay Network Parameter Configuration
@@ -733,7 +774,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-19
+## OCP-NET-20
 
 **Title**
 OVN-Kubernetes Internal Subnet Configuration Strategy
@@ -773,7 +814,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-20
+## OCP-NET-21
 
 **Title**
 OVN-Kubernetes Internal Masquerade Subnet Configuration
@@ -813,7 +854,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-21
+## OCP-NET-22
 
 **Title**
 OVN-Kubernetes Egress Traffic Routing Via Host Network Stack
@@ -853,7 +894,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-22
+## OCP-NET-23
 
 **Title**
 OVN-Kubernetes IPsec Encryption Mode
@@ -897,7 +938,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-23
+## OCP-NET-24
 
 **Title**
 OVN-Kubernetes Cluster Route Advertisement Strategy
@@ -938,7 +979,7 @@ N/A
 
 ---
 
-## OCP-NET-24
+## OCP-NET-25
 
 **Title**
 OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
@@ -979,7 +1020,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-25
+## OCP-NET-26
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
@@ -1020,7 +1061,7 @@ N/A
 
 ---
 
-## OCP-NET-26
+## OCP-NET-27
 
 **Title**
 SSL/TLS Termination Strategy
@@ -1063,7 +1104,7 @@ N/A
 
 ---
 
-## OCP-NET-27
+## OCP-NET-28
 
 **Title**
 Access Control for Cluster Metrics Port (TCP 1936)
@@ -1104,7 +1145,7 @@ N/A
 
 ---
 
-## OCP-NET-28
+## OCP-NET-29
 
 **Title**
 Default Network Policy (Pod Isolation)
@@ -1148,7 +1189,7 @@ N/A
 
 ---
 
-## OCP-NET-29
+## OCP-NET-30
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -1191,7 +1232,7 @@ Cluster uses OVN-Kubernetes CNI.
 
 ---
 
-## OCP-NET-30
+## OCP-NET-31
 
 **Title**
 OVN-Kubernetes Network Policy Audit Log Destination
@@ -1235,7 +1276,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-31
+## OCP-NET-32
 
 **Title**
 Egress IP Address Strategy
@@ -1279,7 +1320,7 @@ N/A
 
 ---
 
-## OCP-NET-32
+## OCP-NET-33
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -1324,7 +1365,7 @@ N/A
 
 ---
 
-## OCP-NET-33
+## OCP-NET-34
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection
@@ -1365,7 +1406,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-34
+## OCP-NET-35
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy
@@ -1406,7 +1447,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-35
+## OCP-NET-36
 
 **Title**
 SR-IOV Virtual Function Bonding Mechanism
