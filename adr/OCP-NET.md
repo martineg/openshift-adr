@@ -24,13 +24,13 @@ N/A
 
 **Justification**
 
-- **Default Machine Network CIDR:** Uses the default CIDR suggested by the installation program (Platform Specific, e.g., 10.0.0.0/16 for IPI). This simplifies setup if the range does not conflict with existing networks.
+- **Default Machine Network CIDR:** Minimizes configuration complexity if the range does not conflict with existing networks.
 - **Custom Machine Network CIDR:** Required if the default range conflicts with existing data center networks, or if specific IP address schemes must be followed for compliance or network segmentation purposes.
 
 **Implications**
 
 - **Default Machine Network CIDR:** Requires verification that this range is unique and non-overlapping within the organizational network.
-- **Custom Machine Network CIDR:** This range must be routable within the organization's existing network infrastructure (firewalls, routers) to ensure control plane and worker nodes can communicate with infrastructure services (DNS, NTP).
+- **Custom Machine Network CIDR:** This range must be routable within the organization's existing network infrastructure (firewalls, routers) to ensure control plane and worker nodes can communicate with infrastructure services (DNS, NTP). **CRITICAL:** The custom range chosen must not overlap with the `172.17.0.0/16` CIDR range, which is reserved by libVirt.
 
 **Agreeing Parties**
 
@@ -661,7 +661,7 @@ Advanced CNI Parameter Configuration Strategy (Install-Config vs Custom Manifest
 Which configuration phase—Phase 1 (Install-Config) or Phase 2 (Custom Manifest)—must be used to define highly specialized Container Network Interface (CNI) parameters that are unavailable in the initial installation file?
 
 **Issue or Problem**
-OpenShift installation splits network configuration into two phases. Phase 1 is limited to high-level network fields, forcing reliance on Phase 2 for specialized CNI parameters (e.g., MTU, IPsec mode). Relying on Phase 2 requires creating extra files, and critically, Phase 2 configurations cannot override conflicting settings already defined in Phase 1.
+OpenShift installation splits network configuration into two phases. Phase 1 is limited to high-level network fields, forcing reliance on Phase 2 for specialized CNI parameters (e.g., MTU, IPsec mode). Relying on Phase 2 requires creating extra files, and critically, Phase 2 configurations cannot override conflicting settings already defined in Phase 1. Furthermore, using different `clusterNetwork.hostPrefix` values for multiple networks breaks OVN-Kubernetes routing.
 
 **Assumption**
 Advanced network configuration (e.g., OVN-Kubernetes customization) is required.
@@ -682,6 +682,7 @@ Advanced network configuration (e.g., OVN-Kubernetes customization) is required.
 **Implications**
 
 - **Configure CNI Parameters via Install-Config (Phase 1 - High-Level Fields Only):** The available configuration options are limited to the high-level network fields present in the initial `install-config.yaml`.
+  - **CRITICAL CONSTRAINT:** If deploying objects across multiple cluster networks, the `clusterNetwork.hostPrefix` parameter must be set to the same value for each network, or the OVN-Kubernetes network plugin cannot effectively route traffic between nodes.
 - **Configure CNI Parameters via Custom Manifests (Phase 2 - Specialized/Advanced Fields Only):** Requires manually creating and maintaining a supplementary manifest file (`cluster-network-03-config.yml`). Furthermore, administrators must be aware that the values defined in these custom manifests during Phase 2 cannot override values already specified in the `install-config.yaml` file (Phase 1).
 
 **Agreeing Parties**
@@ -778,7 +779,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 OVN-Kubernetes Internal Masquerade Subnet Configuration
 
 **Architectural Question**
-How will the default internal IPv4/IPv6 masquerade subnet used by OVN-Kubernetes for host-to-service traffic be modified from its default values?
+Which IP address range will be used as the internal IPv4/IPv6 masquerade subnet by OVN-Kubernetes for host-to-service traffic?
 
 **Issue or Problem**
 The internal masquerade subnet is used internally by OVN-Kubernetes to enable host-to-service traffic. This internal range might conflict with other special-purpose CIDRs or restricted network ranges within the corporate environment.
@@ -961,8 +962,8 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 **Justification**
 
-- **Restricted IP Forwarding (New Install Default):** Enhances the security posture of new installations by setting IP forwarding to drop all non-Kubernetes related traffic on OVN-Kubernetes managed interfaces. This aligns with the Principle of Least Privilege.
-- **Global IP Forwarding (Compatibility/Upgrade Default):** Allows forwarding of all IP traffic. This mode is necessary for compatibility with legacy services or external components relying on broader host-level routing rules.
+- **Restricted IP Forwarding (New Install Default):** This enhances the security posture of new installations by setting IP forwarding to drop all non-Kubernetes related traffic on OVN-Kubernetes managed interfaces. This aligns with the Principle of Least Privilege.
+- **Global IP Forwarding (Compatibility/Upgrade Default):** This allows forwarding of all IP traffic. This mode is necessary for compatibility with legacy services or external components relying on broader host-level routing rules.
 
 **Implications**
 

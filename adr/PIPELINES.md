@@ -45,7 +45,7 @@ A CI/CD solution is required for building and deploying applications.
 
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: DevOps Lead
+- Person: #TODO#, Role: DevOps Engineer
 
 ---
 
@@ -129,7 +129,7 @@ Performance must be maintained by limiting the total simultaneous compute resour
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: Infra Leader
 - Person: #TODO#, Role: OCP Platform Owner
-- Person: #TODO#, Role: Operation Expert
+- Person: #TODO#, Role: Operations Expert
 
 ---
 

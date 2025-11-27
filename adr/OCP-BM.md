@@ -74,7 +74,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 **Justification**
 
 - **Standardize on Red Hat Enterprise Linux CoreOS (RHCOS) workers:** This ensures the standard immutable OS image is used and allows the Machine Config Operator to manage the OS lifecycle via cluster upgrades, simplifying ongoing maintenance and consistency.
-- **Standardize on Red Hat Enterprise Linux (RHEL) workers:** This allows the use of a traditional Linux OS (e.g., RHEL 8.6+ or RHEL 9 depending on OCP version), providing maximum customizability for specialized applications or legacy configurations, and leveraging existing enterprise RHEL operational toolchains.
+- **Standardize on Red Hat Enterprise Linux (RHEL) workers:** This allows the use of a traditional Linux OS, providing maximum customizability for specialized applications or legacy configurations, and leveraging existing enterprise RHEL operational toolchains.
 
 **Implications**
 
@@ -774,7 +774,7 @@ N/A
 
 **Justification**
 
-- **Source artifacts via openshift-install coreos print-stream-json utility (Recommended):** The recommended way to obtain the correct version of RHCOS images is from the output of the `openshift-install` command. This ensures compatibility with the specific OpenShift Container Platform version being installed.
+- **Source artifacts via openshift-install coreos print-stream-json utility (Recommended):** The recommended way to obtain the correct version of RHCOS images is from the output of the `openshift-install` command. This ensures the necessary compatibility is maintained.
 - **Source artifacts directly from the RHCOS image mirror page:** While possible, this method requires manually verifying that the downloaded images are the highest version less than or equal to the OpenShift Container Platform version being installed.
 
 **Implications**
@@ -1064,7 +1064,7 @@ N/A
 **Implications**
 
 - **Configure br-ex using the configure-ovs.sh Shell Script (Single NIC/Simple Default):** This script does not support making post-installation changes to the bridge. Using the script for advanced configurations may result in the bridge failing to connect multiple network interfaces.
-- **Configure br-ex using NMState Configuration embedded in a MachineConfig:** Requires defining and managing an NMState configuration file and corresponding MachineConfig object. This process involves base64 encoding the configuration and embedding it in the manifest.
+- **Configure br-ex using NMState Configuration embedded in a MachineConfig:** Requires defining and managing an NMState configuration file and corresponding MachineConfig object. This process involves base64 encoding the configuration and embedding it in the manifest. The NMState configuration must include `auto-route-metric: 48` to ensure the `br-ex` default route has the highest precedence, preventing routing conflicts.
 
 **Agreeing Parties**
 
@@ -1088,7 +1088,7 @@ Should NMState configuration, embedded via MachineConfig during bare metal provi
 When defining customized network configurations via NMState embedded in MachineConfig, a standard methodology is required to manage configuration scope, balancing the simplicity of a global file against the need for node-specific overrides.
 
 **Assumption**
-Network configuration requires NMState (OCP-BM-26) and is delivered via MachineConfig.
+Network configuration requires NMState and is delivered via MachineConfig.
 
 **Alternatives**
 
@@ -1232,7 +1232,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 - **Secure Boot will not be enabled:** This approach might fail to meet security or regulatory compliance standards that require verifying the integrity of the boot chain.
 - **Secure Boot will be enabled manually:** Requires manual configuration of UEFI boot mode and Secure Boot settings on each control plane and worker node. This is the only supported method when using UPI deployment. Furthermore, Red Hat explicitly supports this manual configuration for IPI only when the installation uses Redfish virtual media.
-- **Secure Boot will be enabled through Managed Secure Boot (TP):** This feature is only supported on specific hardware models: 10th generation HPE hardware and 13th generation Dell hardware running firmware version 2.75.75.75 or greater. This capability is currently designated as a Technology Preview (TP) feature.
+- **Secure Boot will be enabled through Managed Secure Boot (TP):** This capability is currently designated as a Technology Preview (TP) feature and is only supported on specific, verified hardware models.
 
 **Agreeing Parties**
 
@@ -1260,8 +1260,8 @@ Platform infrastructure is vSphere or baremetal. The cluster installation method
 
 - No disk encryption (Default)
 - TPM v2 Only Unlock
-- Tang Server Only Unlock
-- TPM v2 and Tang Server Combination
+- Tang Server Only Unlock (UPI)
+- TPM v2 and Tang Server Combination (UPI)
 
 **Decision**
 #TODO: Document the decision for each cluster.#
@@ -1270,15 +1270,15 @@ Platform infrastructure is vSphere or baremetal. The cluster installation method
 
 - **No disk encryption (Default):** This is the default behavior. It simplifies installation and node provisioning, as no additional key management infrastructure (TPM, Tang) or configuration is required. It relies solely on physical data center security for data-at-rest protection.
 - **TPM v2 Only Unlock:** This method uses the on-board TPM v2 chip to seal the decryption key. The key is only released if the boot measurements (PCRs) are correct, ensuring the system's boot chain has not been tampered with. This is a high-security, self-contained solution.
-- **Tang Server Only Unlock:** This method uses a network-bound key release. The node fetches its decryption key from a highly available Tang server on the network during boot. This decouples the key from the hardware state, simplifying operational events like firmware updates.
-- **TPM v2 and Tang Server Combination:** This is the most resilient automated method. The node can be configured to unlock if either the TPM measurements are correct or it can successfully contact the Tang server. This provides the security of TPM binding while adding the operational flexibility of Tang.
+- **Tang Server Only Unlock (UPI):** This method uses a network-bound key release. The node fetches its decryption key from a highly available Tang server on the network during boot. This decouples the key from the hardware state, simplifying operational events like firmware updates.
+- **TPM v2 and Tang Server Combination (UPI):** This is the most resilient automated method. The node can be configured to unlock if either the TPM measurements are correct or it can successfully contact the Tang server. This provides the security of TPM binding while adding the operational flexibility of Tang.
 
 **Implications**
 
 - **No disk encryption (Default):** Simplest and fastest provisioning. No external dependencies for boot. Fails to meet many security and compliance standards for data-at-rest encryption.
-- **TPM v2 Only Unlock:** High security, as the key is bound to the hardware state. No external infrastructure (like Tang) is needed. Node recovery after expected changes (like a BIOS or firmware update) can be complex. This is the only disk encryption method supported by Installer-Provisioned Infrastructure (IPI), Agent-based Installer (ABI), and Assisted Installer methods. **The Image-based Installer (IBI) does not support disk encryption.**
-- **Tang Server Only Unlock:** Decouples the key from the hardware state (TPM PCRs), making firmware updates non-disruptive. Creates a hard dependency on the network and the Tang servers. This option is supported only by User-Provisioned Infrastructure (UPI) deployments. **The Image-based Installer (IBI) does not support disk encryption.**
-- **TPM v2 and Tang Server Combination:** Provides the "best of both worlds": high security (TPM) and operational flexibility (Tang). This option is supported only by User-Provisioned Infrastructure (UPI) deployments. **The Image-based Installer (IBI) does not support disk encryption.**
+- **TPM v2 Only Unlock:** High security, as the key is bound to the hardware state. No external infrastructure (like Tang) is needed. Node recovery after expected changes (like a BIOS or firmware update) can be complex. This is the only disk encryption method supported by Installer-Provisioned Infrastructure (IPI), Agent-based Installer (ABI), and Assisted Installer methods. The Image-based Installer (IBI) does not support disk encryption.
+- **Tang Server Only Unlock (UPI):** Decouples the key from the hardware state (TPM PCRs), making firmware updates non-disruptive. Creates a hard dependency on the network and the Tang servers. This option is supported only by User-Provisioned Infrastructure (UPI) deployments. The Image-based Installer (IBI) does not support disk encryption.
+- **TPM v2 and Tang Server Combination (UPI):** Provides the "best of both worlds": high security (TPM) and operational flexibility (Tang). This option is supported only by User-Provisioned Infrastructure (UPI) deployments. The Image-based Installer (IBI) does not support disk encryption.
 
 **Agreeing Parties**
 
@@ -1624,10 +1624,10 @@ Installation Boot Device is Local Device.
 Control Plane Storage Performance Validation Strategy
 
 **Architectural Question**
-How will the storage performance for etcd (on control plane nodes) be validated to ensure cluster stability?
+What is the strategy for automatically configuring and validating the storage performance for etcd (on control plane nodes) to ensure cluster stability?
 
 **Issue or Problem**
-Etcd is extremely sensitive to disk write latency. If the storage cannot sustain a specific performance metric (fsync duration < 10ms at the 99th percentile), the cluster will experience instability, leader elections, and potential outages. A decision is needed on whether to enforce a strict pre-flight validation check or rely on hardware specifications.
+Etcd is extremely sensitive to disk write latency. If the storage cannot sustain a specific performance metric (fsync duration < 10ms at the 99th percentile), the cluster will experience instability, leader elections, and potential outages.
 
 **Assumption**
 N/A
@@ -1642,12 +1642,12 @@ N/A
 
 **Justification**
 
-- **Pre-flight Benchmark Validation (Strict):** This treats performance as a hard prerequisite. It creates a "Go/No-Go" gate based on real-world metrics. For example, running the standard Red Hat etcd test: `fio --rw=write --ioengine=sync --fdatasync=1 --directory=/var/lib/etcd ...`. If the 99th percentile result is > 10ms, the hardware is rejected. This guarantees stability but adds time to the provisioning process.
+- **Pre-flight Benchmark Validation (Strict):** This treats performance as a hard prerequisite. It creates a "Go/No-Go" gate based on real-world metrics, such as running the standard Red Hat etcd test: `fio --rw=write --ioengine=sync --fdatasync=1 --directory=/var/lib/etcd`. If the 99th percentile result is > 10ms, the hardware is rejected. This guarantees stability but adds time to the provisioning process.
 - **Specification-Based Provisioning (Standard):** This approach trusts the infrastructure provider's SLA. It significantly speeds up deployment by skipping manual testing. It is appropriate when using standardized, known-good SKUs (e.g., Enterprise NVMe or a specific Tier 1 SSD model) where performance variance is known to be low.
 
 **Implications**
 
-- **Pre-flight Benchmark Validation (Strict):** Requires a pre-install automation step to run the fio container (e.g., `quay.io/cloud-bulldozer/etcd-perf`) on bare metal. This catches "bad drives" or "noisy neighbor" issues early but increases deployment complexity.
+- **Pre-flight Benchmark Validation (Strict):** Requires a pre-install automation step to run a bare metal benchmarking tool (e.g., fio). This catches "bad drives" or "noisy neighbor" issues early but increases deployment complexity.
 - **Specification-Based Provisioning (Standard):** Removes the validation overhead. However, it introduces the risk of "silent" performance degradation where a disk meets the throughput spec but fails the latency requirement (fsync), which may only be discovered during a production outage.
 
 **Agreeing Parties**
@@ -1934,7 +1934,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 **Implications**
 
-- **Switch Internal Registry to Managed State Post-Install:** Requires manual intervention by the cluster administrator to edit the `configs.imageregistry/cluster` resource to change `managementState: Removed` to `Managed` after installation. Subsequently, persistent storage must be configured (RWX is required for high availability).
+- **Switch Internal Registry to Managed State Post-Install:** Requires manual intervention by the cluster administrator to edit the `configs.imageregistry/cluster` resource to change `managementState: Removed` to `Managed` after installation. Subsequently, persistent storage must be configured. For highly available (HA) deployments, ReadWriteMany (RWX) access is required. For supported single-replica deployments using block storage (RWO), the administrator must also set the `rolloutStrategy` to `Recreate` and set `replicas` to 1.
 - **Maintain Removed State (Rely Exclusively on External Registry):** Disables the ability to use the cluster’s internal image building capabilities, requiring all image dependencies (including custom RHOAI notebook images) to be pulled from the external registry. The cluster network must allow external pull access for all nodes and application namespaces must be configured with pull secrets.
 
 **Agreeing Parties**

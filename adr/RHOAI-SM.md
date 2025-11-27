@@ -419,7 +419,7 @@ Secure communication using TLS is required.
 **Justification**
 
 - **Managed by RHOAI Operator:** To have the OpenShift AI Operator automatically manage a `trusted-ca-bundle` ConfigMap. Simpler initial setup but less control and potentially conflicts with cluster-wide trust.
-- **Externally Managed (`managementState: Removed`):** Recommended approach (RHOAI 2.25+). The operator does not manage the CA bundle. Trust is handled externally (e.g., via cluster-wide proxy settings, injected CAs via ConfigMaps referenced by workloads, service mesh trust). Offers better security separation and aligns with standard cluster practices.
+- **Externally Managed (`managementState: Removed`):** Recommended approach. The operator does not manage the CA bundle. Trust is handled externally (e.g., via cluster-wide proxy settings, injected CAs via ConfigMaps referenced by workloads, service mesh trust). Offers better security separation and aligns with standard cluster practices.
 
 **Implications**
 

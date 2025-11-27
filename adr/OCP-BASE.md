@@ -253,7 +253,7 @@ Declarative infrastructure-as-code is the desired operating model.
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: DevOps Lead
+- Person: #TODO#, Role: DevOps Engineer
 
 ---
 

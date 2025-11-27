@@ -25,7 +25,7 @@ OpenShift Data Foundation (ODF) has been selected as the Storage provider.
 **Justification**
 
 - **ODF using Local Storage Operator (LSO):** To leverage the older, established method where LSO discovers and prepares local devices for ODF OSDs.
-- **ODF using Logical Volume Manager Storage (LVMS):** To utilize the newer, recommended operator (introduced in OCP 4.12+) which uses LVM thin provisioning on top of local devices. This approach is more flexible and aligns with future storage management directions.
+- **ODF using Logical Volume Manager Storage (LVMS):** To utilize the newer, recommended operator which uses LVM thin provisioning on top of local devices. This approach is more flexible and aligns with future storage management directions.
 
 **Implications**
 

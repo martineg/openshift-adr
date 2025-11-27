@@ -100,7 +100,7 @@ The OpenShift Logging Operator is deployed with the LokiStack storage solution.
 **Alternatives**
 
 - 1x.demo
-- 1x.pico (6.1+ only)
+- 1x.pico
 - 1x.extra-small
 - 1x.small
 - 1x.medium
@@ -111,7 +111,7 @@ The OpenShift Logging Operator is deployed with the LokiStack storage solution.
 **Justification**
 
 - **1x.demo:** For demo use only, with no CPU/memory requests specified, offering no replication factor, and supporting 0 GB/day data transfer.
-- **1x.pico (6.1+ only):** For minimal resource consumption, suitable for development clusters or environments with very low log volume (50GB/day data transfer). This configuration offers HA support for all components and a replication factor of 2. **This sizing is supported starting with logging 6.1**
+- **1x.pico:** For minimal resource consumption, suitable for development clusters or environments with very low log volume (50GB/day data transfer). This configuration offers HA support for all components and a replication factor of 2.
 - **1x.extra-small:** For minimal resource consumption, suitable for development clusters or environments with very low log volume (100GB/day data transfer).
 - **1x.small:** To provide a balanced, default starting size for most production or pre-production clusters with moderate log volume (500GB/day data transfer).
 - **1x.medium:** For clusters with high log volume or longer on-cluster retention requirements (2TB/day data transfer).
@@ -119,7 +119,7 @@ The OpenShift Logging Operator is deployed with the LokiStack storage solution.
 **Implications**
 
 - **1x.demo:** Lowest resource footprint, lowest capacity, suitable only for demonstration environments.
-- **1x.pico:** Has the lowest resource footprint among HA supported sizes but also limited capacity for ingestion, storage, and querying, designed for 50GB/day. **Requires OpenShift Logging 6.1 or later.**
+- **1x.pico:** Has the lowest resource footprint among HA supported sizes but also limited capacity for ingestion, storage, and querying, designed for 50GB/day.
 - **1x.extra-small:** Has the lowest resource footprint among production sizes but limited capacity for ingestion, storage, and querying (100GB/day).
 - **1x.small:** Provides a good baseline for performance and capacity (500GB/day). The size can be scaled up in the future if requirements change.
 - **1x.medium:** Consumes more significant CPU, memory, and storage resources (2TB/day). This size should be chosen based on a clear understanding of the expected log volume.
@@ -187,46 +187,6 @@ LokiStack solution is selected and requires persistent object storage for log da
 ## LOG-05
 
 **Title**
-LokiStack Storage Schema Version Selection
-
-**Architectural Question**
-Which storage schema version should be configured for LokiStack, particularly regarding compatibility with structured metadata and OTLP ingestion?
-
-**Issue or Problem**
-LokiStack requires a minimum schema version to support features like structured metadata, which is critical if the cluster plans to adopt the OpenTelemetry (OTEL) data model. Schema version v13 is recommended for future compatibility.
-
-**Assumption**
-The LokiStack deployment must be configured to support modern data models and retention capabilities.
-
-**Alternatives**
-
-- Use Schema Version v13
-- Use Schema Version v12 (Legacy)
-
-**Decision**
-#TODO: Document the decision.#
-
-**Justification**
-
-- **Use Schema Version v13:** To ensure future compatibility and support for structured metadata, which is essential for fully utilizing the OpenTelemetry data model.
-- **Use Schema Version v12 (Legacy):** To maintain compatibility with an existing, older Loki deployment that has not yet been migrated.
-
-**Implications**
-
-- **Use Schema Version v13:** Requires setting `version: v13` and a future `effectiveDate` in the LokiStack CR specification; existing schemas must be retained to prevent data loss.
-- **Use Schema Version v12 (Legacy):** Lacks support for structured metadata, which will break OTLP log ingestion if that is ever enabled.
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: Enterprise Architect
-- Person: #TODO#, Role: Operations Expert
-- Person: #TODO#, Role: OCP Platform Owner
-
----
-
-## LOG-06
-
-**Title**
 Log Collector Tuning for Delivery Mode
 
 **Architectural Question**
@@ -264,7 +224,7 @@ The tuning specification is utilized, meaning the logging deployment uses the Ve
 
 ---
 
-## LOG-07
+## LOG-06
 
 **Title**
 Enabling LokiStack-based Alerting and Recording Rules
@@ -304,7 +264,7 @@ Customized log monitoring and alerting are necessary beyond the default platform
 
 ---
 
-## LOG-08
+## LOG-07
 
 **Title**
 Log Collector Resource Limits and Requests (Vector)
