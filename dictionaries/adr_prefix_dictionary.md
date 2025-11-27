@@ -24,8 +24,6 @@ This file maps workshop topics and products to their official Architecture Decis
 | OCP-BM         | OCP on Bare Metal: Physical Hardware, BIOS, Firmware, and OS Installation (Day 0)  |
 | OCP-GCP        | OCP on GCP platform and installation specifics                                     |
 | OCP-HCP        | OCP with Hosted Control Planes general aspects                                     |
-| OCP-HCP-BM     | OCP with Hosted Control Planes baremetal specifics aspects                         |
-| OCP-HCP-OSP    | OCP with Hosted Control Planes OpenStack specifics aspects                         |
 | OCP-IBMCLOUD   | OCP on IBM Cloud platform and installation specifics                               |
 | OCP-IBMPOWER   | OCP on IBM Power platform and installation specifics                               |
 | OCP-IBMPOWERVS | OCP on IBM Power Virtual Server platform and installation specifics                |
@@ -39,15 +37,7 @@ This file maps workshop topics and products to their official Architecture Decis
 | OCP-SEC        | OCP Security: Compliance, Identity, RBAC, and Workload Security Policies           |
 | OCP-STOR       | OCP Storage: CSI Drivers and StorageClass selection (Software)                     |
 | OCP-VSPHERE    | OCP on vSphere platform and installation specifics                                 |
-| ODF-BASE       | OpenShift Data Foundation (General)                                                |
-| ODF-BM         | OpenShift Data Foundation (on Bare Metal)                                          |
-| ODF-GCP        | OpenShift Data Foundation (on GCP)                                                 |
-| ODF-HCP        | OpenShift Data Foundation (Hosted Control Planes)                                  |
-| ODF-IBMCLOUD   | OpenShift Data Foundation (on IBM Cloud)                                           |
-| ODF-IBMPOWER   | OpenShift Data Foundation (on IBM Power)                                           |
-| ODF-IBMZL1     | OpenShift Data Foundation (on IBM Z/LINUXONE)                                      |
-| ODF-OSP        | OpenShift Data Foundation (on OpenStack)                                           |
-| ODF-VSPHERE    | OpenShift Data Foundation (on vSphere)                                             |
+| ODF            | OpenShift Data Foundation                                                          |
 | OSSM           | OpenShift Service Mesh                                                             |
 | OTEL           | Red Hat build of OpenTelemetry                                                     |
 | PIPELINES      | OpenShift Pipelines                                                                |

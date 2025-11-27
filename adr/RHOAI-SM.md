@@ -49,6 +49,45 @@ N/A
 ## RHOAI-SM-02
 
 **Title**
+Update Channel Strategy
+
+**Architectural Question**
+Which update channel will be selected for the Red Hat OpenShift AI Operator?
+
+**Issue or Problem**
+OpenShift AI 3.0 introduces a major architectural break. Upgrades from 2.x are not supported. The channel selection dictates the major version and stability level.
+
+**Assumption**
+Fresh installation of RHOAI is being performed.
+
+**Alternatives**
+
+- **Fast-3.x Channel:** Delivers the latest 3.x features. Required for RHOAI 3.0 installations.
+- **Stable-2.x Channel:** Remains on the legacy 2.x architecture.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Fast-3.x Channel:** Adopts the modern RHOAI architecture (KubeRay, RawDeployment, AI Pipelines). Required for new deployments needing 3.0 features.
+- **Stable-2.x Channel:** Maintenance mode for existing clusters that cannot yet migrate to 3.0.
+
+**Implications**
+
+- **Fast-3.x:** **No direct upgrade path from 2.x.** Requires a fresh install.
+- **Stable-2.x:** Will eventually go End-of-Life. Lacks new features (Model Registry GA, vLLM optimizations).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## RHOAI-SM-03
+
+**Title**
 Red Hat OpenShift AI host OpenShift clusters
 
 **Architectural Question**
@@ -92,7 +131,7 @@ Red Hat OpenShift AI instances have been defined.
 
 ---
 
-## RHOAI-SM-03
+## RHOAI-SM-04
 
 **Title**
 Identity provider Integration
@@ -130,7 +169,7 @@ An appropriate OpenShift IdP must be configured.
 
 ---
 
-## RHOAI-SM-04
+## RHOAI-SM-05
 
 **Title**
 Red Hat OpenShift AI Capabilities Enablement Strategy
@@ -177,37 +216,37 @@ OpenShift AI provides a modular suite of tools. Enabling all components increase
 
 ---
 
-## RHOAI-SM-05
+## RHOAI-SM-06
 
 **Title**
-Data Science Pipelines enablement (KFP/Tekton)
+AI Pipelines Enablement
 
 **Architectural Question**
-Will the Data Science Pipelines component (based on Kubeflow Pipelines with Tekton backend) be enabled within RHOAI?
+Will the AI Pipelines component be enabled within RHOAI?
 
 **Issue or Problem**
-Enabling Data Science Pipelines provides a framework for orchestrating multi-step ML workflows. It requires specific configuration (database, object storage) and impacts the tools available to MLOps engineers.
+Enabling AI Pipelines provides a framework for orchestrating multi-step ML workflows. It requires specific configuration (database, object storage) and impacts the tools available to MLOps engineers.
 
 **Assumption**
 Orchestration of ML workflows is required.
 
 **Alternatives**
 
-- Enable Data Science Pipelines Component
-- Disable Data Science Pipelines Component (Rely on OpenShift Pipelines/Tekton or external orchestrators)
+- Enable AI Pipelines Component
+- Disable AI Pipelines Component
 
 **Decision**
-#TODO#
+#TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Enable Data Science Pipelines:** To provide an integrated, UI-driven (via RHOAI dashboard and Elyra) and SDK-driven platform specifically designed for defining, running, and managing ML pipelines within OpenShift AI. Uses Kubeflow Pipelines API standard with Tekton execution.
-- **Disable Data Science Pipelines:** To simplify the RHOAI deployment if ML pipeline orchestration is handled by other tools (e.g., standard OpenShift Pipelines/Tekton for simpler CI/CD-like tasks, external orchestrators like Airflow, or if not required initially).
+- **Enable AI Pipelines:** To provide an integrated, UI-driven (via RHOAI dashboard and Elyra) and SDK-driven platform specifically designed for defining, running, and managing ML pipelines within OpenShift AI. Uses Kubeflow Pipelines API standard with Tekton execution.
+- **Disable AI Pipelines:** To simplify the RHOAI deployment if ML pipeline orchestration is handled by other tools (e.g., standard OpenShift Pipelines/Tekton for simpler CI/CD-like tasks, external orchestrators like Airflow, or if not required initially).
 
 **Implications**
 
-- **Enable Data Science Pipelines:** Installs KFP/Tekton components. Requires configuring a database backend and S3 object storage. Enables Elyra usage. Consumes additional cluster resources. Provides ML-specific pipeline features (artifact tracking, metadata).
-- **Disable Data Science Pipelines:** Reduces RHOAI footprint and dependencies. Users needing pipeline orchestration must use alternative tools. Elyra extension in JupyterLab will not function for pipeline submission.
+- **Enable AI Pipelines:** Installs KFP/Tekton components. Requires configuring a database backend and S3 object storage. Enables Elyra usage. Consumes additional cluster resources. Provides ML-specific pipeline features (artifact tracking, metadata).
+- **Disable AI Pipelines:** Reduces RHOAI footprint and dependencies. Users needing pipeline orchestration must use alternative tools. Elyra extension in JupyterLab will not function for pipeline submission.
 
 **Agreeing Parties**
 
@@ -220,7 +259,7 @@ Orchestration of ML workflows is required.
 
 ---
 
-## RHOAI-SM-06
+## RHOAI-SM-07
 
 **Title**
 Model Serving Platform Selection
@@ -263,7 +302,83 @@ Model deployment capabilities are required.
 
 ---
 
-## RHOAI-SM-07
+## RHOAI-SM-08
+
+**Title**
+Model Registry Enablement
+
+**Architectural Question**
+Will the Model Registry component be enabled to track model versions and metadata?
+
+**Issue or Problem**
+MLOps teams need a central catalog for model artifacts, versions, and lineage.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Enable Model Registry:** Deploys the Model Registry service and database.
+- **Disable Model Registry:** No central model tracking.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Enable Model Registry:** Provides a structured API for registering models. Essential for MLOps governance.
+- **Disable Model Registry:** Reduces footprint.
+
+**Implications**
+
+- **Enable:** Requires a database backend (PostgreSQL).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: MLOps Engineer
+
+---
+
+## RHOAI-SM-09
+
+**Title**
+Hardware Profile Strategy
+
+**Architectural Question**
+Will Hardware Profiles be defined to manage accelerator access for user workloads?
+
+**Issue or Problem**
+"Accelerator Profiles" are deprecated in 3.0. "Hardware Profiles" are the new mechanism to abstract compute resources (tolerations, labels, resource requests) for users.
+
+**Assumption**
+Accelerators (GPU/TPU) are available.
+
+**Alternatives**
+
+- **Define Hardware Profiles:** Create profiles for "NVIDIA A100", "Intel Gaudi", etc.
+- **No Profiles:** Users must manually configure tolerations/requests.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Define Hardware Profiles:** Simplifies user experience. Users select "T4 GPU" from a dropdown. Decouples user intent from K8s scheduling mechanics.
+- **No Profiles:** High friction for data scientists.
+
+**Implications**
+
+- **Hardware Profiles:** Administrators must define and maintain profile CRs matching the physical nodes.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: AI/ML Platform Owner
+
+---
+
+## RHOAI-SM-10
 
 **Title**
 Data science project allocation strategy (User Namespaces)
@@ -312,7 +427,7 @@ Data science workloads need namespace isolation beyond the core RHOAI components
 
 ---
 
-## RHOAI-SM-08
+## RHOAI-SM-11
 
 **Title**
 User/Group Dashboard Access Configuration
@@ -353,7 +468,7 @@ OpenShift groups are synchronized or defined (Identity Provider Group Synchroniz
 
 ---
 
-## RHOAI-SM-09
+## RHOAI-SM-12
 
 **Title**
 OpenShift AI Namespace Strategy (Core Components)
@@ -394,7 +509,7 @@ N/A
 
 ---
 
-## RHOAI-SM-10
+## RHOAI-SM-13
 
 **Title**
 CA Certificate management
@@ -436,7 +551,7 @@ Secure communication using TLS is required.
 
 ---
 
-## RHOAI-SM-11
+## RHOAI-SM-14
 
 **Title**
 S3 Object Storage Location
@@ -481,7 +596,7 @@ Model serving and/or Data Science Pipelines capabilities are required.
 
 ---
 
-## RHOAI-SM-12
+## RHOAI-SM-15
 
 **Title**
 Default storage class for Red Hat OpenShift AI components
@@ -523,7 +638,7 @@ Dynamic volume provisioning is available via the chosen Storage provider.
 
 ---
 
-## RHOAI-SM-13
+## RHOAI-SM-16
 
 **Title**
 Usage data collection (Telemetry)
@@ -565,7 +680,7 @@ N/A
 
 ---
 
-## RHOAI-SM-14
+## RHOAI-SM-17
 
 **Title**
 Red Hat partner solutions integration
@@ -618,7 +733,7 @@ N/A
 
 ---
 
-## RHOAI-SM-15
+## RHOAI-SM-18
 
 **Title**
 Workbenches provisioning strategy
@@ -664,7 +779,7 @@ N/A
 
 ---
 
-## RHOAI-SM-16
+## RHOAI-SM-19
 
 **Title**
 Notebook images for data scientists
@@ -716,7 +831,7 @@ Workbenches will be used.
 
 ---
 
-## RHOAI-SM-17
+## RHOAI-SM-20
 
 **Title**
 Required Python packages (for Custom Notebook Images)
@@ -765,7 +880,7 @@ Custom notebook images will be built.
 
 ---
 
-## RHOAI-SM-18
+## RHOAI-SM-21
 
 **Title**
 code-server workbenches enablement
@@ -806,7 +921,7 @@ Red Hat notebook server images are used. Workbenches are provisioned.
 
 ---
 
-## RHOAI-SM-19
+## RHOAI-SM-22
 
 **Title**
 Data sources accessibility
@@ -867,7 +982,7 @@ Data scientists will need to access data beyond local workbench storage. S3 Loca
 
 ---
 
-## RHOAI-SM-20
+## RHOAI-SM-23
 
 **Title**
 Notebook file storage location
@@ -908,7 +1023,7 @@ Workbenches are used.
 
 ---
 
-## RHOAI-SM-21
+## RHOAI-SM-24
 
 **Title**
 Cluster Storage (PVC) Sizing for Workbenches
@@ -955,7 +1070,7 @@ Workbenches are configured. Local PVC storage is used.
 
 ---
 
-## RHOAI-SM-22
+## RHOAI-SM-25
 
 **Title**
 Notebook Git repository structure
@@ -1002,7 +1117,7 @@ Notebook files/code primarily stored in Git.
 
 ---
 
-## RHOAI-SM-23
+## RHOAI-SM-26
 
 **Title**
 NVIDIA GPU Support enablement
@@ -1046,7 +1161,7 @@ Hardware Acceleration Strategy and Cluster Topology are established.
 
 ---
 
-## RHOAI-SM-24
+## RHOAI-SM-27
 
 **Title**
 Intel HPU Accelerator Usage
@@ -1090,7 +1205,7 @@ Hardware Acceleration Strategy and Cluster Topology are established.
 
 ---
 
-## RHOAI-SM-25
+## RHOAI-SM-28
 
 **Title**
 AMD GPU Accelerator Usage
@@ -1134,7 +1249,7 @@ Hardware Acceleration Strategy and Cluster Topology are established.
 
 ---
 
-## RHOAI-SM-26
+## RHOAI-SM-29
 
 **Title**
 Workbenches on Intel hardware
@@ -1175,7 +1290,7 @@ Intel accelerators are available. Intel partner component might be enabled. Note
 
 ---
 
-## RHOAI-SM-27
+## RHOAI-SM-30
 
 **Title**
 Pipelines in JupyterLab (Elyra) usage
@@ -1216,7 +1331,7 @@ Data Science Pipelines component is enabled. Users primarily use JupyterLab.
 
 ---
 
-## RHOAI-SM-28
+## RHOAI-SM-31
 
 **Title**
 Pipeline database backend (KFP)
@@ -1259,13 +1374,13 @@ Data Science Pipelines component is enabled.
 
 ---
 
-## RHOAI-SM-29
+## RHOAI-SM-32
 
 **Title**
 Distributed workloads enablement (Ray/CodeFlare)
 
 **Architectural Question**
-Will the capability for distributed AI/ML workloads using Ray (via CodeFlare/KubeRay) be enabled?
+Will the capability for distributed AI/ML workloads using Ray be enabled?
 
 **Issue or Problem**
 RHOAI includes operators for temporary Ray clusters (distributed data processing/training). Enabling impacts cluster resources, dependencies, complexity.
@@ -1275,11 +1390,11 @@ Workloads might benefit from distributed computation.
 
 **Alternatives**
 
-- Enable Distributed Workloads (CodeFlare/KubeRay)
+- Enable Distributed Workloads (KubeRay)
 - Disable Distributed Workloads
 
 **Decision**
-#TODO#
+#TODO: Document the decision for each cluster.#
 
 **Justification**
 
@@ -1288,7 +1403,7 @@ Workloads might benefit from distributed computation.
 
 **Implications**
 
-- **Enable Distributed Workloads:** Installs CodeFlare/KubeRay operators. Requires additional cluster resources (~1.6 vCPU, ~2 GiB RAM for operators minimum). Users define/launch Ray clusters (`AppWrapper` or `RayCluster` CRs). Requires configuring security (Ray dashboard certs). Adds complexity but enables performance gains for suitable workloads.
+- **Enable Distributed Workloads:** Installs the KubeRay Operator. Requires additional cluster resources. Users define/launch Ray clusters (`RayCluster` CRs). Requires configuring security (Ray dashboard certs). Adds complexity but enables performance gains for suitable workloads.
 - **Disable Distributed Workloads:** Reduces operators/resources consumed by RHOAI. Simplifies platform but limits ability to scale certain tasks horizontally.
 
 **Agreeing Parties**
@@ -1302,19 +1417,19 @@ Workloads might benefit from distributed computation.
 
 ---
 
-## RHOAI-SM-30
+## RHOAI-SM-33
 
 **Title**
 Quota management for distributed workloads (Kueue)
 
 **Architectural Question**
-How will resource quotas and scheduling for distributed workloads (Ray clusters via CodeFlare) be managed?
+How will resource quotas and scheduling for distributed workloads (Ray clusters) be managed?
 
 **Issue or Problem**
 Distributed workloads (Ray clusters) consume significant resources. RHOAI integrates Kueue for batch scheduling/resource quota management specifically for these, preventing cluster saturation. Configuration impacts resource sharing/prioritization.
 
 **Assumption**
-Distributed workloads (CodeFlare/KubeRay) are enabled.
+Distributed workloads are enabled.
 
 **Alternatives**
 
@@ -1322,16 +1437,16 @@ Distributed workloads (CodeFlare/KubeRay) are enabled.
 - Disable Kueue Integration (Rely on OpenShift Quotas only)
 
 **Decision**
-#TODO#
+#TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Enable Kueue:** Leverage Kueue's batch scheduling (fair sharing, prioritization) and resource quotas (`ClusterQueue`, `LocalQueue`) designed for managing ephemeral, high-resource jobs like Ray clusters. Finer control than standard OpenShift quotas.
+- **Enable Kueue:** Leverage Kueue's batch scheduling (fair sharing, prioritization) and resource quotas (`ClusterQueue`, `LocalQueue`) designed for managing ephemeral, high-resource jobs like Ray clusters.
 - **Disable Kueue:** Rely solely on standard OpenShift ResourceQuotas at namespace level. Simpler setup but lacks advanced scheduling features.
 
 **Implications**
 
-- **Enable Kueue:** Installs Kueue operator. Requires configuring `ClusterQueue` (overall resources) and potentially `LocalQueue`s (user namespace subdivision). Adds scheduling overhead but better control over resource-intensive batch jobs.
+- **Enable Kueue:** Installs Red Hat build of Kueue Operator. Requires configuring `ClusterQueue` (overall resources) and potentially `LocalQueue`s (user namespace subdivision). Adds scheduling overhead but better control over resource-intensive batch jobs.
 - **Disable Kueue:** Simplifies installation. Ray cluster consumption limited only by standard OCP quotas, risking resource exhaustion/unfair distribution with concurrent large jobs. Lacks queuing/prioritization.
 
 **Agreeing Parties**
@@ -1343,7 +1458,7 @@ Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 ---
 
-## RHOAI-SM-31
+## RHOAI-SM-34
 
 **Title**
 Authentication Method for Ray Dashboard
@@ -1385,7 +1500,7 @@ Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 ---
 
-## RHOAI-SM-32
+## RHOAI-SM-35
 
 **Title**
 Distributed workloads monitoring (Ray)
@@ -1427,7 +1542,7 @@ Distributed workloads (CodeFlare/KubeRay) are enabled.
 
 ---
 
-## RHOAI-SM-33
+## RHOAI-SM-36
 
 **Title**
 Authorization provider for KServe Model Serving
@@ -1469,7 +1584,7 @@ Single-model serving platform (KServe) is enabled.
 
 ---
 
-## RHOAI-SM-34
+## RHOAI-SM-37
 
 **Title**
 Model-serving runtime for KServe
@@ -1521,7 +1636,7 @@ Single-model serving platform (KServe) is enabled.
 
 ---
 
-## RHOAI-SM-35
+## RHOAI-SM-38
 
 **Title**
 NVIDIA NIM Serving Platform Integration
@@ -1565,7 +1680,7 @@ NVIDIA GPU acceleration is enabled. Single-model serving (KServe) is enabled.
 
 ---
 
-## RHOAI-SM-36
+## RHOAI-SM-39
 
 **Title**
 Distributed Inference with LLM-D (TP)
@@ -1608,7 +1723,7 @@ LLMs requiring distributed processing (multi-GPU/multi-node) are planned for dep
 
 ---
 
-## RHOAI-SM-37
+## RHOAI-SM-40
 
 **Title**
 Single-model serving platform (KServe) monitoring enablement
@@ -1650,7 +1765,7 @@ Single-model serving platform (KServe) is enabled.
 
 ---
 
-## RHOAI-SM-38
+## RHOAI-SM-41
 
 **Title**
 NVIDIA NIM Metrics collection
@@ -1692,7 +1807,7 @@ NVIDIA NIM integration is enabled. User Workload Monitoring (UWM) is enabled.
 
 ---
 
-## RHOAI-SM-39
+## RHOAI-SM-42
 
 **Title**
 TrustyAI Monitoring for Data Science Models
@@ -1736,7 +1851,7 @@ Model serving is enabled.
 
 ---
 
-## RHOAI-SM-40
+## RHOAI-SM-43
 
 **Title**
 Persistent Volume Claim (PVC) Backup Strategy for RHOAI
@@ -1778,5 +1893,393 @@ N/A
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Operations Expert
 - Person: #TODO#, Role: Storage Expert
+
+---
+
+## RHOAI-SM-44
+
+**Title**
+Generative AI Application Strategy (Llama Stack)
+
+**Architectural Question**
+Will the Llama Stack Operator be enabled to provide standardized APIs for RAG (Retrieval-Augmented Generation) and agentic AI workflows?
+
+**Issue or Problem**
+Building GenAI apps requires complex orchestration (LLM inference, Vector DBs, Prompt management). Llama Stack provides a pre-built platform for this.
+
+**Assumption**
+GenAI workloads are planned.
+
+**Alternatives**
+
+- **Enable Llama Stack:** Deploys the operator and RAG tools. Enables GenAI Playground.
+- **Disable Llama Stack:** Developers build custom GenAI stacks from scratch.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Enable Llama Stack:** Accelerates GenAI adoption. Standardizes the API surface for inference and safety.
+- **Disable Llama Stack:** Reduces platform footprint.
+
+**Implications**
+
+- **Enable:** Requires GPU resources for local LLM inference or connections to remote LLM services.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: AI/ML Platform Owner
+
+---
+
+## RHOAI-SM-45
+
+**Title**
+Centralized Authentication Gateway Strategy
+
+**Architectural Question**
+Will the Centralized Authentication Gateway (Istio-based) be used to manage OIDC integration for RHOAI services?
+
+**Issue or Problem**
+Direct OIDC integration with individual components is complex and often limited by the OpenShift OAuth proxy. A centralized gateway decouples authentication.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Enable Auth Gateway (TP):** Uses Istio Ingress Gateway to handle OIDC.
+- **Legacy OAuth Proxy:** Relies on standard OpenShift Route/OAuthProxy sidecars.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Enable Auth Gateway:** Modern architecture. Supports external OIDC providers (Keycloak/Okta) directly. Encrypts traffic end-to-end.
+- **Legacy OAuth Proxy:** Stable, proven. Tightly coupled to OpenShift users.
+
+**Implications**
+
+- **Enable:** Tech Preview. Dependency on Istio.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## RHOAI-SM-46
+
+**Title**
+Python Package Sourcing Strategy
+
+**Architectural Question**
+Will data scientists use the Red Hat Python Index or public PyPI for installing libraries?
+
+**Issue or Problem**
+Installing packages from public PyPI introduces supply chain risks (malware, unverified code).
+
+**Assumption**
+Workbenches are used.
+
+**Alternatives**
+
+- **Red Hat Python Index:** Use the curated, vetted repository provided by Red Hat.
+- **Public PyPI:** Allow unrestricted access to public packages.
+- **Private Mirror (Nexus/Artifactory):** Use corporate proxy.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Red Hat Index:** Secure by default. Pre-configured in RHOAI images. Essential for disconnected environments.
+- **Public PyPI:** Max flexibility but high risk.
+
+**Implications**
+
+- **Red Hat Index:** Users might find some niche libraries missing (must request them or use a supplemental source).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: Lead Data Scientist
+
+---
+
+## RHOAI-SM-47
+
+**Title**
+Model Registry Database Strategy
+
+**Architectural Question**
+Which database backend will be used for the Model Registry?
+
+**Issue or Problem**
+Model Registry requires a PostgreSQL database.
+
+**Assumption**
+Model Registry is enabled.
+
+**Alternatives**
+
+- **Internal PostgreSQL:** Operator-managed pod.
+- **External PostgreSQL:** Enterprise managed DB.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Internal:** Quick start. No external dependency.
+- **External:** Production standard. HA, backup, compliance managed by DB team.
+
+**Implications**
+
+- **Internal:** Not HA. Risk of data loss if PVC fails.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: MLOps Engineer
+- Person: #TODO#, Role: Storage Expert
+
+---
+
+## RHOAI-SM-48
+
+**Title**
+RAG Vector Database Strategy
+
+**Architectural Question**
+Which vector database solution will be used to support Retrieval-Augmented Generation (RAG) workflows in Llama Stack?
+
+**Issue or Problem**
+RAG requires storing embeddings. Llama Stack supports inline (ephemeral) or remote (production) databases.
+
+**Assumption**
+Llama Stack is enabled.
+
+**Alternatives**
+
+- **Inline Milvus/FAISS:** Embedded in the pod. Ephemeral.
+- **Remote Milvus:** External, persistent, scalable.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Inline:** Zero setup. Ideal for "Playground" testing and PoCs. Data is lost on restart.
+- **Remote:** Mandatory for production RAG applications requiring data persistence and high availability.
+
+**Implications**
+
+- **Remote:** Requires deploying and managing a Milvus cluster (and etcd/minio).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## RHOAI-SM-49
+
+**Title**
+Guardrails Orchestrator Strategy
+
+**Architectural Question**
+Will the Guardrails Orchestrator be deployed to enforce safety policies (toxicity, bias, PII) on GenAI interactions?
+
+**Issue or Problem**
+GenAI models can produce harmful content. Guardrails intercept inputs/outputs to enforce safety.
+
+**Assumption**
+GenAI workloads are active.
+
+**Alternatives**
+
+- **Enable Guardrails Orchestrator:** Active filtering.
+- **Disable Guardrails:** No safety interception layer.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Enable:** Critical for enterprise risk management. Prevents data leakage and toxic responses.
+- **Disable:** Lower latency. Acceptable for internal, low-risk research.
+
+**Implications**
+
+- **Enable:** Adds latency to inference calls. Requires configuring detectors (Regex, HuggingFace models).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: AI/ML Platform Owner
+
+---
+
+## RHOAI-SM-50
+
+**Title**
+Model Evaluation Strategy (Ragas/LM-Eval)
+
+**Architectural Question**
+Will automated evaluation frameworks (Ragas for RAG, LM-Eval for LLMs) be enabled to benchmark model quality?
+
+**Issue or Problem**
+Understanding LLM quality requires standardized metrics (accuracy, hallucination rate).
+
+**Assumption**
+GenAI workloads are active.
+
+**Alternatives**
+
+- **Enable Evaluation Services:** Deploy Ragas/LM-Eval.
+- **Disable Evaluation:** Manual or external testing only.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Enable:** Provides quantitative quality metrics. Essential for MLOps lifecycle management of LLMs.
+- **Disable:** Reduces platform footprint.
+
+**Implications**
+
+- **Enable:** Consumes compute resources for running evaluation jobs.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Lead Data Scientist
+
+---
+
+## RHOAI-SM-51
+
+**Title**
+Feature Store Enablement
+
+**Architectural Question**
+Will the Feature Store component (based on Feast) be enabled to manage ML features?
+
+**Issue or Problem**
+ML models need consistent feature data for training and inference. A Feature Store provides a centralized registry and serving layer.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Enable Feature Store:** Deploy Feast-based store.
+- **Disable Feature Store:** No central feature management.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Enable:** Promotes reuse of features across teams. Ensures training/inference consistency (prevents skew).
+- **Disable:** Simpler architecture for teams not using feature engineering at scale.
+
+**Implications**
+
+- **Enable:** Requires configuring Online and Offline stores.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Lead Data Scientist
+
+---
+
+## RHOAI-SM-52
+
+**Title**
+Feature Store Storage Backend
+
+**Architectural Question**
+Which storage services will back the Feature Store for Offline (Historical) and Online (Low-Latency) retrieval?
+
+**Issue or Problem**
+Feast requires two distinct storage types.
+
+**Assumption**
+Feature Store is enabled.
+
+**Alternatives**
+
+- **Cloud Native (S3 + Redis/DynamoDB):** High scale.
+- **On-Premise (ODF/MinIO + PostgreSQL):** Local execution.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Cloud Native:** Best performance and management offload.
+- **On-Premise:** Data sovereignty. Leverages existing ODF/DB infrastructure.
+
+**Implications**
+
+- **On-Premise:** Requires deploying/managing a high-performance Redis or Postgres instance.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## RHOAI-SM-53
+
+**Title**
+Training Hub Enablement
+
+**Architectural Question**
+Will the Training Hub be enabled to facilitate model fine-tuning workflows?
+
+**Issue or Problem**
+Fine-tuning foundation models requires orchestration of data, compute, and hyperparameters. Training Hub simplifies this via UI/API.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Enable Training Hub:** Use the managed fine-tuning workflow.
+- **Disable Training Hub:** Users run raw PyTorch/Ray jobs manually.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Enable:** Lowers barrier to entry for fine-tuning. Standardizes the process (SFT/LoRA).
+- **Disable:** Max flexibility for advanced researchers using custom training loops.
+
+**Implications**
+
+- **Enable:** Relies on Kubeflow Training Operator.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Lead Data Scientist
+- Person: #TODO#, Role: AI/ML Platform Owner
 
 ---

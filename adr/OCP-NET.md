@@ -491,6 +491,87 @@ N/A
 ## OCP-NET-13
 
 **Title**
+MetalLB Operator Deployment Strategy
+
+**Architectural Question**
+Will the MetalLB Operator be deployed to provide LoadBalancer service implementation on bare metal / on-premise clusters?
+
+**Issue or Problem**
+On-premise clusters lack a native cloud load balancer (like AWS ELB). Services type `LoadBalancer` will remain `Pending` forever unless a provider is configured.
+
+**Assumption**
+Cluster is on Bare Metal, vSphere, or platform without native LB.
+Load Balancer Strategy selected "User-Managed" or "On-Prem".
+
+**Alternatives**
+
+- **No Internal Load Balancer:** Rely on external, manually configured LBs (e.g., F5) pointing to NodePorts.
+- **MetalLB Operator:** Deploy MetalLB to automatically announce `LoadBalancer` Service IPs via Layer 2 (ARP) or Layer 3 (BGP).
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **No Internal Load Balancer:** Keeps cluster simple. Shifts complexity to network team.
+- **MetalLB Operator:** Provides "Cloud-like" experience on-prem. Developers get IPs automatically.
+
+**Implications**
+
+- **No Internal Load Balancer:** Manual ticket-based workflow for every new service.
+- **MetalLB Operator:** Requires reserving a pool of IPs. Layer 2 mode has failover limitations (single node bottleneck). Layer 3 mode (BGP) requires upstream router configuration.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-14
+
+**Title**
+MetalLB Advertisement Protocol
+
+**Architectural Question**
+Which protocol will MetalLB use to announce Service LoadBalancer IPs to the upstream network?
+
+**Issue or Problem**
+MetalLB must attract traffic to the cluster. Layer 2 (ARP) is simple but has bottlenecks. BGP is robust but complex.
+
+**Assumption**
+MetalLB Operator is deployed.
+
+**Alternatives**
+
+- Layer 2 Mode (ARP/NDP)
+- BGP Mode
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Layer 2 Mode (ARP/NDP):** Simple leader election. Zero upstream router config needed. Good for small clusters or where network teams are uncooperative.
+- **BGP Mode:** Dynamic routing with upstream routers. True load balancing (ECMP) across all nodes. Faster failover (<1s). Scalable.
+
+**Implications**
+
+- **Layer 2 Mode:** Traffic for one VIP goes to _one_ node (bandwidth bottleneck). Failover takes several seconds.
+- **BGP Mode:** Requires configuring upstream routers (ASN, neighbors).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader
+
+--
+
+## OCP-NET-15
+
+**Title**
 Pod Network CIDR Selection
 
 **Architectural Question**
@@ -528,7 +609,7 @@ N/A
 
 ---
 
-## OCP-NET-14
+## OCP-NET-16
 
 **Title**
 Service Network CIDR Selection
@@ -568,7 +649,7 @@ N/A
 
 ---
 
-## OCP-NET-15
+## OCP-NET-17
 
 **Title**
 Ingress Controller Strategy
@@ -612,7 +693,87 @@ N/A
 
 ---
 
-## OCP-NET-16
+## OCP-NET-18
+
+**Title**
+Ingress Controller Sharding Strategy
+
+**Architectural Question**
+Will Ingress Controllers be sharded (partitioned) to isolate traffic paths for different applications or tenants?
+
+**Issue or Problem**
+A single Ingress Controller creates a bottleneck and shared failure domain. High-priority apps (or private intranet apps) often need separation from public/low-priority traffic.
+
+**Assumption**
+Ingress Controller Strategy allows dedicated/custom controllers.
+
+**Alternatives**
+
+- **Monolithic Ingress (Default):** One controller handles all routes.
+- **Sharded Ingress (Route Labels):** Controllers listen only for routes with specific labels (e.g., `type: public`).
+- **Namespace-Scoped Sharding:** Controllers listen only to specific namespaces.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Monolithic:** Simple. Good for small clusters.
+- **Sharded:** Essential for separating "Public Internet" vs "Private VPN" access paths. Reduces blast radius of traffic spikes.
+
+**Implications**
+
+- **Sharded:** Requires creating multiple `IngressController` resources and ensuring developers label their Routes correctly.
+- **Namespace-Scoped:** Strongest isolation but harder to manage at scale.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-19
+
+**Title**
+Gateway API Adoption Strategy
+
+**Architectural Question**
+Will the Kubernetes Gateway API be enabled and used as the standard for advanced traffic routing?
+
+**Issue or Problem**
+The standard `Route` and `Ingress` APIs lack advanced features (header-based routing, traffic splitting) without annotations. Gateway API is the modern successor.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Standard Routes/Ingress Only:** Rely on stable OpenShift Route API.
+- **Gateway API Enabled:** Enable the Gateway API CRDs and controllers.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Standard Routes:** Mature, fully supported, widely known.
+- **Gateway API:** Enables portable, complex routing (e.g., canary weights, cross-namespace routing) natively. Future-proof.
+
+**Implications**
+
+- **Gateway API:** Adds complexity (new CRDs: Gateway, HTTPRoute). Requires OCP 4.12+.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Application team leadership
+
+---
+
+## OCP-NET-20
 
 **Title**
 Ingress Controller Replica Count
@@ -652,7 +813,47 @@ N/A
 
 ---
 
-## OCP-NET-17
+## OCP-NET-21
+
+**Title**
+External DNS Operator Integration
+
+**Architectural Question**
+Will the External DNS Operator be used to automatically manage DNS records for OpenShift Routes and Services on external DNS providers?
+
+**Issue or Problem**
+Exposing applications requires creating public DNS records pointing to the Ingress VIP. Doing this manually is slow and error-prone.
+
+**Assumption**
+External DNS provider supports API updates (e.g., Route53, Infoblox, Bind).
+
+**Alternatives**
+
+- **Manual DNS Management:** Admins manually create CNAME/A records.
+- **External DNS Operator:** Automates record creation based on Route/Service annotations.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Manual DNS Management:** Full control, no credentials stored in cluster.
+- **External DNS Operator:** Enables self-service for developers. Reduces ticket toil.
+
+**Implications**
+
+- **Manual:** Slows down app deployment.
+- **External DNS Operator:** Requires storing DNS provider credentials (highly sensitive) in the cluster. Risk of accidental DNS zone corruption if misconfigured.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-22
 
 **Title**
 CNI Plugin Selection (Platform Specific)
@@ -693,7 +894,47 @@ N/A
 
 ---
 
-## OCP-NET-18
+## OCP-NET-23
+
+**Title**
+Hardware Offloading Strategy (SmartNICs / DPUs)
+
+**Architectural Question**
+Will the cluster utilize OVS Hardware Offloading to accelerate network performance using supported SmartNICs or Data Processing Units (DPUs)?
+
+**Issue or Problem**
+Standard software-based OVS processing consumes significant CPU resources at high throughput. Offloading packet processing to hardware frees up CPU for workloads and reduces latency.
+
+**Assumption**
+Cluster uses OVN-Kubernetes CNI. Hardware supports offloading (e.g., NVIDIA ConnectX-6 Dx, BlueField).
+
+**Alternatives**
+
+- **Software OVS (Default):** All packet processing happens on the host CPU.
+- **Hardware Offload Enabled:** OVS flows are offloaded to the NIC/DPU.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Software OVS:** Simplest configuration. Works on standard hardware. Sufficient for most general-purpose workloads.
+- **Hardware Offload Enabled:** Mandatory for high-performance Telco/5G workloads (CNFs) or high-throughput data paths (100Gbps+). Reduces host CPU overhead.
+
+**Implications**
+
+- **Software OVS:** Higher CPU usage for networking.
+- **Hardware Offload Enabled:** Requires specific supported NICs. Enabling offload is a Day 0 configuration (MachineConfig). Complexity in debugging offloaded flows.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: Network Expert
+
+---
+
+## OCP-NET-24
 
 **Title**
 Advanced CNI Parameter Configuration Strategy (Install-Config vs Custom Manifest)
@@ -734,7 +975,7 @@ Advanced network configuration (e.g., OVN-Kubernetes customization) is required.
 
 ---
 
-## OCP-NET-19
+## OCP-NET-25
 
 **Title**
 OVN-Kubernetes Overlay Network Parameter Configuration
@@ -774,7 +1015,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-20
+## OCP-NET-26
 
 **Title**
 OVN-Kubernetes Internal Subnet Configuration Strategy
@@ -814,7 +1055,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-21
+## OCP-NET-27
 
 **Title**
 OVN-Kubernetes Internal Masquerade Subnet Configuration
@@ -854,7 +1095,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-22
+## OCP-NET-28
 
 **Title**
 OVN-Kubernetes Egress Traffic Routing Via Host Network Stack
@@ -894,7 +1135,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-23
+## OCP-NET-29
 
 **Title**
 OVN-Kubernetes IPsec Encryption Mode
@@ -938,7 +1179,7 @@ CNI Plugin Selection is OVN-Kubernetes.
 
 ---
 
-## OCP-NET-24
+## OCP-NET-30
 
 **Title**
 OVN-Kubernetes Cluster Route Advertisement Strategy
@@ -979,7 +1220,7 @@ N/A
 
 ---
 
-## OCP-NET-25
+## OCP-NET-31
 
 **Title**
 OVN-Kubernetes IP Forwarding Scope for Managed Interfaces
@@ -1020,7 +1261,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-26
+## OCP-NET-32
 
 **Title**
 Network Diagnostics Operator Deployment Strategy
@@ -1061,7 +1302,7 @@ N/A
 
 ---
 
-## OCP-NET-27
+## OCP-NET-33
 
 **Title**
 SSL/TLS Termination Strategy
@@ -1104,7 +1345,7 @@ N/A
 
 ---
 
-## OCP-NET-28
+## OCP-NET-34
 
 **Title**
 Access Control for Cluster Metrics Port (TCP 1936)
@@ -1145,7 +1386,7 @@ N/A
 
 ---
 
-## OCP-NET-29
+## OCP-NET-35
 
 **Title**
 Default Network Policy (Pod Isolation)
@@ -1189,7 +1430,7 @@ N/A
 
 ---
 
-## OCP-NET-30
+## OCP-NET-36
 
 **Title**
 Administrative Network Policy Strategy (Cluster-wide)
@@ -1232,7 +1473,7 @@ Cluster uses OVN-Kubernetes CNI.
 
 ---
 
-## OCP-NET-31
+## OCP-NET-37
 
 **Title**
 OVN-Kubernetes Network Policy Audit Log Destination
@@ -1276,7 +1517,7 @@ CNI Plugin Selection is set to OVN-Kubernetes.
 
 ---
 
-## OCP-NET-32
+## OCP-NET-38
 
 **Title**
 Egress IP Address Strategy
@@ -1320,7 +1561,7 @@ N/A
 
 ---
 
-## OCP-NET-33
+## OCP-NET-39
 
 **Title**
 Secondary Network Strategy (Multus / SR-IOV)
@@ -1365,7 +1606,90 @@ N/A
 
 ---
 
-## OCP-NET-34
+## OCP-NET-40
+
+**Title**
+IP Address Management (IPAM) Strategy for Secondary Networks
+
+**Architectural Question**
+How will IP addresses be assigned to pods attached to secondary networks (Multus/SR-IOV)?
+
+**Issue or Problem**
+Secondary interfaces do not use the main OVN-Kubernetes IPAM. Managing static IPs in hundreds of Pod specs is unmanageable.
+
+**Assumption**
+Secondary Networks (Multus) are in use.
+
+**Alternatives**
+
+- Static IP Assignment
+- DHCP (via CNI)
+- Whereabouts CNI (IPAM)
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Static IP Assignment:** Manually defining IPs in Pod annotations. Simple for singleton pods (e.g., VNFs).
+- **DHCP (via CNI):** Relies on external DHCP network. Requires running `dhcp-daemon` on nodes. Good for integration with legacy networks.
+- **Whereabouts CNI (IPAM):** Cluster-wide IP address management via CRDs. Native K8s experience. Assigns IPs dynamically from a defined range (`IPPool`) without external DHCP dependencies.
+
+**Implications**
+
+- **Static IP Assignment:** High operational toil.
+- **DHCP (via CNI):** Dependency on external infrastructure.
+- **Whereabouts CNI (IPAM):** Requires installing the Whereabouts CNI. State is stored in etcd; improper shutdown can leak IPs (requiring cleanup).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-41
+
+**Title**
+User-Defined Networks (UDN) Strategy
+
+**Architectural Question**
+Will the cluster utilize User-Defined Networks (UDN) to provide tenant-isolated Layer 2 or Layer 3 primary networks?
+
+**Issue or Problem**
+Standard OpenShift networking puts all pods on a shared, flat overlay network. Some tenants require strict network isolation (own CIDR, own topology) without the complexity of Multus secondary interfaces.
+
+**Assumption**
+Cluster uses OVN-Kubernetes CNI.
+
+**Alternatives**
+
+- **Shared Cluster Network Only (Default):** All pods share the main cluster CIDR.
+- **User-Defined Networks Enabled:** Tenants can define their own `UserDefinedNetwork` CRs for isolation.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Shared Cluster Network Only:** Simple, standard Kubernetes model. NetworkPolicy used for isolation.
+- **User-Defined Networks Enabled:** Allows tenants to have their own primary network (L2 or L3). Useful for multi-tenant hosting where tenants need overlapping IPs or strict L2 isolation.
+
+**Implications**
+
+- **Shared Cluster Network:** Isolation limited to L3 NetworkPolicies.
+- **User-Defined Networks Enabled:** Adds complexity to routing and ingress (pods on UDNs might not be reachable from standard Ingress controllers without specific gateways).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-NET-42
 
 **Title**
 SR-IOV Virtual Function (VF) Driver Selection
@@ -1406,7 +1730,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-35
+## OCP-NET-43
 
 **Title**
 SR-IOV Virtual Function Bonding Strategy
@@ -1447,7 +1771,7 @@ Secondary Network Strategy includes SR-IOV.
 
 ---
 
-## OCP-NET-36
+## OCP-NET-44
 
 **Title**
 SR-IOV Virtual Function Bonding Mechanism

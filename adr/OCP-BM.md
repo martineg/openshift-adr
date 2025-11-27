@@ -301,6 +301,46 @@ To enable features like Bare Metal as a Service (BMaaS) or GitOps ZTP, the BMO m
 ## OCP-BM-08
 
 **Title**
+Host Role Assignment Strategy (ABI/Assisted)
+
+**Architectural Question**
+How will physical hosts be assigned to OpenShift node roles (Control Plane vs. Worker) during Agent-based or Assisted installation?
+
+**Issue or Problem**
+The installer needs to know which physical server becomes a Master and which becomes a Worker. This can be done dynamically based on resource availability or explicitly defined to ensure deterministic placement.
+
+**Assumption**
+Cluster installation method is Agent-based Installer (ABI) or Assisted Installer.
+
+**Alternatives**
+
+- **Automatic Assignment (Resource-Based):** The installer automatically assigns roles based on discovered hardware specs (e.g., largest nodes become Masters).
+- **Explicit Assignment (MAC/Hostname Binding):** Administrators explicitly map specific physical hosts (identified by MAC address or hostname) to specific roles in the `agent-config.yaml` or API.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Automatic Assignment:** Simplifies zero-touch provisioning for homogeneous hardware pools. Reduces configuration toil.
+- **Explicit Assignment:** Mandatory for heterogeneous hardware or when specific rack/power placement is required for the control plane (e.g., ensuring masters are in different racks). Guarantees deterministic cluster layout.
+
+**Implications**
+
+- **Automatic Assignment:** Risk of non-deterministic placement (e.g., Master 1 lands on a rack you wanted to be Worker-only).
+- **Explicit Assignment:** Requires gathering MAC addresses or BMC hostnames beforehand and maintaining a strict inventory mapping in the installation manifests.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-BM-09
+
+**Title**
 BMC protocol
 
 **Architectural Question**
@@ -342,7 +382,7 @@ Bare Metal Operator is enabled.
 
 ---
 
-## OCP-BM-09
+## OCP-BM-10
 
 **Title**
 BMC Credential Security and Storage Strategy
@@ -383,7 +423,7 @@ Bare Metal Operator is enabled.
 
 ---
 
-## OCP-BM-10
+## OCP-BM-11
 
 **Title**
 Network Controller Sideband Interface (NC-SI) Support Enforcement
@@ -423,7 +463,7 @@ Bare Metal Operator is enabled.
 
 ---
 
-## OCP-BM-11
+## OCP-BM-12
 
 **Title**
 Provisioning Network Strategy for Installer-Provisioned Bare Metal
@@ -463,7 +503,7 @@ Cluster installation method is Installer-Provisioned Infrastructure (IPI).
 
 ---
 
-## OCP-BM-12
+## OCP-BM-13
 
 **Title**
 IPI Provisioning Network DHCP Management Mode
@@ -504,7 +544,7 @@ A dedicated provisioning network is configured for IPI deployment.
 
 ---
 
-## OCP-BM-13
+## OCP-BM-14
 
 **Title**
 IPI/Assisted Provisioning Boot Mechanism
@@ -545,7 +585,7 @@ Cluster installation method is IPI, Agent-based Installer (ABI), or Assisted Ins
 
 ---
 
-## OCP-BM-14
+## OCP-BM-15
 
 **Title**
 Ironic RHCOS Image Transfer Protocol (Virtual Media)
@@ -586,7 +626,7 @@ Installation utilizes Virtual Media BMC addressing (e.g., `redfish-virtualmedia`
 
 ---
 
-## OCP-BM-15
+## OCP-BM-16
 
 **Title**
 UPI Provisioning Boot Mechanism
@@ -626,7 +666,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-16
+## OCP-BM-17
 
 **Title**
 Ignition Configuration Integrity Validation Strategy
@@ -669,7 +709,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-17
+## OCP-BM-18
 
 **Title**
 RHCOS Live Installer Custom CA Trust Strategy
@@ -710,7 +750,7 @@ The cluster installation method is User-Provisioned Infrastructure (UPI) or PXE/
 
 ---
 
-## OCP-BM-18
+## OCP-BM-19
 
 **Title**
 RHCOS Image Signature Verification Policy for UPI Installation
@@ -750,7 +790,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-19
+## OCP-BM-20
 
 **Title**
 RHCOS Artifact Sourcing Strategy
@@ -791,7 +831,7 @@ N/A
 
 ---
 
-## OCP-BM-20
+## OCP-BM-21
 
 **Title**
 RHCOS Day-1 Customization and Network Configuration Strategy
@@ -831,7 +871,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-21
+## OCP-BM-22
 
 **Title**
 RHCOS Customization Timing Strategy (Live vs Permanent Ignition)
@@ -872,7 +912,7 @@ Custom Day-0 tasks requiring non-MCO methods are needed (e.g., advanced partitio
 
 ---
 
-## OCP-BM-22
+## OCP-BM-23
 
 **Title**
 RHCOS Live Network Configuration Persistence Strategy (UPI)
@@ -913,7 +953,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-23
+## OCP-BM-24
 
 **Title**
 Node IP Address Management
@@ -937,7 +977,7 @@ N/A
 **Justification**
 
 - **DHCP:** Simplifies node provisioning by automatically assigning IPs. Reduces manual configuration.
-- **Static IP Configuration:** Ensures persistent, predictable node IPs, often required by enterprise network/security policies, especially in production.
+- **Static IP Configuration:** Ensures persistent, predictable node IPs. For Agent-based Installer, this is achieved by embedding NMState configurations directly into the agent-config.yaml, allowing the ISO to boot with static networking without external DHCP.
 
 **Implications**
 
@@ -952,7 +992,7 @@ N/A
 
 ---
 
-## OCP-BM-24
+## OCP-BM-25
 
 **Title**
 RHCOS Node Day-1 DNS Resolver Redundancy Strategy
@@ -994,7 +1034,7 @@ The cluster machines are configured with static IP addresses during RHCOS instal
 
 ---
 
-## OCP-BM-25
+## OCP-BM-26
 
 **Title**
 Multi-NIC Strategy for RHCOS Core Network (UPI)
@@ -1034,7 +1074,7 @@ Cluster uses User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-26
+## OCP-BM-27
 
 **Title**
 Bare Metal Network Bridge Configuration Tooling Strategy
@@ -1076,7 +1116,7 @@ N/A
 
 ---
 
-## OCP-BM-27
+## OCP-BM-28
 
 **Title**
 NMState Configuration Scope for Provisioning
@@ -1117,7 +1157,7 @@ Network configuration requires NMState and is delivered via MachineConfig.
 
 ---
 
-## OCP-BM-28
+## OCP-BM-29
 
 **Title**
 Cluster Node Hostname Assignment Strategy (User-Provisioned Infrastructure)
@@ -1158,7 +1198,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-29
+## OCP-BM-30
 
 **Title**
 Host Network Bonding Mode for High Availability (OVS)
@@ -1199,7 +1239,7 @@ The cluster hosts performance-sensitive workloads (e.g., virtualization) that re
 
 --
 
-## OCP-BM-30
+## OCP-BM-31
 
 **Title**
 Bare Metal Node Secure Boot Strategy
@@ -1242,7 +1282,7 @@ The bare metal hardware supports UEFI boot mode and Secure Boot functionality.
 
 ---
 
-## OCP-BM-31
+## OCP-BM-32
 
 **Title**
 Boot disks encryption
@@ -1288,7 +1328,7 @@ Platform infrastructure is vSphere or baremetal. The cluster installation method
 
 ---
 
-## OCP-BM-32
+## OCP-BM-33
 
 **Title**
 Bare Metal Host Firmware Configuration Management
@@ -1329,7 +1369,7 @@ Provisioning workflow is GitOps ZTP.
 
 ---
 
-## OCP-BM-33
+## OCP-BM-34
 
 **Title**
 RHCOS Node Console Access Strategy
@@ -1369,7 +1409,7 @@ N/A
 
 ---
 
-## OCP-BM-34
+## OCP-BM-35
 
 **Title**
 RHCOS Installation Boot Device Selection
@@ -1410,7 +1450,7 @@ N/A
 
 ---
 
-## OCP-BM-35
+## OCP-BM-36
 
 **Title**
 iSCSI Boot Configuration Method for RHCOS
@@ -1451,7 +1491,7 @@ iSCSI boot device is used
 
 ---
 
-## OCP-BM-36
+## OCP-BM-37
 
 **Title**
 RHCOS Multipathing Enablement Strategy (Boot and Secondary Disks)
@@ -1496,7 +1536,7 @@ Installation Boot Device or Secondary Storage is a SAN device.
 
 ---
 
-## OCP-BM-37
+## OCP-BM-38
 
 **Title**
 RHCOS Multipath Installation Target Naming
@@ -1538,7 +1578,7 @@ Multipathing to be enabled.
 
 ---
 
-## OCP-BM-38
+## OCP-BM-39
 
 **Title**
 RHCOS Installation Drive Identification Strategy
@@ -1563,7 +1603,7 @@ Installation target is a local disk or single-path SAN LUN.
 **Justification**
 
 - **Volatile Device Path Naming:** This approach simplifies command usage (e.g., using `/dev/sda`) and is explicitly allowed for the `coreos.inst.install_dev` kernel argument.
-- **Persistent Device Path Naming:** This is the recommended practice for identifying devices (e.g., through `/dev/disk/by-id` symlinks). It prevents errors related to device enumeration changes upon reboot, which is critical for reliable automation and large-scale deployments. For multipath devices, using the World Wide Name (WWN) symlink available in `/dev/disk/by-id` is explicitly recommended over simpler paths.
+- **Persistent Device Path Naming:** This is the recommended practice. It prevents errors related to device enumeration changes upon reboot, which is critical for reliable automation and large-scale deployments. **For Agent-based/Assisted Installer**, this utilizes the rootDeviceHints API (matching by Model, Serial, or WWN) to deterministically select the boot drive regardless of kernel enumeration order. For multipath devices, using the World Wide Name (WWN) symlink available in `/dev/disk/by-id` is explicitly recommended over simpler paths.
 
 **Implications**
 
@@ -1578,7 +1618,7 @@ Installation target is a local disk or single-path SAN LUN.
 
 ---
 
-## OCP-BM-39
+## OCP-BM-40
 
 **Title**
 Hardware RAID Configuration for Bare Metal Installation Drive
@@ -1618,7 +1658,7 @@ Installation Boot Device is Local Device.
 
 ---
 
-## OCP-BM-40
+## OCP-BM-41
 
 **Title**
 Control Plane Storage Performance Validation Strategy
@@ -1658,7 +1698,7 @@ N/A
 
 ---
 
-## OCP-BM-41
+## OCP-BM-42
 
 **Title**
 Bare Metal Minimum Boot Disk Capacity Strategy
@@ -1699,7 +1739,7 @@ While OpenShift supports small boot drives (e.g., 120GB for SNO), advanced confi
 
 ---
 
-## OCP-BM-42
+## OCP-BM-43
 
 **Title**
 RHCOS /var Partitioning Strategy (General Data Isolation)
@@ -1741,7 +1781,7 @@ The cluster will utilize large disk sizes (e.g., > 100GB) and may host applicati
 
 ---
 
-## OCP-BM-43
+## OCP-BM-44
 
 **Title**
 Bare Metal Node OS Disk Partitioning for Container Storage
@@ -1781,7 +1821,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-44
+## OCP-BM-45
 
 **Title**
 Control Plane Etcd Storage Partitioning Strategy
@@ -1822,7 +1862,7 @@ General /var Partitioning Strategy is defined.
 
 ---
 
-## OCP-BM-45
+## OCP-BM-46
 
 **Title**
 RHCOS Partition Retention Strategy during Reinstallation (UPI)
@@ -1862,7 +1902,7 @@ N/A
 
 ---
 
-## OCP-BM-46
+## OCP-BM-47
 
 **Title**
 Bare Metal Node Image Pre-caching Strategy for Disconnected/Edge Deployments
@@ -1905,7 +1945,7 @@ Nodes utilize disk partitioning to include a shared container partition (`/var/l
 
 ---
 
-## OCP-BM-47
+## OCP-BM-48
 
 **Title**
 Internal Image Registry Management State on Bare Metal UPI
@@ -1946,7 +1986,7 @@ Cluster installation method is User-Provisioned Infrastructure (UPI).
 
 ---
 
-## OCP-BM-48
+## OCP-BM-49
 
 **Title**
 Storage Architecture for the Internal Image Registry
@@ -1994,7 +2034,7 @@ Internal Image Registry Management State is set to "Managed".
 
 ---
 
-## OCP-BM-49
+## OCP-BM-50
 
 **Title**
 Bare Metal Kernel Selection: Real-Time Kernel Implementation
@@ -2035,7 +2075,7 @@ Low-latency workloads are required, consistent with the Hardware Acceleration St
 
 ---
 
-## OCP-BM-50
+## OCP-BM-51
 
 **Title**
 Simultaneous Multithreading (SMT) Configuration Strategy
@@ -2076,7 +2116,7 @@ N/A
 
 ---
 
-## OCP-BM-51
+## OCP-BM-52
 
 **Title**
 Workload Partitioning (CPU Isolation)
@@ -2117,7 +2157,7 @@ Low-latency workloads are required.
 
 ---
 
-## OCP-BM-52
+## OCP-BM-53
 
 **Title**
 Container Runtime Selection for Bare Metal Performance Workloads
@@ -2158,7 +2198,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-53
+## OCP-BM-54
 
 **Title**
 Precision Time Protocol (PTP) Configuration Strategy for Low-Latency Workloads
@@ -2200,7 +2240,7 @@ Performance-sensitive workloads (e.g., vDU) will be deployed on the bare metal c
 
 ---
 
-## OCP-BM-54
+## OCP-BM-55
 
 **Title**
 Kernel Module and Device Plugin Management on Bare Metal using KMM
@@ -2240,7 +2280,7 @@ The bare metal cluster will utilize specialized hardware requiring out-of-tree k
 
 ---
 
-## OCP-BM-55
+## OCP-BM-56
 
 **Title**
 Bare Metal Node Firmware Management
@@ -2280,7 +2320,7 @@ Cluster installation method is IPI / Assisted Installer / Agent-based installer 
 
 ---
 
-## OCP-BM-56
+## OCP-BM-57
 
 **Title**
 Bare Metal Firmware Update Application Timing Policy
@@ -2320,7 +2360,7 @@ The Bare Metal Operator (BMO) is enabled and managing node firmware configuratio
 
 ---
 
-## OCP-BM-57
+## OCP-BM-58
 
 **Title**
 Bare Metal Node Remediation

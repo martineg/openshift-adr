@@ -43,6 +43,46 @@ Hardware Acceleration Strategy includes NVIDIA GPUs.
 ## NVIDIA-GPU-02
 
 **Title**
+Virtualization Enablement Strategy (vGPU vs Passthrough)
+
+**Architectural Question**
+For OpenShift clusters running on virtualized infrastructure (vSphere/KubeVirt), how will GPUs be exposed to the worker nodes?
+
+**Issue or Problem**
+Virtualization adds a layer of abstraction. You can either pass the whole physical card to the VM (Passthrough) or slice it at the hypervisor level (vGPU).
+
+**Assumption**
+Cluster is running on a Hypervisor.
+
+**Alternatives**
+
+- **PCI Passthrough (DDA):** VM gets full control of the physical card.
+- **NVIDIA vGPU (Grid):** Hypervisor slices the GPU. VM sees a virtual device.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **PCI Passthrough:** Highest performance. Simplest driver stack in the guest.
+- **NVIDIA vGPU:** Allows multiple VMs (OpenShift Nodes) to share one physical GPU. Higher density.
+
+**Implications**
+
+- **Passthrough:** No vMotion/Live Migration for the Node VM.
+- **vGPU:** Requires NVIDIA Licensing Server. Drivers must match host and guest.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Infra Leader
+- Person: #TODO#, Role: AI/ML Platform Owner
+
+---
+
+## NVIDIA-GPU-03
+
+**Title**
 GPU Resource Configuration
 
 **Architectural Question**
@@ -82,7 +122,45 @@ Multiple applications or tenants will share physical GPU hardware.
 
 ---
 
-## NVIDIA-GPU-03
+## NVIDIA-GPU-04
+
+**Title**
+Dynamic GPU Partitioning Strategy (DAS)
+
+**Architectural Question**
+Will the Dynamic Accelerator Slicer (DAS) be used to reconfigure GPU partitions on-the-fly based on workload demand?
+
+**Issue or Problem**
+Standard MIG is static (requires reboot or reconfiguration to change slice sizes). Workloads vary (training needs big slices, inference needs small).
+
+**Assumption**
+MIG-capable hardware is available.
+
+**Alternatives**
+
+- **Static Partitioning (Default):** Slices defined at boot/config time.
+- **Dynamic Partitioning (DAS) (TP):** Operator re-slices GPUs based on Pod annotations.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Static:** Stable, predictable.
+- **Dynamic:** Maximizes utilization. Adapts to mixed training/inference clusters.
+
+**Implications**
+
+- **Dynamic:** Technology Preview. Adds controller overhead.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: AI/ML Platform Owner
+
+---
+
+## NVIDIA-GPU-05
 
 **Title**
 GPUDirect Technology Enablement
@@ -123,7 +201,124 @@ Extreme performance is required for specific workloads, and the hardware (NICs, 
 
 ---
 
-## NVIDIA-GPU-04
+## NVIDIA-GPU-06
+
+**Title**
+Network Operator Deployment Strategy
+
+**Architectural Question**
+Will the NVIDIA Network Operator be deployed alongside the GPU Operator to manage secondary RDMA networks?
+
+**Issue or Problem**
+GPUDirect RDMA requires specialized NIC drivers (OFED) and Kubernetes networking (Multus, SR-IOV) configured in sync.
+
+**Assumption**
+High-performance networking is required.
+
+**Alternatives**
+
+- **Manual Network Config:** Admin manages SR-IOV/Multus.
+- **Network Operator:** Automates the full stack (Drivers + K8s Config).
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Manual:** Fine-grained control.
+- **Network Operator:** Ensures compatibility between GPU driver and NIC driver versions.
+
+**Implications**
+
+- **Network Operator:** Adds CRDs. Controls the NIC firmware/driver.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Network Expert
+- Person: #TODO#, Role: Infra Leader
+
+---
+
+## NVIDIA-GPU-07
+
+**Title**
+GPU Autoscaling Strategy
+
+**Architectural Question**
+Will the Cluster Autoscaler be configured to scale GPU nodes from zero?
+
+**Issue or Problem**
+GPU nodes are expensive. Keeping them running when idle wastes money.
+
+**Assumption**
+Cluster is on Cloud or IPI-capable infrastructure.
+
+**Alternatives**
+
+- **Static Capacity:** Fixed number of GPU nodes.
+- **Scale-from-Zero:** Autoscaler spins up nodes only when GPU pods are pending.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Static:** Immediate availability (no spin-up latency).
+- **Scale-from-Zero:** Maximizes cost efficiency.
+
+**Implications**
+
+- **Scale-from-Zero:** Pod startup latency (minutes). Requires correct `MachineSet` labels (`cluster-api/accelerator`).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: FinOps Lead
+
+---
+
+## NVIDIA-GPU-08
+
+**Title**
+GPU Instance Lifecycle Strategy (Spot vs On-Demand)
+
+**Architectural Question**
+Will GPU workloads run on Spot/Preemptible instances to reduce costs?
+
+**Issue or Problem**
+Spot instances are 70-90% cheaper but can be terminated at any time.
+
+**Assumption**
+Cloud deployment.
+
+**Alternatives**
+
+- **On-Demand (Standard):** Guaranteed availability.
+- **Spot/Preemptible:** Lower cost, risk of interruption.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **On-Demand:** Critical for interactive sessions (Notebooks) or inference.
+- **Spot:** Ideal for checkpoint-able training jobs or batch inference.
+
+**Implications**
+
+- **Spot:** Workloads must handle `SIGTERM` gracefully.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: AI/ML Platform Owner
+- Person: #TODO#, Role: FinOps Lead
+
+---
+
+## NVIDIA-GPU-09
 
 **Title**
 Monitoring Strategy

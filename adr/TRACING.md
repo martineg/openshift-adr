@@ -72,3 +72,248 @@ N/A
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Operations Expert
+
+---
+
+## TRACING-03
+
+**Title**
+Collector Deployment Mode
+
+**Architectural Question**
+How will the OpenTelemetry Collector be deployed to balance resource usage and scalability?
+
+**Issue or Problem**
+The Collector can run as a DaemonSet (one per node), a Deployment (scaled horizontally), or a Sidecar. This choice impacts CPU/RAM usage and network topology.
+
+**Assumption**
+OpenTelemetry is enabled.
+
+**Alternatives**
+
+- **DaemonSet Mode:** Runs on every node. Receives traces from local pods.
+- **Deployment Mode:** Runs as a scalable service. Centralized processing.
+- **Sidecar Mode:** Injected into every application pod.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **DaemonSet:** Good for infrastructure correlation (node metadata). Efficient for high-volume node-local traffic.
+- **Deployment:** Decouples collector scaling from node count. Best for processing/filtering logic (tail sampling).
+- **Sidecar:** Simplifies app configuration (send to localhost). High resource overhead (N sidecars for N apps).
+
+**Implications**
+
+- **DaemonSet:** Uses resources on every node, even if no apps are tracing.
+- **Deployment:** Requires LoadBalancer/Service for apps to reach it.
+- **Sidecar:** Increases Pod resource requests. Updates require app redeployment.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## TRACING-04
+
+**Title**
+Trace Object Storage Backend
+
+**Architectural Question**
+Which object storage solution will be used to persist Tempo trace data?
+
+**Issue or Problem**
+Tempo requires an S3-compatible backend.
+
+**Assumption**
+TempoStack is selected.
+
+**Alternatives**
+
+- **OpenShift Data Foundation (ODF/MCG):** On-cluster S3.
+- **External Cloud S3 (AWS/Azure/GCP):** Managed object storage.
+- **MinIO:** Simple, self-hosted.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **ODF:** Keeps data local. Integrated support.
+- **External Cloud S3:** Infinite scale, offloads management.
+- **MinIO:** Good for testing or simple on-prem setups without ODF.
+
+**Implications**
+
+- **ODF:** Consumes cluster storage resources.
+- **Cloud S3:** Egress costs. Requires managing cloud credentials (STS recommended).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Storage Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## TRACING-05
+
+**Title**
+Multi-Tenancy Strategy
+
+**Architectural Question**
+Will Tempo be configured in multi-tenant mode to isolate trace data between teams?
+
+**Issue or Problem**
+Without multi-tenancy, all traces are visible to anyone with read access.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Single Tenant (Global):** All traces shared.
+- **Multi-Tenant:** Traces isolated by tenant ID (often Namespace).
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Single Tenant:** Simple. Good for small teams or debugging.
+- **Multi-Tenant:** Essential for large shared clusters. Enforces RBAC on trace data.
+
+**Implications**
+
+- **Multi-Tenant:** Requires Gateway/Auth configuration (often via sidecar or gateway). Clients must send `X-Scope-OrgID` header.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## TRACING-06
+
+**Title**
+Instrumentation Strategy (Auto vs Manual)
+
+**Architectural Question**
+Will applications rely on the OpenTelemetry Operator's auto-instrumentation injection or manual code instrumentation?
+
+**Issue or Problem**
+Developers can manually add OTEL SDKs to code, or Ops can inject agents at runtime.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Auto-Instrumentation (Operator Injection):** Zero-code.
+- **Manual Instrumentation:** Developers add SDKs.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Auto-Instrumentation:** Rapid adoption. No code changes needed. Ideal for Java/Python/Nodejs.
+- **Manual Instrumentation:** Full control over spans/tags. Required for compiled languages (Go) or custom logic.
+
+**Implications**
+
+- **Auto-Instrumentation:** Adds initialization overhead to Pod start.
+- **Manual:** Maintenance burden on dev teams.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Application team leadership
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## TRACING-07
+
+**Title**
+Sampling Strategy
+
+**Architectural Question**
+What sampling strategy will be used to control trace volume?
+
+**Issue or Problem**
+Tracing 100% of requests is expensive and often unnecessary.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Head Sampling (Probabilistic):** Random % of traces kept at start.
+- **Tail Sampling:** Decisions made after trace completes (keep errors/slow traces).
+- **100% Sampling:** Keep everything.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Head Sampling:** Low overhead. Good for general trends.
+- **Tail Sampling:** High value (keeps the "interesting" broken traces). High resource cost (must buffer traces in memory).
+
+**Implications**
+
+- **Tail Sampling:** Requires `Deployment` mode Collector with significant RAM.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## TRACING-08
+
+**Title**
+Visualization Interface Strategy
+
+**Architectural Question**
+Which UI will be used to visualize traces?
+
+**Issue or Problem**
+Users need a frontend to search traces.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Console Plugin (Distributed Tracing UI):** Embedded in OCP Console.
+- **Standalone Jaeger UI:** Dedicated URL.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Console Plugin:** Seamless experience. Single sign-on.
+- **Standalone Jaeger UI:** Familiar to legacy users. Advanced query features may appear here first.
+
+**Implications**
+
+- **Console Plugin:** Requires enabling the plugin.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---

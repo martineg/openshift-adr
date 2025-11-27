@@ -84,6 +84,50 @@ FIPS mode is enabled for the cluster installation.
 ## OCP-SEC-03
 
 **Title**
+TLS Security Profile Selection
+
+**Architectural Question**
+Which cluster-wide TLS security profile will be applied to the Ingress Controller and control plane components to govern cryptographic ciphers and TLS versions?
+
+**Issue or Problem**
+Different organizations have different requirements for cryptographic strength versus client compatibility. Using older ciphers ensures legacy clients can connect but increases security risk. Using modern ciphers improves security but may break older clients.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Intermediate Profile (Default):** Balances security and compatibility. Supports TLS 1.2 and 1.3 with a broad set of strong ciphers.
+- **Modern Profile:** Enforces strict security. Requires TLS 1.3 and drops support for older ciphers.
+- **Old Profile:** Maximize compatibility with legacy clients/browsers. Not recommended for secure environments.
+- **Custom Profile:** Manually defined list of ciphers.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Intermediate Profile:** The safe default. Meets most compliance standards (like NIST) while ensuring standard browsers and tools can connect.
+- **Modern Profile:** Required for high-security environments (e.g., requiring Forward Secrecy) where all clients are known to support TLS 1.3.
+- **Old Profile:** Only selected if specific legacy hardware/software must interact with the cluster API or Ingress.
+
+**Implications**
+
+- **Intermediate Profile:** Allows TLS 1.2.
+- **Modern Profile:** **Breaks clients** that do not support TLS 1.3. May impact older CI/CD tools or external integrations.
+- **Custom Profile:** High maintenance burden to update cipher lists as vulnerabilities are discovered.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-SEC-04
+
+**Title**
 Compliance Automation Strategy
 
 **Architectural Question**
@@ -124,7 +168,49 @@ N/A
 
 ---
 
-## OCP-SEC-04
+## OCP-SEC-05
+
+**Title**
+Audit Log Policy Configuration
+
+**Architectural Question**
+What level of detail will be captured in the Kubernetes API Server audit logs?
+
+**Issue or Problem**
+Audit logs are essential for forensic analysis. However, logging too much detail (like request bodies) generates massive amounts of data, impacting performance and storage costs. Logging too little prevents effective auditing of _what_ changed.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Default Policy (Metadata Only):** Logs who, what, when, and the response status. Does not log the payload.
+- **WriteRequestBodies:** Logs the metadata AND the full payload (body) for modification requests (create, update, patch).
+- **AllRequestBodies:** Logs payloads for every request, including reads.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Default Policy:** Sufficient for tracking "Who did it". Minimizes I/O load and storage requirements.
+- **WriteRequestBodies:** Essential for security auditing. Allows admins to see exactly _what_ changed in a resource (e.g., seeing the specific bad value injected into a ConfigMap), not just that it changed.
+- **AllRequestBodies:** Extreme verbosity. Usually only enabled for short debugging sessions or highest-security environments with massive storage capacity.
+
+**Implications**
+
+- **Default Policy:** Cannot reconstruct the state of an object from logs alone.
+- **WriteRequestBodies:** Significantly increases the volume of logs sent to the auditing system (LOG-01/LOG-02). **Sensitive data** in request bodies (Secrets, ConfigMaps) might be logged; requires strict access control on the logs themselves.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-SEC-06
 
 **Title**
 Identity Provider Selection
@@ -170,7 +256,7 @@ N/A
 
 ---
 
-## OCP-SEC-05
+## OCP-SEC-07
 
 **Title**
 Identity Provider Group Synchronization
@@ -216,7 +302,7 @@ Identity Provider is configured.
 
 ---
 
-## OCP-SEC-06
+## OCP-SEC-08
 
 **Title**
 Multi-Tenant Identity Provider Integration
@@ -256,7 +342,87 @@ Multiple, distinct IdPs are required.
 
 ---
 
-## OCP-SEC-07
+## OCP-SEC-09
+
+**Title**
+OAuth Token Duration Policy
+
+**Architectural Question**
+What duration will be configured for OpenShift OAuth access tokens?
+
+**Issue or Problem**
+The default access token duration is 24 hours. Security compliance standards (e.g., NIST, PCI-DSS) often mandate shorter session lifetimes to reduce the risk of compromised credentials.
+
+**Assumption**
+IdP is configured.
+
+**Alternatives**
+
+- **Default Duration (24 Hours):** Convenient for developers; reduces login frequency.
+- **Short Duration (e.g., 1-8 Hours):** Enhances security by forcing re-authentication more frequently. Recommended for production.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Default Duration:** Balances security with user experience. Suitable for non-prod.
+- **Short Duration:** Mitigates the impact of token theft. Aligns with "Zero Trust" principles by ensuring user identity is re-verified frequently.
+
+**Implications**
+
+- **Default Duration:** Higher risk window if a token is leaked.
+- **Short Duration:** Users (CLI and Console) must log in more often. Automation relying on user tokens will break frequently (Service Accounts should be used instead).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-SEC-10
+
+**Title**
+Kubeadmin User Removal Policy
+
+**Architectural Question**
+Will the default `kubeadmin` superuser account be removed after configuring a permanent Identity Provider?
+
+**Issue or Problem**
+The `kubeadmin` user is a temporary bootstrap administrator with full cluster privileges and a password stored in a secret. Leaving it enabled creates a persistent security risk (brute force, leaked secret).
+
+**Assumption**
+A permanent IdP (`OCP-SEC-06`) and Admin RBAC (`OCP-MGT-02`) are verified working.
+
+**Alternatives**
+
+- **Retain Kubeadmin:** Keep the user as a "break-glass" emergency account.
+- **Remove Kubeadmin:** Delete the user and the associated secret.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Retain Kubeadmin:** Provides a fallback if the external IdP fails.
+- **Remove Kubeadmin:** Eliminates a critical attack vector. Best practice for production.
+
+**Implications**
+
+- **Retain Kubeadmin:** Password secret must be rotated and secured. Audit logs will show "kubeadmin" actions, obscuring the actual human identity.
+- **Remove Kubeadmin:** If the IdP fails, admins must use the physical/cloud console to access the system via SSH and `system:admin` certificates (which bypass OAuth).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-SEC-11
 
 **Title**
 Security Context Constraint (SCC) / Pod Security Admission (PSA) Policy
@@ -299,7 +465,7 @@ N/A
 
 ---
 
-## OCP-SEC-08
+## OCP-SEC-12
 
 **Title**
 Admission Control Strategy (Custom Policies)
@@ -342,7 +508,7 @@ Need for custom policy enforcement exists.
 
 ---
 
-## OCP-SEC-09
+## OCP-SEC-13
 
 **Title**
 Container Image Trust and Signature Verification
@@ -385,7 +551,48 @@ Supply chain security is a requirement.
 
 ---
 
-## OCP-SEC-10
+## OCP-SEC-14
+
+**Title**
+Container Vulnerability Scanning Strategy
+
+**Architectural Question**
+How will container images be scanned for known vulnerabilities (CVEs) before and during execution on the platform?
+
+**Issue or Problem**
+Trusting an image source does not guarantee the image is free of vulnerabilities. Continuous scanning is required to detect new CVEs in running workloads.
+
+**Assumption**
+Image Registry Strategy is defined.
+
+**Alternatives**
+
+- **Registry-Side Scanning Only (e.g., Quay):** Images are scanned at rest in the registry.
+- **Platform-Side Scanning (e.g., Red Hat Advanced Cluster Security - ACS):** Images are scanned at build time, in the registry, and monitored at runtime.
+- **External Scanner:** Reliance on 3rd party tools in the CI/CD pipeline.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Registry-Side Scanning:** Good baseline. Catches issues before pull. Does not protect against zero-day vulnerabilities discovered in images _already running_.
+- **Platform-Side Scanning (ACS):** Recommended for comprehensive security. Connects CVEs to running pods, allowing prioritization based on exposure (e.g., "Fix the CVE in the pod exposed to the internet first").
+
+**Implications**
+
+- **Registry-Side Scanning:** Passive. Ops teams must manually check registry reports.
+- **Platform-Side Scanning (ACS):** Requires installing ACS (Central/Sensor). Consumes cluster resources. Can enforce deployment policies (e.g., "Block deployments with CVSS > 7").
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-SEC-15
 
 **Title**
 Data Protection (etcd) Encryption
@@ -425,7 +632,50 @@ Protection of sensitive configuration data at rest is required.
 
 ---
 
-## OCP-SEC-11
+## OCP-SEC-16
+
+**Title**
+Cloud Credential Management Mode Strategy
+
+**Architectural Question**
+How will the OpenShift Cloud Credential Operator (CCO) manage authentication with the underlying cloud provider API (AWS, Azure, GCP, OpenStack)?
+
+**Issue or Problem**
+OpenShift components need permissions to provision cloud resources (load balancers, storage). The method of granting these permissions impacts the security blast radius and operational complexity.
+
+**Assumption**
+Cluster is deployed on a cloud provider (IPI/UPI).
+
+**Alternatives**
+
+- **Mint Mode (Default for IPI):** CCO uses a high-privileged admin credential to mint short-lived, scoped secrets.
+- **Passthrough Mode:** Components share a global static credential.
+- **Manual Mode with STS/Workload Identity:** Administrator manually provisions short-term credentials via the cloud's IAM (AWS STS, Azure Workload ID).
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Mint Mode:** Good balance of automation and security.
+- **Passthrough Mode:** Least secure. One key rules them all.
+- **Manual Mode (STS):** Highest security. No long-term secrets stored in the cluster.
+
+**Implications**
+
+- **Mint Mode:** Installer needs Admin rights.
+- **Passthrough:** Credential rotation is painful.
+- **Manual Mode:** High setup complexity (IAM roles, OIDC providers) but preferred for high-compliance environments.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-SEC-17
 
 **Title**
 Centralized Secret Management Integration
@@ -465,7 +715,47 @@ Applications require secrets; GitOps might be used; storing secrets directly in 
 
 ---
 
-## OCP-SEC-12
+## OCP-SEC-18
+
+**Title**
+Service Account Token Strategy (Bound vs Legacy)
+
+**Architectural Question**
+Will workloads relying on Service Account Tokens use legacy permanent secrets or Bound Service Account Tokens (Volume Projection)?
+
+**Issue or Problem**
+Legacy Service Account tokens are static secrets that never expire. If stolen, they are valid forever. Bound tokens are time-limited, audience-bound, and rotate automatically.
+
+**Assumption**
+Workloads use Service Accounts to talk to the Kubernetes API.
+
+**Alternatives**
+
+- **Legacy Secrets (Default behavior in older apps):** Mounting the static secret.
+- **Bound Service Account Tokens:** Configuring `serviceAccountToken` volume projection.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Legacy Secrets:** Simple, backward compatible.
+- **Bound Tokens:** significantly improves security. Tokens expire (e.g., 1 hour). Stolen tokens become useless quickly.
+
+**Implications**
+
+- **Legacy Secrets:** High risk of long-term credential theft.
+- **Bound Tokens:** Applications _must_ reload the token from disk periodically (standard client-go does this). Incompatible with apps that read the token once at startup and never refresh.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: DevOps Engineer
+
+---
+
+## OCP-SEC-19
 
 **Title**
 Kubelet Serving Certificate Signing Request (CSR) Management Strategy for UPI

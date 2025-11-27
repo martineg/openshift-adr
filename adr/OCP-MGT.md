@@ -182,6 +182,50 @@ Multi-tenancy or resource contention is expected. Project Allocation is defined.
 ## OCP-MGT-05
 
 **Title**
+Cluster Update Channel Strategy
+
+**Architectural Question**
+Which OpenShift update channel will be selected to govern the cadence and stability of platform upgrades?
+
+**Issue or Problem**
+The update channel determines how quickly the cluster receives new versions and the level of validation those versions have undergone. This impacts stability, feature availability, and support windows.
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Stable Channel:** Releases are promoted only after passing testing in the Fast channel and proving stability in the field.
+- **Fast Channel:** Releases are promoted as soon as Red Hat QA approves them. Access to new features sooner, but potentially higher risk of bugs.
+- **Candidate Channel:** Pre-release builds. Not for production.
+- **EUS (Extended Update Support) Channel:** Allows staying on specific even-numbered minor versions (e.g., 4.14) for longer periods (18+ months) with a simplified upgrade path to the next EUS version.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Stable Channel:** Recommended default for production. Balances novelty with reliability.
+- **Fast Channel:** Suitable for non-production or "canary" clusters to test upcoming features before they hit Stable.
+- **EUS Channel:** Critical for mission-critical clusters where upgrade frequency must be minimized (e.g., Telco, Edge, Banking).
+
+**Implications**
+
+- **Stable:** Slower access to fixes/features than Fast.
+- **Fast:** Higher risk of regression.
+- **EUS:** Upgrade paths are stricter (e.g., 4.12 -> 4.13 -> 4.14 required, even if "skipping" via EUS logic). Only available on specific versions.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-MGT-06
+
+**Title**
 Platform Backup and Restore Strategy
 
 **Architectural Question**
@@ -223,7 +267,7 @@ Disaster recovery and data protection are required.
 
 ---
 
-## OCP-MGT-06
+## OCP-MGT-07
 
 **Title**
 Remote Health Reporting (Telemetry) Configuration
@@ -259,5 +303,201 @@ Cluster is in a connected environment.
 
 - Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: Security Expert
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-MGT-08
+
+**Title**
+Cluster Autoscaling Strategy
+
+**Architectural Question**
+Will the cluster utilize the Cluster Autoscaler to dynamically adjust the size of MachineSets based on workload demand?
+
+**Issue or Problem**
+Static clusters may be over-provisioned (wasting money) or under-provisioned (causing pending pods). Autoscaling adapts infrastructure to demand but adds complexity and cost unpredictability.
+
+**Assumption**
+Platform supports Machine API (IPI/Cloud).
+
+**Alternatives**
+
+- **Static Sizing:** Fixed number of nodes per MachineSet. Manual scaling only.
+- **Cluster Autoscaler Enabled:** Dynamic scaling within defined min/max bounds.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Static Sizing:** Predictable costs and topology. Simple to manage. Recommended for Bare Metal UPI or fixed-budget environments.
+- **Cluster Autoscaler Enabled:** Optimizes cloud costs by creating nodes only when pods are pending and deleting them when empty. Recommended for cloud IPI or dynamic virtualization environments.
+
+**Implications**
+
+- **Static Sizing:** Operations team must monitor capacity and manually scale out/in.
+- **Autoscaler:** Risk of "runaway" costs if max limits are too high or workloads lack requests/limits. Pods must tolerate disruption (node scale-down).
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-MGT-09
+
+**Title**
+General Node Remediation Strategy (MachineHealthCheck)
+
+**Architectural Question**
+How will unhealthy nodes (e.g., NotReady state) be automatically remediated in Cloud/Virtualization environments?
+
+**Issue or Problem**
+Nodes can freeze or disconnect. Manual recovery is slow. Automated remediation improves uptime but risks data loss if configured incorrectly (e.g., fencing).
+
+**Assumption**
+Platform supports Machine API (IPI).
+
+**Alternatives**
+
+- **Manual Remediation:** Alerts fire; humans investigate.
+- **MachineHealthCheck (MHC) Enabled:** Controller detects unhealthy nodes and recreates them (Cloud/Virt) or reboots them (Bare Metal).
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Manual:** Safe. Prevents accidental data loss or "reboot loops" in unstable clusters.
+- **MHC Enabled:** Self-healing infrastructure. Essential for high availability in cloud environments where instances are ephemeral.
+
+**Implications**
+
+- **MHC Enabled:** Must configure `maxUnhealthy` to prevent cascading failures. **Warning:** On platforms without shared storage (like vSphere without RWX), recreating a node might detach RWO volumes safely, but requires careful testing.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Operations Expert
+
+---
+
+## OCP-MGT-10
+
+**Title**
+Pod Descheduling Strategy
+
+**Architectural Question**
+Will the Descheduler be deployed to proactively move running pods to optimize cluster balance?
+
+**Issue or Problem**
+The default scheduler only places _new_ pods. Over time, clusters become fragmented or imbalanced (e.g., all high-cpu pods on one node).
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **No Descheduler:** Pods stay where they land until deleted or evicted.
+- **Descheduler Enabled:** Automated eviction of pods based on policies (e.g., `RemoveDuplicates`, `LowNodeUtilization`).
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **No Descheduler:** Stability. Pods are not restarted unless necessary.
+- **Descheduler Enabled:** Optimization. Actively corrects placement to enforce anti-affinity, improve bin-packing, or clear nodes with high utilization.
+
+**Implications**
+
+- **Descheduler:** Pods will be killed and rescheduled. Workloads **must** utilize PodDisruptionBudgets (PDBs) and handle restarts gracefully.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+- Person: #TODO#, Role: Application team leadership
+
+---
+
+## OCP-MGT-11
+
+**Title**
+Web Console Customization Strategy
+
+**Architectural Question**
+Will the OpenShift Web Console be customized with organization-specific branding, links, or plugins?
+
+**Issue or Problem**
+The default console implies a generic Red Hat experience. Enterprises often need to add "Help" links to internal ticketing systems, display classification banners (e.g., "TOP SECRET"), or integrate custom UI plugins (e.g., for internal tools).
+
+**Assumption**
+N/A
+
+**Alternatives**
+
+- **Standard Console:** Default look and feel.
+- **Customized Console:** Custom logo, login text, help links, notification banners, or dynamic plugins enabled.
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Standard:** Zero maintenance.
+- **Customized:** Improves user experience and compliance (e.g., mandatory warning banners). Directs users to correct support channels.
+
+**Implications**
+
+- **Customized:** Requires managing `Console` resource configuration and potentially hosting assets (logos) or plugin containers.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: OCP Platform Owner
+
+---
+
+## OCP-MGT-12
+
+**Title**
+Cluster Capabilities Selection Strategy
+
+**Architectural Question**
+Will optional cluster capabilities (e.g., Marketplace, Insights, Console) be disabled to optimize resource consumption?
+
+**Issue or Problem**
+By default, OpenShift installs a comprehensive set of operators. For resource-constrained environments like Single Node OpenShift (SNO) or Edge, these idle operators consume valuable CPU/RAM.
+
+**Assumption**
+Cluster topology is SNO or Edge.
+
+**Alternatives**
+
+- **Full Capabilities (Default):** Installs all standard operators.
+- **Optimized/Reduced Capabilities:** Explicitly disables optional components via `install-config.yaml` (`capabilities.baselineCapabilitySet` or `additionalEnabledCapabilities`).
+
+**Decision**
+#TODO: Document the decision for each cluster.#
+
+**Justification**
+
+- **Full Capabilities:** Ensures feature parity with standard clusters. Simpler updates (no missing dependencies).
+- **Optimized/Reduced:** Critical for SNO. Can save significant memory (e.g., disabling `Marketplace`, `Console`, `Insights`).
+
+**Implications**
+
+- **Full:** Higher overhead.
+- **Optimized:** "Day 2" enablement of features (like adding the Console back later) can be complex.
+
+**Agreeing Parties**
+
+- Person: #TODO#, Role: Enterprise Architect
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Operations Expert
