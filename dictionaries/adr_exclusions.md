@@ -15,9 +15,13 @@ These topics are **invalid** as ADRs (Misconfigurations, Deprecated, Non-Decisio
 
 These topics are known to be correct. **Do NOT report updates** if the ADR matches these Titles/Topics.
 
-| ADR Title / Scope                                           | Suppressed Issue                            | Instruction                                                                                            |
-| :---------------------------------------------------------- | :------------------------------------------ | :----------------------------------------------------------------------------------------------------- |
-| **Bare Metal Node Secure Boot Strategy**                    | **(TP) Flag on Managed Secure Boot**        | The flag is already present. Ignore requests to add it.                                                |
-| **OVN-Kubernetes IP Forwarding Scope**                      | **Versioning Policy (New Install Default)** | The phrase "New Install Default" is a valid architectural state. Do not report.                        |
-| **Node IP Address Management**                              | **Mixed / Hybrid IPAM**                     | This ADR correctly chooses _between_ DHCP and Static. It is NOT a "Mixed" strategy. Do not remove.     |
-| **OVN-Kubernetes Internal Masquerade Subnet Configuration** | **Default Masquerade CIDR**                 | The ADR already correctly states the 169.254.0.0/17 default. Ignore comparisons to legacy /29 subnets. |
+| ADR Title / Scope                                        | Suppressed Issue                     | Instruction                                                                                        |
+| :------------------------------------------------------- | :----------------------------------- | :------------------------------------------------------------------------------------------------- |
+| **Bare Metal Node Secure Boot Strategy**                 | **(TP) Flag on Managed Secure Boot** | The flag is already present. Ignore requests to add it.                                            |
+| **OVN-Kubernetes Internal Masquerade Subnet**            | **Default Masquerade CIDR**          | The CIDR is already updated. Ignore legacy comparison.                                             |
+| **Node IP Address Management**                           | **Mixed / Hybrid IPAM**              | This ADR correctly chooses _between_ DHCP and Static. It is NOT a "Mixed" strategy. Do not remove. |
+| **OVN-Kubernetes IP Forwarding Scope**                   | **Versioning Policy**                | The ADR correctly uses "New Install Default" without version numbers. Do not report.               |
+| **Bare Metal Fleet Cluster Upgrade Strategy**            | **(TP) Flag on IBGU**                | The (TP) flag is already present or decided. Do not report.                                        |
+| **Bare Metal Firmware Update Application Timing Policy** | **(TP) Flag on Live Update**         | The (TP) flag is already present or decided. Do not report.                                        |
+| **Bare Metal Node Remediation**                          | **(TP) Flag on BMO Remediation**     | The (TP) flag is already present or decided. Do not report.                                        |
+| **Environment Isolation Strategy**                       | **(TP) Flag on Consolidated Model**  | Do not flag the entire model as TP just because of User Namespaces.                                |
