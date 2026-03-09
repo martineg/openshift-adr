@@ -55,32 +55,33 @@ Update Channel Strategy
 Which update channel will be selected for the Red Hat OpenShift AI Operator?
 
 **Issue or Problem**
-OpenShift AI 3.0 introduces a major architectural break. Upgrades from 2.x are not supported. The channel selection dictates the major version and stability level.
+The operator update channel determines the feature set, stability level, and update cadence. Channel selection affects the availability of new capabilities, technology preview features, and the frequency of updates.
 
 **Assumption**
-Fresh installation of RHOAI is being performed.
+Fresh installation of RHOAI 3.x is being performed on a supported OpenShift Container Platform cluster.
 
 **Alternatives**
 
-- **Fast-3.x Channel:** Delivers the latest 3.x features. Required for RHOAI 3.0 installations.
-- **Stable-2.x Channel:** Remains on the legacy 2.x architecture.
+- fast Channel
+- stable Channel
 
 **Decision**
 #TODO: Document the decision for each cluster.#
 
 **Justification**
 
-- **Fast-3.x Channel:** Adopts the modern RHOAI architecture (KubeRay, RawDeployment, AI Pipelines). Required for new deployments needing 3.0 features.
-- **Stable-2.x Channel:** Maintenance mode for existing clusters that cannot yet migrate to 3.0.
+- **fast Channel:** Provides access to the latest RHOAI features and capabilities, including technology preview features. Delivers updates more frequently. Suitable for development, testing, and organizations that prioritize early access to new functionality.
+- **stable Channel:** Provides production-ready releases with a focus on stability. Updates are delivered after additional validation. Suitable for production environments prioritizing stability over immediate feature access.
 
 **Implications**
 
-- **Fast-3.x:** **No direct upgrade path from 2.x.** Requires a fresh install.
-- **Stable-2.x:** Will eventually go End-of-Life. Lacks new features (Model Registry GA, vLLM optimizations).
+- **fast Channel:** Enables access to technology preview features and the latest capabilities. May include features not yet recommended for production workloads. Requires more frequent update testing and validation cycles. Organizations must evaluate technology preview features against risk tolerance.
+- **stable Channel:** Reduces exposure to early-stage features. Provides a more conservative update schedule. May delay access to new capabilities compared to fast channel. Recommended for production environments with strict change control requirements.
 
 **Agreeing Parties**
 
 - Person: #TODO#, Role: Enterprise Architect
+- Person: #TODO#, Role: AI/ML Platform Owner
 - Person: #TODO#, Role: OCP Platform Owner
 
 ---
@@ -175,19 +176,20 @@ An appropriate OpenShift IdP must be configured.
 Red Hat OpenShift AI Capabilities Enablement Strategy
 
 **Architectural Question**
-Which high-level functional components (Workbenches, Data Science Pipelines, Model Serving, Distributed Workloads) will be enabled within the `DataScienceCluster` to define the scope of the AI platform?
+Which high-level functional components will be enabled within the `DataScienceCluster` to define the scope of the AI platform?
 
 **Issue or Problem**
-OpenShift AI provides a modular suite of tools. Enabling all components increases the cluster resource footprint (CPU, Memory, CRDs) and operational surface area. A strategic decision is needed to define whether the platform acts as a full end-to-end MLOps suite or a specialized environment (e.g., Serving-only or Exploration-only).
+OpenShift AI provides a modular suite of tools. Enabling all components increases the cluster resource footprint (CPU, Memory, CRDs) and operational surface area. A strategic decision is needed to define whether the platform acts as a full end-to-end MLOps suite or a specialized environment (e.g., Serving-only, Exploration-only, or MLOps Governance-focused).
 
 **Assumption**
 **Red Hat OpenShift AI instances** have been defined.
 
 **Alternatives**
 
-- **Full MLOps Platform (All Capabilities):** Enable Workbenches, Pipelines, Model Serving (KServe), and Distributed Workloads.
-- **Exploration & Training Only:** Enable Workbenches and Distributed Workloads; disable Model Serving.
-- **Production Serving Only:** Enable Model Serving; disable Workbenches and Pipelines.
+- **Full MLOps Platform (All Capabilities):** Enable all major components including Workbenches, Data Science Pipelines, Model Serving (KServe), Distributed Workloads, Model Registry, TrustyAI, Training Hub, and Feature Store.
+- **Exploration & Training Only:** Enable Workbenches, Distributed Workloads, and Training Hub; disable Model Serving.
+- **Production Serving Only:** Enable Model Serving (KServe), Model Registry, and TrustyAI; disable Workbenches, Pipelines, and Training Hub.
+- **MLOps Governance & Observability Focus:** Enable Model Registry, TrustyAI, Model Serving, and Data Science Pipelines while potentially disabling resource-intensive training components.
 - **Custom/Selective Enablement:** Granular selection based on specific use case requirements.
 
 **Decision**
@@ -195,17 +197,19 @@ OpenShift AI provides a modular suite of tools. Enabling all components increase
 
 **Justification**
 
-- **Full MLOps Platform (All Capabilities):** Provides a complete end-to-end workflow from experimentation (Workbenches) to automation (Pipelines) and production inference (Model Serving). This is the standard configuration for general-purpose Data Science teams.
-- **Exploration & Training Only:** Optimizes the cluster for model development and heavy computation (Ray/CodeFlare). Suitable for "Dev" clusters where models are trained but not served for production traffic.
-- **Production Serving Only:** Reduces the attack surface and resource overhead by removing interactive components (Workbenches, Dashboard). Ideal for strictly controlled "Prod" inference clusters where artifacts are promoted via GitOps.
-- **Custom/Selective Enablement:** Allows precise resource optimization (e.g., enabling Workbenches but disabling Pipelines if an external orchestrator like Airflow is used).
+- **Full MLOps Platform (All Capabilities):** Provides a complete end-to-end workflow from experimentation (Workbenches) to automation (Pipelines) and production inference (Model Serving) with full governance and observability. Standard configuration for general-purpose Data Science teams.
+- **Exploration & Training Only:** Optimizes the cluster for model development and heavy computation (Ray/CodeFlare). Suitable for development clusters where models are trained but not served for production traffic.
+- **Production Serving Only:** Reduces attack surface and resource overhead by removing interactive components. Ideal for strictly controlled production inference clusters where artifacts are promoted via GitOps.
+- **MLOps Governance & Observability Focus:** Balances governance requirements (Model Registry for lineage, TrustyAI for fairness/bias monitoring) with operational constraints. May require coordination with separate training environments.
+- **Custom/Selective Enablement:** Allows precise resource optimization by enabling only necessary components.
 
 **Implications**
 
-- **Full MLOps Platform:** Requires significant cluster resources (CPU/Memory) to host control plane components for all services. Requires deciding configuration for dependent services like **S3 Object Storage** and **Data Science Pipelines Database**.
-- **Exploration & Training Only:** Eliminates the overhead of Istio/Knative/KServe if inference is not required.
-- **Production Serving Only:** Data Scientists cannot log in to write code. Requires a robust CI/CD pipeline to promote trained models into the serving environment.
-- **Custom/Selective Enablement:** Requires managing the `DataScienceCluster` resource configuration carefully to ensure dependencies (e.g., Kueue for Distributed Workloads) are correctly handled.
+- **Full MLOps Platform:** Requires significant cluster resources (CPU/Memory) to host control plane components for all services (Workbenches, KServe, KubeRay, Kueue, Model Registry DB, Pipelines DB, TrustyAI, Training Operator, Feature Store). Requires deciding configuration for dependent services like S3 Object Storage, databases (PostgreSQL for Model Registry, MariaDB/MySQL for Pipelines), and vector databases (if using Feature Store or RAG capabilities).
+- **Exploration & Training Only:** Eliminates the overhead of Istio/Knative/KServe if inference is not required. Reduces dependencies on external S3 storage for model serving artifacts. Focuses resources on compute-intensive workloads (GPU, distributed training).
+- **Production Serving Only:** Data Scientists cannot log in to write code. Requires a robust CI/CD pipeline to promote trained models into the serving environment. Eliminates training-related resource consumption and security exposure.
+- **MLOps Governance & Observability Focus:** Balances governance requirements with operational constraints. May require coordination with separate training environments.
+- **Custom/Selective Enablement:** Requires managing the `DataScienceCluster` resource configuration carefully to ensure dependencies are correctly handled (e.g., Kueue for Distributed Workloads, S3 for Model Registry and KServe, databases for Model Registry and Pipelines).
 
 **Agreeing Parties**
 
@@ -213,6 +217,7 @@ OpenShift AI provides a modular suite of tools. Enabling all components increase
 - Person: #TODO#, Role: AI/ML Platform Owner
 - Person: #TODO#, Role: OCP Platform Owner
 - Person: #TODO#, Role: Operations Expert
+- Person: #TODO#, Role: Lead Data Scientist
 
 ---
 
