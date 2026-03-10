@@ -206,7 +206,7 @@ SELECTED_INDICES=()
 while true; do
     display_products
 
-    read -p "Select product number (or press ENTER to continue): " SELECTION
+    read -p "Select product number(s) [e.g., '5' or '5 10 17'] (or ENTER to continue): " SELECTION
 
     # If empty, break the loop
     if [ -z "$SELECTION" ]; then
@@ -228,41 +228,44 @@ while true; do
         continue
     fi
 
-    # Validate input is a number
-    if ! [[ "$SELECTION" =~ ^[0-9]+$ ]]; then
-        print_error "Invalid input: must be a number or 'all'"
-        sleep 1
-        continue
-    fi
-
-    # Convert to array index (1-based to 0-based)
-    index=$((SELECTION - 1))
-
-    # Validate range
-    if [ $index -lt 0 ] || [ $index -ge ${#PRODUCTS[@]} ]; then
-        print_error "Invalid selection: $SELECTION (out of range 1-${#PRODUCTS[@]})"
-        sleep 1
-        continue
-    fi
-
-    # Toggle selection
-    already_selected=false
-    new_indices=()
-    for selected in "${SELECTED_INDICES[@]}"; do
-        if [ "$selected" == "$index" ]; then
-            already_selected=true
-            # Don't add it (deselect)
-        else
-            new_indices+=("$selected")
+    # Process space-separated numbers (e.g., "5 10 17")
+    for num in $SELECTION; do
+        # Validate each number
+        if ! [[ "$num" =~ ^[0-9]+$ ]]; then
+            print_error "Invalid input: '$num' is not a number"
+            sleep 1
+            continue 2  # Continue outer loop
         fi
+
+        # Convert to array index (1-based to 0-based)
+        index=$((num - 1))
+
+        # Validate range
+        if [ $index -lt 0 ] || [ $index -ge ${#PRODUCTS[@]} ]; then
+            print_error "Invalid selection: $num (out of range 1-${#PRODUCTS[@]})"
+            sleep 1
+            continue 2  # Continue outer loop
+        fi
+
+        # Toggle selection
+        already_selected=false
+        new_indices=()
+        for selected in "${SELECTED_INDICES[@]}"; do
+            if [ "$selected" == "$index" ]; then
+                already_selected=true
+                # Don't add it (deselect)
+            else
+                new_indices+=("$selected")
+            fi
+        done
+
+        if [ "$already_selected" = false ]; then
+            # Add to selection
+            new_indices+=("$index")
+        fi
+
+        SELECTED_INDICES=("${new_indices[@]}")
     done
-
-    if [ "$already_selected" = false ]; then
-        # Add to selection
-        new_indices+=("$index")
-    fi
-
-    SELECTED_INDICES=("${new_indices[@]}")
 done
 
 # Build selected products array and calculate totals

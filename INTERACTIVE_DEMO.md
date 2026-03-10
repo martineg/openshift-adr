@@ -48,7 +48,7 @@ Available ADR templates:
 
 ================================================================================
 
-Select product number (or press ENTER to continue): 5
+Select product number(s) [e.g., '5' or '5 10 17'] (or ENTER to continue): 5
 
 [Screen refreshes]
 
@@ -78,7 +78,7 @@ Available ADR templates:
 
 Selected: 1 product(s)
 
-Select product number (or press ENTER to continue): 10
+Select product number(s) [e.g., '5' or '5 10 17'] (or ENTER to continue): 10
 
 [Screen refreshes]
 
@@ -108,7 +108,7 @@ Available ADR templates:
 
 Selected: 2 product(s)
 
-Select product number (or press ENTER to continue): 17
+Select product number(s) [e.g., '5' or '5 10 17'] (or ENTER to continue): 17
 
 [Screen refreshes]
 
@@ -127,7 +127,7 @@ Available ADR templates:
 
 Selected: 3 product(s)
 
-Select product number (or press ENTER to continue): [ENTER]
+Select product number(s) [e.g., '5' or '5 10 17'] (or ENTER to continue): [ENTER]
 
 [Screen clears]
 
@@ -231,13 +231,27 @@ python scripts/customer_adrs.py generate \
 
 ## Product Selection Features
 
+**Single Number Selection:**
+```
+Select product number(s): 5     ← Select OCP-BASE
+  5) [X] OCP-BASE
+```
+
+**Multiple Numbers at Once:**
+```
+Select product number(s): 5 10 17     ← Select 3 products at once!
+  5) [X] OCP-BASE
+ 10) [X] OCP-NET
+ 17) [X] RHOAI-SM
+```
+
 **Toggle Selection (Select/Deselect):**
 ```
-Select product number: 5     ← Select OCP-BASE
+Select product number(s): 5     ← Select OCP-BASE
   5) [X] OCP-BASE
 
-Select product number: 5     ← Select again to deselect
-  5) [ ] OCP-BASE            ← Deselected!
+Select product number(s): 5     ← Select again to deselect
+  5) [ ] OCP-BASE              ← Deselected!
 ```
 
 **Select All Products:**
