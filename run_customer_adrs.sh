@@ -138,6 +138,29 @@ if [ ${#PRODUCTS[@]} -eq 0 ]; then
     exit 1
 fi
 
+# Product descriptions mapping
+declare -A PRODUCT_NAMES=(
+    ["GITOPS"]="OpenShift GitOps"
+    ["LOG"]="OpenShift Logging"
+    ["NETOBSERV"]="Network Observability"
+    ["NVIDIA-GPU"]="NVIDIA GPU Operator"
+    ["OCP-BASE"]="OCP - General Platform"
+    ["OCP-BM"]="OCP - Bare Metal Installation"
+    ["OCP-HCP"]="OCP - Hosted Control Planes"
+    ["OCP-MGT"]="OCP - Cluster Management & Day2 Ops"
+    ["OCP-MON"]="OCP - Monitoring (Metrics)"
+    ["OCP-NET"]="OCP - Networking"
+    ["OCP-OSP"]="OCP - OpenStack Installation"
+    ["OCP-SEC"]="OCP - Security & Compliance"
+    ["OCP-STOR"]="OCP - Storage"
+    ["ODF"]="OpenShift Data Foundation"
+    ["PIPELINES"]="OpenShift Pipelines"
+    ["POWERMON"]="OpenShift Power Monitoring (Kepler)"
+    ["RHOAI-SM"]="OpenShift AI Self-Managed"
+    ["TRACING"]="Red Hat Distributed Tracing"
+    ["VIRT"]="OpenShift Virtualization"
+)
+
 # Function to display product list with selection markers
 display_products() {
     clear
@@ -150,6 +173,7 @@ display_products() {
 
     for i in "${!PRODUCTS[@]}"; do
         product="${PRODUCTS[$i]}"
+        product_name="${PRODUCT_NAMES[$product]:-$product}"
         template_file="adr_templates/${product}.md"
         count=$(grep -c "^## ${product}-" "$template_file" 2>/dev/null || echo "0")
 
@@ -162,7 +186,7 @@ display_products() {
             fi
         done
 
-        printf "  %2d) %s %-15s (%s ADRs)\n" $((i+1)) "$marker" "$product" "$count"
+        printf "  %2d) %s %-15s - %-45s (%2s ADRs)\n" $((i+1)) "$marker" "$product" "$product_name" "$count"
     done
 
     echo ""
@@ -267,9 +291,10 @@ echo ""
 print_success "You have selected ${#SELECTED_PRODUCTS[@]} product(s):"
 echo ""
 for product in "${SELECTED_PRODUCTS[@]}"; do
+    product_name="${PRODUCT_NAMES[$product]:-$product}"
     template_file="adr_templates/${product}.md"
     count=$(grep -c "^## ${product}-" "$template_file" 2>/dev/null || echo "0")
-    echo "  - $product ($count ADRs)"
+    printf "  - %-15s (%s) - %2s ADRs\n" "$product" "$product_name" "$count"
 done
 echo ""
 echo "  Total ADRs: $TOTAL_ADRS"

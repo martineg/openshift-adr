@@ -26,25 +26,25 @@ $ ./run_customer_adrs.sh
 
 Available ADR templates:
 
-   1) [ ] GITOPS          (6 ADRs)
-   2) [ ] LOG             (6 ADRs)
-   3) [ ] NETOBSERV       (7 ADRs)
-   4) [ ] NVIDIA-GPU      (9 ADRs)
-   5) [ ] OCP-BASE        (15 ADRs)
-   6) [ ] OCP-BM          (58 ADRs)
-   7) [ ] OCP-HCP         (11 ADRs)
-   8) [ ] OCP-MGT         (17 ADRs)
-   9) [ ] OCP-MON         (9 ADRs)
-  10) [ ] OCP-NET         (44 ADRs)
-  11) [ ] OCP-OSP         (12 ADRs)
-  12) [ ] OCP-SEC         (19 ADRs)
-  13) [ ] OCP-STOR        (7 ADRs)
-  14) [ ] ODF             (14 ADRs)
-  15) [ ] PIPELINES       (8 ADRs)
-  16) [ ] POWERMON        (2 ADRs)
-  17) [ ] RHOAI-SM        (53 ADRs)
-  18) [ ] TRACING         (6 ADRs)
-  19) [ ] VIRT            (7 ADRs)
+   1) [ ] GITOPS          - OpenShift GitOps                              ( 6 ADRs)
+   2) [ ] LOG             - OpenShift Logging                             ( 7 ADRs)
+   3) [ ] NETOBSERV       - Network Observability                         ( 6 ADRs)
+   4) [ ] NVIDIA-GPU      - NVIDIA GPU Operator                           ( 9 ADRs)
+   5) [ ] OCP-BASE        - OCP - General Platform                        (15 ADRs)
+   6) [ ] OCP-BM          - OCP - Bare Metal Installation                 (58 ADRs)
+   7) [ ] OCP-HCP         - OCP - Hosted Control Planes                   ( 6 ADRs)
+   8) [ ] OCP-MGT         - OCP - Cluster Management & Day2 Ops           (12 ADRs)
+   9) [ ] OCP-MON         - OCP - Monitoring (Metrics)                    ( 6 ADRs)
+  10) [ ] OCP-NET         - OCP - Networking                              (44 ADRs)
+  11) [ ] OCP-OSP         - OCP - OpenStack Installation                  ( 8 ADRs)
+  12) [ ] OCP-SEC         - OCP - Security & Compliance                   (19 ADRs)
+  13) [ ] OCP-STOR        - OCP - Storage                                 ( 7 ADRs)
+  14) [ ] ODF             - OpenShift Data Foundation                     ( 9 ADRs)
+  15) [ ] PIPELINES       - OpenShift Pipelines                           ( 8 ADRs)
+  16) [ ] POWERMON        - OpenShift Power Monitoring (Kepler)           ( 3 ADRs)
+  17) [ ] RHOAI-SM        - OpenShift AI Self-Managed                     (53 ADRs)
+  18) [ ] TRACING         - Red Hat Distributed Tracing                   ( 8 ADRs)
+  19) [ ] VIRT            - OpenShift Virtualization                      ( 7 ADRs)
 
 ================================================================================
 
@@ -54,25 +54,25 @@ Select product number (or press ENTER to continue): 5
 
 Available ADR templates:
 
-   1) [ ] GITOPS          (6 ADRs)
-   2) [ ] LOG             (6 ADRs)
-   3) [ ] NETOBSERV       (7 ADRs)
-   4) [ ] NVIDIA-GPU      (9 ADRs)
-   5) [X] OCP-BASE        (15 ADRs)    ← Now selected!
-   6) [ ] OCP-BM          (58 ADRs)
-   7) [ ] OCP-HCP         (11 ADRs)
-   8) [ ] OCP-MGT         (17 ADRs)
-   9) [ ] OCP-MON         (9 ADRs)
-  10) [ ] OCP-NET         (44 ADRs)
-  11) [ ] OCP-OSP         (12 ADRs)
-  12) [ ] OCP-SEC         (19 ADRs)
-  13) [ ] OCP-STOR        (7 ADRs)
-  14) [ ] ODF             (14 ADRs)
-  15) [ ] PIPELINES       (8 ADRs)
-  16) [ ] POWERMON        (2 ADRs)
-  17) [ ] RHOAI-SM        (53 ADRs)
-  18) [ ] TRACING         (6 ADRs)
-  19) [ ] VIRT            (7 ADRs)
+   1) [ ] GITOPS          - OpenShift GitOps                              ( 6 ADRs)
+   2) [ ] LOG             - OpenShift Logging                             ( 7 ADRs)
+   3) [ ] NETOBSERV       - Network Observability                         ( 6 ADRs)
+   4) [ ] NVIDIA-GPU      - NVIDIA GPU Operator                           ( 9 ADRs)
+   5) [X] OCP-BASE        - OCP - General Platform                        (15 ADRs)  ← Selected!
+   6) [ ] OCP-BM          - OCP - Bare Metal Installation                 (58 ADRs)
+   7) [ ] OCP-HCP         - OCP - Hosted Control Planes                   ( 6 ADRs)
+   8) [ ] OCP-MGT         - OCP - Cluster Management & Day2 Ops           (12 ADRs)
+   9) [ ] OCP-MON         - OCP - Monitoring (Metrics)                    ( 6 ADRs)
+  10) [ ] OCP-NET         - OCP - Networking                              (44 ADRs)
+  11) [ ] OCP-OSP         - OCP - OpenStack Installation                  ( 8 ADRs)
+  12) [ ] OCP-SEC         - OCP - Security & Compliance                   (19 ADRs)
+  13) [ ] OCP-STOR        - OCP - Storage                                 ( 7 ADRs)
+  14) [ ] ODF             - OpenShift Data Foundation                     ( 9 ADRs)
+  15) [ ] PIPELINES       - OpenShift Pipelines                           ( 8 ADRs)
+  16) [ ] POWERMON        - OpenShift Power Monitoring (Kepler)           ( 3 ADRs)
+  17) [ ] RHOAI-SM        - OpenShift AI Self-Managed                     (53 ADRs)
+  18) [ ] TRACING         - Red Hat Distributed Tracing                   ( 8 ADRs)
+  19) [ ] VIRT            - OpenShift Virtualization                      ( 7 ADRs)
 
 ================================================================================
 
@@ -137,9 +137,9 @@ Select product number (or press ENTER to continue): [ENTER]
 
 ✅ You have selected 3 product(s):
 
-  - OCP-BASE (15 ADRs)
-  - OCP-NET (44 ADRs)
-  - RHOAI-SM (53 ADRs)
+  - OCP-BASE        (OCP - General Platform) - 15 ADRs
+  - OCP-NET         (OCP - Networking) - 44 ADRs
+  - RHOAI-SM        (OpenShift AI Self-Managed) - 53 ADRs
 
   Total ADRs: 112
 
