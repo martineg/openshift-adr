@@ -138,64 +138,137 @@ if [ ${#PRODUCTS[@]} -eq 0 ]; then
     exit 1
 fi
 
-# Display product counts
-echo "Available ADR templates:"
-echo ""
-for i in "${!PRODUCTS[@]}"; do
-    product="${PRODUCTS[$i]}"
-    template_file="adr_templates/${product}.md"
-    count=$(grep -c "^## ${product}-" "$template_file" 2>/dev/null || echo "0")
-    printf "  %2d) %-15s (%s ADRs)\n" $((i+1)) "$product" "$count"
+# Function to display product list with selection markers
+display_products() {
+    clear
+    echo "================================================================================"
+    echo "  Interactive Product Selection"
+    echo "================================================================================"
+    echo ""
+    echo "Available ADR templates:"
+    echo ""
+
+    for i in "${!PRODUCTS[@]}"; do
+        product="${PRODUCTS[$i]}"
+        template_file="adr_templates/${product}.md"
+        count=$(grep -c "^## ${product}-" "$template_file" 2>/dev/null || echo "0")
+
+        # Check if product is selected
+        marker="[ ]"
+        for selected in "${SELECTED_INDICES[@]}"; do
+            if [ "$selected" == "$i" ]; then
+                marker="[X]"
+                break
+            fi
+        done
+
+        printf "  %2d) %s %-15s (%s ADRs)\n" $((i+1)) "$marker" "$product" "$count"
+    done
+
+    echo ""
+    echo "================================================================================"
+    echo ""
+
+    if [ ${#SELECTED_INDICES[@]} -gt 0 ]; then
+        echo -e "${GREEN}Selected: ${#SELECTED_INDICES[@]} product(s)${NC}"
+        echo ""
+    fi
+}
+
+# Initialize selected indices array
+SELECTED_INDICES=()
+
+# Interactive selection loop
+while true; do
+    display_products
+
+    read -p "Select product number (or press ENTER to continue): " SELECTION
+
+    # If empty, break the loop
+    if [ -z "$SELECTION" ]; then
+        if [ ${#SELECTED_INDICES[@]} -eq 0 ]; then
+            print_error "No products selected"
+            echo ""
+            read -p "Press ENTER to try again..."
+            continue
+        fi
+        break
+    fi
+
+    # Special case: 'all' selects all products
+    if [[ "$SELECTION" == "all" ]] || [[ "$SELECTION" == "ALL" ]]; then
+        SELECTED_INDICES=()
+        for i in "${!PRODUCTS[@]}"; do
+            SELECTED_INDICES+=("$i")
+        done
+        continue
+    fi
+
+    # Validate input is a number
+    if ! [[ "$SELECTION" =~ ^[0-9]+$ ]]; then
+        print_error "Invalid input: must be a number or 'all'"
+        sleep 1
+        continue
+    fi
+
+    # Convert to array index (1-based to 0-based)
+    index=$((SELECTION - 1))
+
+    # Validate range
+    if [ $index -lt 0 ] || [ $index -ge ${#PRODUCTS[@]} ]; then
+        print_error "Invalid selection: $SELECTION (out of range 1-${#PRODUCTS[@]})"
+        sleep 1
+        continue
+    fi
+
+    # Toggle selection
+    already_selected=false
+    new_indices=()
+    for selected in "${SELECTED_INDICES[@]}"; do
+        if [ "$selected" == "$index" ]; then
+            already_selected=true
+            # Don't add it (deselect)
+        else
+            new_indices+=("$selected")
+        fi
+    done
+
+    if [ "$already_selected" = false ]; then
+        # Add to selection
+        new_indices+=("$index")
+    fi
+
+    SELECTED_INDICES=("${new_indices[@]}")
 done
 
-echo ""
-echo "================================================================================"
-echo ""
-
-# Interactive selection
-echo "Select products (enter numbers separated by spaces, or 'all' for all products):"
-echo "Example: 1 3 5  (selects products #1, #3, and #5)"
-echo ""
-read -p "Your selection: " -r SELECTION
-
-# Parse selection
+# Build selected products array and calculate totals
 SELECTED_PRODUCTS=()
-
-if [[ "$SELECTION" == "all" ]] || [[ "$SELECTION" == "ALL" ]]; then
-    SELECTED_PRODUCTS=("${PRODUCTS[@]}")
-else
-    # Parse space-separated numbers
-    for num in $SELECTION; do
-        # Validate it's a number
-        if ! [[ "$num" =~ ^[0-9]+$ ]]; then
-            print_error "Invalid selection: $num (must be a number)"
-            exit 1
-        fi
-
-        # Convert to array index (1-based to 0-based)
-        index=$((num - 1))
-
-        if [ $index -lt 0 ] || [ $index -ge ${#PRODUCTS[@]} ]; then
-            print_error "Invalid selection: $num (out of range)"
-            exit 1
-        fi
-
-        SELECTED_PRODUCTS+=("${PRODUCTS[$index]}")
-    done
-fi
-
-if [ ${#SELECTED_PRODUCTS[@]} -eq 0 ]; then
-    print_error "No products selected"
-    exit 1
-fi
-
-echo ""
-print_success "Selected products:"
 TOTAL_ADRS=0
-for product in "${SELECTED_PRODUCTS[@]}"; do
+
+# Sort indices for display
+IFS=$'\n' SORTED_INDICES=($(sort -n <<<"${SELECTED_INDICES[*]}"))
+unset IFS
+
+for index in "${SORTED_INDICES[@]}"; do
+    product="${PRODUCTS[$index]}"
+    SELECTED_PRODUCTS+=("$product")
+
     template_file="adr_templates/${product}.md"
     count=$(grep -c "^## ${product}-" "$template_file" 2>/dev/null || echo "0")
     TOTAL_ADRS=$((TOTAL_ADRS + count))
+done
+
+# Display final selection
+clear
+echo "================================================================================"
+echo "  Selected Products"
+echo "================================================================================"
+echo ""
+print_success "You have selected ${#SELECTED_PRODUCTS[@]} product(s):"
+echo ""
+for product in "${SELECTED_PRODUCTS[@]}"; do
+    template_file="adr_templates/${product}.md"
+    count=$(grep -c "^## ${product}-" "$template_file" 2>/dev/null || echo "0")
     echo "  - $product ($count ADRs)"
 done
 echo ""
