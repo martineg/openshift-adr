@@ -20,6 +20,7 @@ import sys
 import argparse
 import re
 import subprocess
+import json
 from pathlib import Path
 from datetime import datetime
 import yaml
@@ -27,6 +28,23 @@ import yaml
 # Repository paths
 REPO_ROOT = Path(__file__).parent.parent
 ADR_TEMPLATES_DIR = REPO_ROOT / 'adr_templates'
+DICTIONARIES_DIR = REPO_ROOT / 'dictionaries'
+
+# Valid roles from dictionaries/adr_parties_role_dictionnary.md
+VALID_ROLES = [
+    'Enterprise Architect',
+    'Infra Leader',
+    'Infrastructure Leader',  # Alias
+    'Network Expert',
+    'Storage Expert',
+    'Security Expert',
+    'Operations Expert',
+    'OCP Platform Owner',
+    'DevOps Engineer',
+    'AI/ML Platform Owner',
+    'Lead Data Scientist',
+    'MLOps Engineer'
+]
 
 
 def slugify(text):
@@ -326,16 +344,387 @@ def generate_customer_adrs(args):
 
 def check_adr_completion(args):
     """Check ADR completion status"""
-    print("⚠️  Subcommand 'check' not yet implemented")
-    print("📝 See RUN_SCRIPTS_REQUIREMENTS.md for specifications")
-    sys.exit(0)
+    input_dir = Path(args.input)
+
+    if not input_dir.exists():
+        print(f"❌ Error: ADR directory not found: {input_dir}")
+        sys.exit(2)
+
+    # Read metadata
+    metadata_file = input_dir / 'metadata.yaml'
+    if not metadata_file.exists():
+        print(f"❌ Error: metadata.yaml not found in {input_dir}")
+        sys.exit(2)
+
+    with open(metadata_file, 'r', encoding='utf-8') as f:
+        metadata = yaml.safe_load(f)
+
+    customer = metadata.get('customer', 'Unknown')
+
+    # Find all ADR files
+    adr_files = list(input_dir.glob('*.md'))
+    adr_files = [f for f in adr_files if f.name != 'README.md']
+
+    if not adr_files:
+        print(f"❌ Error: No ADR markdown files found in {input_dir}")
+        sys.exit(2)
+
+    # Analysis results
+    completed_adrs = []
+    incomplete_adrs = []
+    not_discussed_adrs = []
+
+    for adr_file in sorted(adr_files):
+        with open(adr_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Extract ADR ID from filename or content
+        adr_id = adr_file.stem.split('-')[0] + '-' + adr_file.stem.split('-')[1]
+        title = extract_adr_title(content)
+
+        # Check Decision field
+        decision_match = re.search(r'\*\*Decision\*\*\s*\n(.+?)(?:\n\n|\*\*)', content, re.DOTALL)
+        decision_text = decision_match.group(1).strip() if decision_match else ""
+
+        # Consider it TODO if contains #TODO# or if it's the default placeholder
+        has_decision_todo = '#TODO' in decision_text or decision_text == "" or decision_text.startswith('#TODO')
+
+        # Check Agreeing Parties
+        parties_match = re.search(r'\*\*Agreeing Parties\*\*\s*\n(.+?)(?:\n\n|\Z)', content, re.DOTALL)
+        parties_text = parties_match.group(1).strip() if parties_match else ""
+
+        has_parties_todo = '#TODO#' in parties_text
+
+        # Parse agreeing parties
+        parties_lines = [line.strip() for line in parties_text.split('\n') if line.strip().startswith('- Person:')]
+        invalid_roles = []
+
+        for party_line in parties_lines:
+            # Extract role
+            role_match = re.search(r'Role:\s*([^,\n]+)', party_line)
+            if role_match:
+                role = role_match.group(1).strip()
+                if role not in VALID_ROLES:
+                    invalid_roles.append(role)
+
+        # Classify ADR
+        if has_decision_todo and has_parties_todo:
+            # Entire ADR is TODO
+            not_discussed_adrs.append({
+                'id': adr_id,
+                'title': title,
+                'filename': adr_file.name
+            })
+        elif has_decision_todo or has_parties_todo or invalid_roles:
+            # Partially complete
+            issues = []
+            if has_decision_todo:
+                issues.append('Decision field incomplete')
+            if has_parties_todo:
+                issues.append('Agreeing Parties incomplete')
+            if invalid_roles:
+                issues.append(f'Invalid role(s): {", ".join(invalid_roles)}')
+
+            incomplete_adrs.append({
+                'id': adr_id,
+                'title': title,
+                'filename': adr_file.name,
+                'issues': issues
+            })
+        else:
+            # Complete
+            completed_adrs.append({
+                'id': adr_id,
+                'title': title,
+                'filename': adr_file.name
+            })
+
+    # Generate report based on format
+    total_adrs = len(adr_files)
+
+    if args.format == 'json':
+        report = {
+            'customer': customer,
+            'total_adrs': total_adrs,
+            'completed': len(completed_adrs),
+            'incomplete': len(incomplete_adrs),
+            'not_discussed': len(not_discussed_adrs),
+            'ready_for_export': len(incomplete_adrs) == 0,
+            'completed_adrs': [{'id': a['id'], 'title': a['title']} for a in completed_adrs],
+            'incomplete_adrs': incomplete_adrs,
+            'not_discussed_adrs': [{'id': a['id'], 'title': a['title']} for a in not_discussed_adrs]
+        }
+        print(json.dumps(report, indent=2))
+
+    elif args.format == 'html':
+        print("<html><body>")
+        print(f"<h1>ADR Completion Report for {customer}</h1>")
+        print(f"<p><strong>✅ Completed:</strong> {len(completed_adrs)} ADRs</p>")
+        print(f"<p><strong>⏳ Incomplete:</strong> {len(incomplete_adrs)} ADRs</p>")
+        print(f"<p><strong>⏭️ Not Discussed:</strong> {len(not_discussed_adrs)} ADRs</p>")
+
+        if incomplete_adrs:
+            print("<h2>Incomplete ADRs</h2><ul>")
+            for adr in incomplete_adrs:
+                print(f"<li><strong>{adr['id']}: {adr['title']}</strong><br>")
+                print(f"Issues: {', '.join(adr['issues'])}</li>")
+            print("</ul>")
+
+        print("</body></html>")
+
+    else:  # text format (default)
+        print("="*80)
+        print(f"ADR Completion Report for {customer}")
+        print("="*80)
+        print()
+        print(f"✅ Completed: {len(completed_adrs)} ADRs (no #TODO# markers)")
+        print(f"⏳ Incomplete: {len(incomplete_adrs)} ADRs (has #TODO# or issues)")
+        print(f"⏭️  Not Discussed: {len(not_discussed_adrs)} ADRs (entire ADR is #TODO#)")
+        print()
+
+        if incomplete_adrs:
+            print("Incomplete ADRs:")
+            print("-"*80)
+            for adr in incomplete_adrs:
+                print(f"\n{adr['id']}: {adr['title']}")
+                for issue in adr['issues']:
+                    print(f"  ❌ {issue}")
+            print()
+
+        if not_discussed_adrs:
+            print(f"Not Discussed (can be excluded from export using --exclude-not-discussed):")
+            print("-"*80)
+            for adr in not_discussed_adrs[:10]:  # Show first 10
+                print(f"  - {adr['id']}: {adr['title']}")
+            if len(not_discussed_adrs) > 10:
+                print(f"  ... and {len(not_discussed_adrs) - 10} more")
+            print()
+
+        print("Summary:")
+        print("-"*80)
+        if len(incomplete_adrs) == 0 and len(not_discussed_adrs) < total_adrs:
+            print("✅ Ready for export: All discussed ADRs are complete")
+            print()
+            print("Next steps:")
+            print(f"  python scripts/customer_adrs.py export --input {input_dir}")
+        elif len(incomplete_adrs) == 0:
+            print("⚠️  No ADRs have been discussed yet (all are #TODO#)")
+            print()
+            print("Next steps:")
+            print("  1. Conduct design workshops")
+            print("  2. Fill Decision and Agreeing Parties fields")
+            print(f"  3. Re-run: python scripts/customer_adrs.py check {input_dir}")
+        else:
+            print(f"❌ Not ready: {len(incomplete_adrs)} incomplete ADR(s) must be completed first")
+            print()
+            print("Next steps:")
+            print("  1. Review incomplete ADRs listed above")
+            print("  2. Fill missing Decision fields")
+            print("  3. Complete Agreeing Parties sections")
+            print(f"  4. Re-run: python scripts/customer_adrs.py check {input_dir}")
+        print()
+
+    # Exit code
+    if args.fail_on_incomplete and len(incomplete_adrs) > 0:
+        sys.exit(1)
+    else:
+        sys.exit(0)
 
 
 def export_adrs(args):
-    """Export ADRs to Google Docs"""
-    print("⚠️  Subcommand 'export' not yet implemented")
-    print("📝 See RUN_SCRIPTS_REQUIREMENTS.md for specifications")
-    sys.exit(0)
+    """Export ADRs to various formats"""
+    input_dir = Path(args.input)
+
+    if not input_dir.exists():
+        print(f"❌ Error: ADR directory not found: {input_dir}")
+        sys.exit(2)
+
+    # Read metadata
+    metadata_file = input_dir / 'metadata.yaml'
+    if not metadata_file.exists():
+        print(f"❌ Error: metadata.yaml not found in {input_dir}")
+        sys.exit(2)
+
+    with open(metadata_file, 'r', encoding='utf-8') as f:
+        metadata = yaml.safe_load(f)
+
+    customer = args.customer if args.customer else metadata.get('customer', 'Unknown')
+    products = metadata.get('products', [])
+
+    # Find all ADR files
+    adr_files = list(input_dir.glob('*.md'))
+    adr_files = [f for f in adr_files if f.name != 'README.md']
+
+    if not adr_files:
+        print(f"❌ Error: No ADR markdown files found in {input_dir}")
+        sys.exit(2)
+
+    # Parse ADRs
+    adrs = []
+    for adr_file in sorted(adr_files):
+        with open(adr_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Extract ADR ID
+        adr_id = adr_file.stem.split('-')[0] + '-' + adr_file.stem.split('-')[1]
+        title = extract_adr_title(content)
+
+        # Check if discussed
+        decision_match = re.search(r'\*\*Decision\*\*\s*\n(.+?)(?:\n\n|\*\*)', content, re.DOTALL)
+        decision_text = decision_match.group(1).strip() if decision_match else ""
+        is_discussed = '#TODO' not in decision_text and decision_text != "" and not decision_text.startswith('#TODO')
+
+        # Extract product from ADR ID
+        product = adr_id.rsplit('-', 1)[0]
+
+        # Skip not-discussed if requested
+        if args.exclude_not_discussed and not is_discussed:
+            continue
+
+        adrs.append({
+            'id': adr_id,
+            'title': title,
+            'product': product,
+            'content': content,
+            'is_discussed': is_discussed
+        })
+
+    if not adrs:
+        print("❌ Error: No ADRs to export (all are marked as not discussed)")
+        sys.exit(1)
+
+    # Group ADRs
+    if args.group_by == 'product':
+        grouped_adrs = {}
+        for product in products:
+            product_adrs = [a for a in adrs if a['product'] == product]
+            if product_adrs:
+                grouped_adrs[product] = product_adrs
+    else:
+        # No grouping - flat list
+        grouped_adrs = {'All ADRs': adrs}
+
+    # Export based on format
+    if args.format == 'markdown':
+        output_file = Path(f"{slugify(customer)}-ADRs-export.md")
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(f"# Architecture Decisions - {customer}\n\n")
+            f.write(f"**Generated:** {datetime.now().strftime('%Y-%m-%d')}\n")
+            f.write(f"**Total ADRs:** {len(adrs)}\n\n")
+
+            # Table of contents
+            if args.create_toc:
+                f.write("## Table of Contents\n\n")
+                for group_name, group_adrs in grouped_adrs.items():
+                    f.write(f"### {group_name} ({len(group_adrs)} ADRs)\n\n")
+                    for adr in group_adrs:
+                        f.write(f"- [{adr['id']}: {adr['title']}](#{slugify(adr['id'])})\n")
+                    f.write("\n")
+
+            f.write("---\n\n")
+
+            # ADR content
+            for group_name, group_adrs in grouped_adrs.items():
+                f.write(f"# {group_name}\n\n")
+                f.write("---\n\n")
+
+                for adr in group_adrs:
+                    # Remove metadata comments
+                    content = re.sub(r'<!--.*?-->', '', adr['content'], flags=re.DOTALL).strip()
+                    f.write(content)
+                    f.write("\n\n---\n\n")
+
+        print("="*80)
+        print("✅ Export to Markdown Complete")
+        print("="*80)
+        print(f"\n📄 Output: {output_file}")
+        print(f"📊 Total ADRs: {len(adrs)}")
+        if args.group_by == 'product':
+            for group_name, group_adrs in grouped_adrs.items():
+                print(f"   - {group_name}: {len(group_adrs)}")
+        print(f"\n💡 Open with: cat {output_file}")
+        print()
+
+    elif args.format == 'html':
+        output_file = Path(f"{slugify(customer)}-ADRs-export.html")
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write("<!DOCTYPE html>\n<html>\n<head>\n")
+            f.write(f"<title>Architecture Decisions - {customer}</title>\n")
+            f.write("<style>\n")
+            f.write("body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; }\n")
+            f.write("h1 { color: #c00; border-bottom: 3px solid #c00; }\n")
+            f.write("h2 { color: #333; margin-top: 40px; }\n")
+            f.write("h3 { color: #666; }\n")
+            f.write(".adr { border: 1px solid #ddd; padding: 20px; margin: 20px 0; background: #f9f9f9; }\n")
+            f.write(".adr-header { background: #c00; color: white; padding: 10px; margin: -20px -20px 20px -20px; }\n")
+            f.write("hr { border: none; border-top: 2px solid #ddd; margin: 40px 0; }\n")
+            f.write("</style>\n</head>\n<body>\n")
+
+            f.write(f"<h1>Architecture Decisions - {customer}</h1>\n")
+            f.write(f"<p><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d')}</p>\n")
+            f.write(f"<p><strong>Total ADRs:</strong> {len(adrs)}</p>\n")
+
+            # Table of contents
+            if args.create_toc:
+                f.write("<h2>Table of Contents</h2>\n")
+                for group_name, group_adrs in grouped_adrs.items():
+                    f.write(f"<h3>{group_name} ({len(group_adrs)} ADRs)</h3>\n<ul>\n")
+                    for adr in group_adrs:
+                        f.write(f"<li><a href='#{slugify(adr['id'])}'>{adr['id']}: {adr['title']}</a></li>\n")
+                    f.write("</ul>\n")
+
+            f.write("<hr>\n")
+
+            # ADR content
+            for group_name, group_adrs in grouped_adrs.items():
+                f.write(f"<h1>{group_name}</h1>\n")
+                f.write("<hr>\n")
+
+                for adr in group_adrs:
+                    f.write(f"<div class='adr' id='{slugify(adr['id'])}'>\n")
+                    f.write(f"<div class='adr-header'><h2>{adr['id']}: {adr['title']}</h2></div>\n")
+
+                    # Convert markdown to HTML
+                    content = re.sub(r'<!--.*?-->', '', adr['content'], flags=re.DOTALL).strip()
+                    content = re.sub(r'## .+', '', content)  # Remove ## header
+                    content = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', content)
+                    content = re.sub(r'^- (.+)$', r'<li>\1</li>', content, flags=re.MULTILINE)
+                    content = content.replace('\n\n', '</p><p>')
+                    content = f"<p>{content}</p>"
+                    content = content.replace('<p><li>', '<ul><li>').replace('</li></p>', '</li></ul>')
+
+                    f.write(content)
+                    f.write("</div>\n\n")
+
+            f.write("</body>\n</html>")
+
+        print("="*80)
+        print("✅ Export to HTML Complete")
+        print("="*80)
+        print(f"\n📄 Output: {output_file}")
+        print(f"📊 Total ADRs: {len(adrs)}")
+        if args.group_by == 'product':
+            for group_name, group_adrs in grouped_adrs.items():
+                print(f"   - {group_name}: {len(group_adrs)}")
+        print(f"\n💡 Open with: open {output_file}")
+        print()
+
+    elif args.format == 'google-doc':
+        print("="*80)
+        print("⚠️  Google Docs Export")
+        print("="*80)
+        print()
+        print("Google Docs export requires API credentials setup.")
+        print()
+        print("For now, use markdown or HTML export:")
+        print(f"  python scripts/customer_adrs.py export --input {input_dir} --format markdown")
+        print()
+        print("Then manually copy content into Google Docs.")
+        print()
+        print("Future enhancement: Direct Google Docs API integration")
+        print("  See: RUN_SCRIPTS_REQUIREMENTS.md for specifications")
+        print()
+        sys.exit(0)
 
 
 def main():
