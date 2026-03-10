@@ -364,8 +364,8 @@ def main():
                 {'text': 'Agreeing Parties: Customer + Red Hat roles', 'level': 1, 'bold': False},
                 {'text': '→ See adr-structure-example.png for real example', 'level': 0, 'bold': False},
             ],
-            3: [  # Slide 4: ADR Template Repository
-                {'text': 'ADR Template Repository: 291 Documented Decisions', 'level': 0, 'bold': True},
+            3: [  # Slide 4: ADR repository template
+                {'text': 'ADR repository template: 291 Documented Decisions', 'level': 0, 'bold': True},
                 {'text': 'https://github.com/redhat-ai-services/openshift-adr', 'level': 0, 'bold': False},
                 {'text': 'OpenShift Container Platform (148 ADRs):', 'level': 0, 'bold': True},
                 {'text': 'OCP-BM: 58 (Bare Metal & Day 0)', 'level': 1, 'bold': False},
@@ -421,43 +421,21 @@ def main():
             ],
         }
 
-        # Speaker notes
+        # Speaker notes - Complete sentences for presentation delivery
         speaker_notes = {
-            0: """Welcome. Today I'll show you why Architecture Decision Records should be part of every design document. This is a 10-minute overview, and I'll demo our ADR repository with 291 documented decisions at the end.""",
+            0: """Welcome everyone. Today I'm going to show you why Architecture Decision Records, or ADRs, should be part of every design document. This is a ten-minute overview of what ADRs are, why they matter, and how to use them. At the end, I'll show you our ADR repository which contains two hundred ninety-one documented architectural decisions across all Red Hat products.""",
 
-            1: """ADRs document strategic architectural choices during design phases - not configuration checklists.
+            1: """Architecture Decision Records document strategic architectural choices during the design phase of consulting engagements. They are not configuration checklists. A configuration checklist would say something like "set this parameter to this value" - there's only one right answer, no choice involved. Real architectural decisions have multiple valid alternatives. For example: Should we use KServe or a custom deployment for model serving? Should we use an internal PostgreSQL database or an external managed database? Should we use the fast update channel to get early features, or the stable channel for production readiness? These are real architectural decisions where we need to choose between two or more viable options.""",
 
-A configuration checklist is "set this parameter to this value" - there's no choice. Real architectural decisions have multiple valid alternatives: KServe vs custom deployment, internal vs external database, fast vs stable update channel.""",
+            2: """Every Architecture Decision Record follows the same structure. It starts with a Title that concisely describes the decision. Then we have the Architectural Question, which defines what choice is being made. The Issue section explains why this decision is needed. Assumptions capture any dependencies or prerequisites. The Alternatives section lists two or more viable options. The Decision field starts as a TODO placeholder and gets filled in during workshops. The Justification section explains why you would choose each alternative. The Implications section describes the consequences, trade-offs, and risks for each option. Finally, Agreeing Parties captures who made the decision - both customer stakeholders and Red Hat roles. The screenshot shows a real example from our repository: RHOAI-SM-47, which documents the Model Registry database strategy decision.""",
 
-            2: """Every ADR follows the same structure with these fields. Title, Architectural Question, Issue, Assumptions, Alternatives, Decision (starts as #TODO#), Justification, Implications, Agreeing Parties.
+            3: """This is the ADR Template Repository, which contains two hundred ninety-one documented architectural decisions across all Red Hat products. It's available at github.com/redhat-ai-services/openshift-adr. Let me break down these numbers. OpenShift Container Platform has one hundred forty-eight ADRs. The largest category is OCP-BM with fifty-eight decisions covering bare metal infrastructure and Day Zero installation. OCP-NET has forty-four networking decisions. OCP-SEC has nineteen security decisions. OCP-BASE has fifteen cross-cutting platform decisions. And OCP-MGT has twelve management decisions. For AI and ML capabilities, we have sixty-two ADRs. RHOAI-SM has fifty-three decisions covering all OpenShift AI components. NVIDIA-GPU has nine decisions for GPU infrastructure. Platform services add another eighty-one ADRs covering data foundation, storage, monitoring, GitOps, pipelines, virtualization, logging, and observability. Each of these two hundred ninety-one ADRs documents a real architectural choice made during actual customer engagements, with alternatives, justifications, and agreeing parties all captured.""",
 
-The screenshot shows a real example from our RHOAI repository - RHOAI-SM-47 about Model Registry database strategy.""",
+            4: """So why do ADRs matter? Let me explain the problem. Architects already facilitate design workshops. Decisions get captured on Miro boards, on paper, on whiteboards. But here's what happens: those decisions are not formalized into the design document. The workshop outputs vanish after the design phase ends. Then consultants start implementation without understanding the context of why choices were made. This creates problems. Now, here's the opportunity. It takes just five minutes per ADR to formalize what was already captured in the workshop. Five minutes to turn that Miro board into a permanent design deliverable with full rationale. This gives you complete design deliverables, smoother handover to consultants, reduced disputes, and a permanent record for future audits. One important note: CER has been decommissioned. ADRs now go directly in design documents, not in a separate system.""",
 
-            3: """This is the ADR template repository containing 291 documented architectural decisions across all Red Hat products, available at github.com/redhat-ai-services/openshift-adr.
+            5: """Who creates ADRs and when? Consulting delivery has three phases. First is Design, which is done by the Architect. Second is Implementation, done by the Consultant. Third is Enablement, also done by the Consultant. Here's the ADR workflow. During Preparation, you extract decision points from Red Hat documentation. During the Workshop, you present architectural questions to the customer and explain the alternatives with their pros and cons. You capture the decisions on Miro or paper - this is already happening today. During the Design phase, you formalize those Miro captures into ADRs in the design document. This is the step that's missing today. During Handover, the consultant receives the design document with ADRs that explain the "why" behind every choice. Best practice is: Workshop leads to Miro, Miro leads to ADRs, ADRs lead to diagrams. This ensures nothing gets lost in the handover.""",
 
-OpenShift Container Platform has 148 ADRs covering bare metal, networking, security, and management. AI and ML has 62 ADRs including 53 for OpenShift AI. Platform services add 81 more ADRs.
-
-Each ADR documents a real architectural choice with alternatives, justifications, and agreeing parties.""",
-
-            4: """Why do ADRs matter? The problem: Architects facilitate workshops and capture decisions on Miro or paper. But these aren't formalized into design documents. Workshop outputs vanish. Consultants implement without context.
-
-The opportunity: Just 5 minutes per ADR to formalize workshop outputs into design documents. This gives complete deliverables, smoother handover, and permanent records.
-
-Note: CER is decommissioned. ADRs now go directly in design documents.""",
-
-            5: """Who creates ADRs and when? Consulting has three phases: Design by Architects, Implementation by Consultants, Enablement by Consultants.
-
-The workflow: Preparation - extract decision points. Workshop - present questions, capture decisions. Design - formalize into ADRs. Handover - consultant gets full context.
-
-Best practice: Workshop to Miro to ADRs to Diagrams.""",
-
-            6: """This is a real ADR workshop process example: OCP-BASE-01 Cluster Isolation Strategy. The question was how to separate Dev, Test, and Prod workloads.
-
-Three alternatives: Consolidated single cluster, Prod/Non-Prod split, or per-environment.
-
-Decision: Separate by infrastructure type. OpenStack for general purpose, Bare Metal for performance workloads with GPUs.
-
-Agreeing parties captured with names obfuscated for demo.""",
+            6: """Let me show you a real ADR workshop process example. This is OCP-BASE-01: Cluster Isolation Strategy. The architectural question was: How do we separate development, test, and production workloads across OpenShift clusters? Three alternatives were presented during the workshop. Alternative one: Consolidated single cluster where everything runs together. Alternative two: Prod/Non-Prod split, where production is separate from everything else. Alternative three: Per-environment separation, where dev, test, and prod each get their own cluster. The decision made was to separate clusters based on infrastructure type. OpenStack would host general purpose and development workloads. Bare Metal would host performance-intensive production workloads with GPUs. The agreeing parties were captured: J. Smith as the AI/ML Platform Owner, A. Johnson as the Storage Expert, and M. Chen as the Security Expert. Names are obfuscated here for demo purposes, but in a real ADR you would use actual names and roles.""",
         }
 
         # Populate content slides
