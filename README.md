@@ -181,7 +181,7 @@ Use only standardized roles from `dictionaries/adr_parties_role_dictionnary.md`:
 
 ## Current Statistics
 
-**271 documented architectural decisions** across:
+**291 documented architectural decisions** across:
 - OpenShift Container Platform (OCP-BASE, OCP-BM, OCP-NET, OCP-SEC, OCP-STOR, etc.)
 - Red Hat OpenShift AI Self-Managed (RHOAI-SM: 53 ADRs)
 - GitOps

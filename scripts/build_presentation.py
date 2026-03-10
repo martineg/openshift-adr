@@ -364,7 +364,24 @@ def main():
                 {'text': 'Agreeing Parties: Customer + Red Hat roles', 'level': 1, 'bold': True},
                 {'text': '→ See adr-structure-example.png for real example', 'level': 0, 'bold': False},
             ],
-            3: [  # Slide 4: Why ADRs Matter?
+            3: [  # Slide 4: ADR Repository Statistics
+                {'text': 'ADR Repository: 291 Documented Decisions', 'level': 0, 'bold': True},
+                {'text': 'OpenShift Platform (148 ADRs):', 'level': 0, 'bold': True},
+                {'text': 'OCP-BM: 58 (Bare Metal & Day 0)', 'level': 1},
+                {'text': 'OCP-NET: 44 (Networking)', 'level': 1},
+                {'text': 'OCP-SEC: 19 (Security)', 'level': 1},
+                {'text': 'OCP-BASE: 15 (Cross-cutting)', 'level': 1},
+                {'text': 'OCP-MGT: 12 (Management)', 'level': 1},
+                {'text': 'AI/ML & Data (62 ADRs):', 'level': 0, 'bold': True},
+                {'text': 'RHOAI-SM: 53 (OpenShift AI)', 'level': 1},
+                {'text': 'NVIDIA-GPU: 9 (GPU Infrastructure)', 'level': 1},
+                {'text': 'Platform Services (81 ADRs):', 'level': 0, 'bold': True},
+                {'text': 'ODF: 9 (Data Foundation)', 'level': 1},
+                {'text': 'OCP-STOR: 7, OCP-OSP: 8, OCP-MON: 6, OCP-HCP: 6', 'level': 1},
+                {'text': 'GITOPS: 6, PIPELINES: 8, VIRT: 7, LOG: 7, TRACING: 8', 'level': 1},
+                {'text': 'NETOBSERV: 6, POWERMON: 3', 'level': 1},
+            ],
+            4: [  # Slide 5: Why ADRs Matter?
                 {'text': 'The Problem:', 'level': 0, 'bold': True},
                 {'text': 'Workshops happen, decisions captured (Miro/paper)', 'level': 1},
                 {'text': 'NOT formalized into design doc ❌', 'level': 1},
@@ -377,7 +394,7 @@ def main():
                 {'text': 'Permanent record for future audits', 'level': 1},
                 {'text': 'Note: CER decommissioned, ADRs go in design docs', 'level': 0, 'bold': False},
             ],
-            4: [  # Slide 5: Who & When?
+            5: [  # Slide 6: Who & When?
                 {'text': 'Three Consulting Phases:', 'level': 0, 'bold': True},
                 {'text': 'Design (Architect)', 'level': 1},
                 {'text': 'Implementation (Consultant)', 'level': 1},
@@ -389,7 +406,7 @@ def main():
                 {'text': 'Handover: Consultant gets full context', 'level': 1},
                 {'text': 'Best Practice: Workshop → Miro → ADRs → Diagrams', 'level': 0, 'bold': True},
             ],
-            5: [  # Slide 6: Real Example
+            6: [  # Slide 7: Real Example
                 {'text': 'OCP-BASE-01: Cluster Isolation Strategy', 'level': 0, 'bold': True},
                 {'text': 'Question: How to separate Dev/Test/Prod workloads?', 'level': 0, 'bold': False},
                 {'text': 'Alternatives:', 'level': 0, 'bold': True},
@@ -408,7 +425,7 @@ def main():
 
         # Speaker notes
         speaker_notes = {
-            0: """Welcome. Today I'll show you why Architecture Decision Records should be part of every design document. This is a 10-minute overview, and I'll demo our ADR repository with 271 documented decisions at the end.""",
+            0: """Welcome. Today I'll show you why Architecture Decision Records should be part of every design document. This is a 10-minute overview, and I'll demo our ADR repository with 291 documented decisions at the end.""",
 
             1: """ADRs document strategic architectural choices during design phases - not configuration checklists.
 
@@ -418,19 +435,29 @@ A configuration checklist is "set this parameter to this value" - there's no cho
 
 The screenshot shows a real example from our RHOAI repository - RHOAI-SM-47 about Model Registry database strategy.""",
 
-            3: """Why do ADRs matter? The problem: Architects already facilitate workshops and capture decisions on Miro boards or paper. But these captures aren't formalized into the design document. Workshop outputs vanish. Consultants implement without understanding why choices were made.
+            3: """This repository contains 291 documented architectural decisions across all Red Hat products.
+
+The breakdown: OpenShift Platform has 148 ADRs - the largest being OCP-BM with 58 decisions covering bare metal infrastructure and Day 0 installation, and OCP-NET with 44 networking decisions.
+
+AI and ML capabilities have 62 ADRs - RHOAI-SM has 53 decisions covering all OpenShift AI components, and NVIDIA-GPU has 9 decisions for GPU infrastructure.
+
+Platform services add 81 more ADRs covering data foundation, storage, monitoring, GitOps, pipelines, virtualization, logging, and observability.
+
+Each of these 291 ADRs documents a real architectural choice made during customer engagements, with alternatives, justifications, and agreeing parties captured.""",
+
+            4: """Why do ADRs matter? The problem: Architects already facilitate workshops and capture decisions on Miro boards or paper. But these captures aren't formalized into the design document. Workshop outputs vanish. Consultants implement without understanding why choices were made.
 
 The opportunity: Just 15-30 minutes per ADR to formalize workshop outputs into design documents. This gives complete deliverables with rationale, smoother handover, reduced disputes, and permanent records for future audits.
 
 Note: CER is decommissioned due to the Tang project. ADRs now go directly in design documents.""",
 
-            4: """Who creates ADRs and when? Consulting delivery has three phases: Design by Architects, Implementation by Consultants, Enablement by Consultants.
+            5: """Who creates ADRs and when? Consulting delivery has three phases: Design by Architects, Implementation by Consultants, Enablement by Consultants.
 
 The ADR workflow: Preparation - extract decision points from Red Hat docs. Workshop - present questions, capture decisions on Miro or paper. Design phase - formalize those Miro captures into ADRs in the design document. Handover - consultant receives full context.
 
 Best practice flow: Workshop to Miro to ADRs to Diagrams. This ensures nothing is lost.""",
 
-            5: """Real example showing the complete ADR structure. OCP-BASE-01: Cluster Isolation Strategy. The question was how to separate Dev, Test, and Prod workloads across OpenShift clusters.
+            6: """Real example showing the complete ADR structure. OCP-BASE-01: Cluster Isolation Strategy. The question was how to separate Dev, Test, and Prod workloads across OpenShift clusters.
 
 Three alternatives were considered: Consolidated single cluster, Prod/Non-Prod split, or per-environment separation.
 

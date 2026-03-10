@@ -6,16 +6,17 @@
 
 ## What Was Done
 
-### 1. Presentation Finalized (6 slides)
-- ✅ Slide 7 (Call to Action) removed - no added value
+### 1. Presentation Finalized (7 slides)
+- ✅ Added repository statistics slide after ADR Structure
 - ✅ Final structure:
   - Slide 1: Title
   - Slide 2: What Are ADRs?
   - Slide 3: ADR Structure (bold fields + screenshot note)
-  - Slide 4: Why ADRs Matter?
-  - Slide 5: Who & When?
-  - Slide 6: Real Example (ODCN customer)
-  - Slide 7: Closing
+  - Slide 4: ADR Repository Statistics (291 ADRs breakdown)
+  - Slide 5: Why ADRs Matter?
+  - Slide 6: Who & When?
+  - Slide 7: Real Example (ODCN customer)
+  - Slide 8: Closing
 
 **Presentation ID:** `1_fLv4jVz4_XSs7MKdsaywiHa1vrtyFG0u937BlgDAnU`
 **Link:** https://docs.google.com/presentation/d/1_fLv4jVz4_XSs7MKdsaywiHa1vrtyFG0u937BlgDAnU/edit
@@ -191,8 +192,8 @@ Verified exclusions:
 
 ## Statistics
 
-- **271 ADRs** documented across 8+ products
-- **6-slide presentation** (down from 10, zero redundancy)
+- **291 ADRs** documented across 19 products
+- **7-slide presentation** (8 including closing)
 - **2 automation scripts** (build_presentation.py, update_adrs.py)
 - **1 comprehensive guide** (UPDATE_GUIDE.md)
 - **Clean repository** (no unnecessary files)
@@ -215,6 +216,8 @@ Verified exclusions:
 
 The project has been finalized and successfully pushed to GitHub at:
 **https://github.com/redhat-ai-services/openshift-adr**
+
+**291 documented ADRs** across 19 Red Hat products. Presentation includes repository statistics slide showing breakdown by product category.
 
 All unnecessary content removed. No sensitive data pushed. Automation scripts ready. Documentation complete.
 
