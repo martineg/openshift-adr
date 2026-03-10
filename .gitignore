@@ -1,0 +1,26 @@
+# Google API credentials - DO NOT COMMIT
+credentials.json
+token.json
+
+# Log files
+*.log
+pipeline.log
+
+# Documentation PDFs (large files)
+docs
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+.DS_Store
+*~
+
+# Temporary files
+*.tmp
+*.swp
