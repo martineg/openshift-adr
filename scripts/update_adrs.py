@@ -17,7 +17,7 @@ Example:
     python scripts/update_adrs.py RHOAI-SM
 
 The script will:
-1. Read the ADR file (adr/<PREFIX>.md)
+1. Read the ADR template file (adr_templates/<PREFIX>.md)
 2. Read documentation from docs/<product>/*.pdf
 3. Use Claude to analyze for updates needed
 4. Generate a report with recommended changes
@@ -38,7 +38,7 @@ except ImportError:
 
 # Repository paths
 REPO_ROOT = Path(__file__).parent.parent
-ADR_DIR = REPO_ROOT / 'adr'
+ADR_DIR = REPO_ROOT / 'adr_templates'
 DOCS_DIR = REPO_ROOT / 'docs'
 DICTIONARIES_DIR = REPO_ROOT / 'dictionaries'
 

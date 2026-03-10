@@ -14,8 +14,8 @@ This is an **ADR Template Repository** for OpenShift Container Platform and rela
 
 ## Repository Structure
 
-- **`/adr/`**: ADR markdown files organized by product prefix
-  - Each file contains multiple numbered ADRs (e.g., `OCP-BASE-01`, `OCP-BASE-02`)
+- **`/adr_templates/`**: ADR markdown template files organized by product prefix
+  - Each file contains multiple numbered ADR templates (e.g., `OCP-BASE-01`, `OCP-BASE-02`)
   - Naming: `OCP-BASE.md`, `OCP-NET.md`, `RHOAI-SM.md`, `GITOPS.md`, etc.
 
 - **`/dictionaries/`**: Governance and reference files
@@ -162,7 +162,7 @@ python scripts/update_adrs.py RHOAI-SM
 cat RHOAI-SM-Analysis-Report.md
 
 # 4. Apply changes manually to ADR file
-vim adr/RHOAI-SM.md
+vim adr_templates/RHOAI-SM.md
 
 # 5. Renumber if ADRs were added/removed
 python scripts/renumber_adrs.py RHOAI-SM
@@ -207,9 +207,9 @@ python scripts/split_pdf.py documentation.pdf 20
 The `update_adrs.py` script uses Claude API to analyze ADRs against product documentation:
 
 **What it does:**
-1. Reads ADR file (e.g., `adr/RHOAI-SM.md`)
+1. Reads ADR template file (e.g., `adr_templates/RHOAI-SM.md`)
 2. Reads governance rules and exclusions
-3. Uses Claude to identify updates needed, removals recommended, new ADRs suggested
+3. Uses Claude to identify updates needed, removals recommended, new ADR templates suggested
 4. Generates analysis report (e.g., `RHOAI-SM-Analysis-Report.md`)
 
 **Prerequisites:**

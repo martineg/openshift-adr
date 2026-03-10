@@ -33,7 +33,7 @@ The ADR Template Repository contains **291 pre-defined ADR templates** across 19
 git clone https://github.com/redhat-ai-services/openshift-adr.git
 
 # 2. Manually identify relevant templates
-# - Browse /adr/ directory
+# - Browse /adr_templates/ directory
 # - Read OCP-BASE.md, OCP-NET.md, RHOAI-SM.md, etc.
 # - Copy relevant ADR templates to customer folder
 

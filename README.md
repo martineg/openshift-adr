@@ -20,7 +20,7 @@ Architecture Decision Records (ADRs) document strategic choices between valid ar
 ## Repository Structure
 
 ```
-/adr/                   # ADR markdown files by product
+/adr_templates/         # ADR template markdown files by product
   ├── OCP-BASE.md       # Cross-cutting platform decisions
   ├── OCP-BM.md         # Bare metal and Day 0
   ├── OCP-NET.md        # Networking decisions
