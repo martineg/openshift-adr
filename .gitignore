@@ -2,6 +2,9 @@
 credentials.json
 token.json
 
+# Customer data - NEVER commit customer ADRs
+customer-*/
+
 # Log files
 *.log
 pipeline.log

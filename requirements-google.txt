@@ -1,0 +1,17 @@
+# Google API Client Libraries for Customer ADR Workflow
+#
+# Install with: pip install -r requirements-google.txt
+#
+# These packages enable direct Google Docs creation and editing
+# for the customer ADR workflow.
+#
+# Setup guide: See GOOGLE_API_SETUP.md
+
+# Core dependencies (always required)
+PyYAML>=6.0
+
+# Google API dependencies (required for Google Docs features)
+google-api-python-client>=2.0
+google-auth>=2.0
+google-auth-httplib2>=0.1.0
+google-auth-oauthlib>=0.5.0

@@ -21,9 +21,22 @@ import argparse
 import re
 import subprocess
 import json
+import socket
 from pathlib import Path
 from datetime import datetime
 import yaml
+
+# Google API imports (optional - check availability)
+GOOGLE_API_AVAILABLE = False
+try:
+    from google.auth.transport.requests import Request
+    from google.oauth2.credentials import Credentials
+    from google_auth_oauthlib.flow import InstalledAppFlow
+    from googleapiclient.discovery import build
+    from googleapiclient.errors import HttpError
+    GOOGLE_API_AVAILABLE = True
+except ImportError:
+    pass
 
 # Repository paths
 REPO_ROOT = Path(__file__).parent.parent
@@ -45,6 +58,168 @@ VALID_ROLES = [
     'Lead Data Scientist',
     'MLOps Engineer'
 ]
+
+# Google API Scopes
+GOOGLE_SCOPES = [
+    'https://www.googleapis.com/auth/documents',
+    'https://www.googleapis.com/auth/drive.file'
+]
+
+
+def check_internet():
+    """Check if internet connection is available"""
+    try:
+        socket.create_connection(("8.8.8.8", 53), timeout=3)
+        return True
+    except OSError:
+        return False
+
+
+def check_google_prerequisites():
+    """Check if Google API prerequisites are met"""
+    issues = []
+
+    # Check internet
+    if not check_internet():
+        issues.append("No internet connection")
+
+    # Check Google API packages
+    if not GOOGLE_API_AVAILABLE:
+        issues.append("Google API packages not installed (pip install -r requirements-google.txt)")
+
+    # Check credentials.json
+    credentials_file = REPO_ROOT / 'credentials.json'
+    if not credentials_file.exists():
+        issues.append("credentials.json not found (see GOOGLE_API_SETUP.md)")
+
+    return issues
+
+
+def get_google_credentials():
+    """Get Google API credentials via OAuth flow"""
+    creds = None
+    token_file = REPO_ROOT / 'token.json'
+    credentials_file = REPO_ROOT / 'credentials.json'
+
+    # Load existing token
+    if token_file.exists():
+        creds = Credentials.from_authorized_user_file(str(token_file), GOOGLE_SCOPES)
+
+    # If no valid credentials, authenticate
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                str(credentials_file), GOOGLE_SCOPES)
+            creds = flow.run_local_server(port=0)
+
+        # Save credentials
+        with open(token_file, 'w') as token:
+            token.write(creds.to_json())
+
+    return creds
+
+
+def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, architect, args):
+    """Create Google Doc with ADR templates"""
+    try:
+        creds = get_google_credentials()
+        docs_service = build('docs', 'v1', credentials=creds)
+        drive_service = build('drive', 'v3', credentials=creds)
+
+        # Create new document
+        doc_title = f"ADR Pack - {customer}"
+        doc = docs_service.documents().create(body={'title': doc_title}).execute()
+        doc_id = doc['documentId']
+        doc_url = f"https://docs.google.com/document/d/{doc_id}/edit"
+
+        # Build document content
+        requests = []
+
+        # Insert title
+        requests.append({
+            'insertText': {
+                'location': {'index': 1},
+                'text': f"Architecture Decision Records\n{customer}\n\nGenerated: {engagement_date}\nArchitect: {architect}\n\n"
+            }
+        })
+
+        # Insert ADRs by product
+        index = 1
+        for product, product_adrs in adrs_by_product.items():
+            # Product section header
+            requests.append({
+                'insertText': {
+                    'location': {'index': index},
+                    'text': f"\n{'='*80}\n{product} ({len(product_adrs)} ADRs)\n{'='*80}\n\n"
+                }
+            })
+
+            # Insert each ADR
+            for adr in product_adrs:
+                adr_text = adr['content']
+                # Remove metadata comments
+                adr_text = re.sub(r'<!--.*?-->', '', adr_text, flags=re.DOTALL).strip()
+                requests.append({
+                    'insertText': {
+                        'location': {'index': index},
+                        'text': adr_text + "\n\n" + "-"*80 + "\n\n"
+                    }
+                })
+
+        # Apply formatting (batch update)
+        if requests:
+            docs_service.documents().batchUpdate(
+                documentId=doc_id,
+                body={'requests': requests}
+            ).execute()
+
+        return {'url': doc_url, 'id': doc_id}
+
+    except HttpError as error:
+        print(f"❌ Google API Error: {error}")
+        return None
+
+
+def extract_doc_id_from_url(url):
+    """Extract document ID from Google Docs URL"""
+    # https://docs.google.com/document/d/DOCUMENT_ID/edit
+    match = re.search(r'/document/d/([a-zA-Z0-9-_]+)', url)
+    if match:
+        return match.group(1)
+    # Maybe it's already just the ID
+    if re.match(r'^[a-zA-Z0-9-_]+$', url):
+        return url
+    return None
+
+
+def read_google_doc(doc_url_or_id):
+    """Read content from Google Doc"""
+    try:
+        creds = get_google_credentials()
+        docs_service = build('docs', 'v1', credentials=creds)
+
+        doc_id = extract_doc_id_from_url(doc_url_or_id)
+        if not doc_id:
+            return None
+
+        doc = docs_service.documents().get(documentId=doc_id).execute()
+
+        # Extract text content
+        content = doc.get('body', {}).get('content', [])
+        text = ''
+        for element in content:
+            if 'paragraph' in element:
+                for text_run in element['paragraph'].get('elements', []):
+                    if 'textRun' in text_run:
+                        text += text_run['textRun'].get('content', '')
+
+        return text
+
+    except HttpError as error:
+        print(f"❌ Google API Error: {error}")
+        return None
 
 
 def slugify(text):
@@ -156,9 +331,179 @@ def generate_customer_adrs(args):
 
     customer = args.customer
     products = [p.strip() for p in args.products.split(',')]
-    output_dir = Path(args.output) if args.output else Path(f"./{slugify(customer)}-ADRs")
     engagement_date = args.engagement_date if args.engagement_date else datetime.now().strftime('%Y-%m-%d')
     architect = args.architect if args.architect else get_git_user_name()
+
+    # Check Google API prerequisites
+    google_issues = check_google_prerequisites() if GOOGLE_API_AVAILABLE else ["Google API packages not installed"]
+
+    # Decide: Google Docs or Local
+    use_google_docs = len(google_issues) == 0 and not getattr(args, 'local', False)
+
+    if use_google_docs:
+        print("📊 Mode: Google Docs (online, collaborative)")
+        print()
+        return generate_google_doc_mode(customer, products, engagement_date, architect, args)
+    else:
+        # Fallback to local - ask user
+        print()
+        print("="*80)
+        print("⚠️  Google Docs Not Available")
+        print("="*80)
+        print()
+        for issue in google_issues:
+            print(f"  • {issue}")
+        print()
+        print("📖 To enable Google Docs mode, see: GOOGLE_API_SETUP.md")
+        print()
+        print("─"*80)
+        print()
+
+        # Ask user if they want offline mode
+        if not getattr(args, 'local', False):  # If not forced via --local flag
+            response = input("Generate offline document instead? [Y/n] ").strip().lower()
+            if response and response not in ['y', 'yes']:
+                print()
+                print("❌ Operation cancelled")
+                print()
+                print("💡 To generate Google Doc:")
+                print("   1. Connect to internet")
+                print("   2. Follow GOOGLE_API_SETUP.md")
+                print("   3. Run: ./run_customer_adrs.sh")
+                print()
+                sys.exit(0)
+
+        print()
+        print("📁 Generating offline document (local markdown files)")
+        print()
+
+        # Customer data goes in customer-{slug}/ directory (in .gitignore)
+        output_dir = Path(args.output) if args.output else Path(f"./customer-{slugify(customer)}")
+        return generate_local_mode(customer, products, engagement_date, architect, output_dir, args)
+
+
+def generate_google_doc_mode(customer, products, engagement_date, architect, args):
+    """Generate ADRs in Google Docs mode"""
+
+    print("="*80)
+    print(f"Generating Google Doc for {customer}")
+    print("="*80)
+
+    # Validate products
+    missing_products = []
+    for product in products:
+        template_file = ADR_TEMPLATES_DIR / f"{product}.md"
+        if not template_file.exists():
+            missing_products.append(product)
+
+    if missing_products:
+        available = [f.stem for f in ADR_TEMPLATES_DIR.glob('*.md')]
+        print(f"❌ Error: Template(s) not found: {', '.join(missing_products)}")
+        print(f"\nAvailable templates:")
+        for tmpl in sorted(available):
+            print(f"   - {tmpl}")
+        sys.exit(1)
+
+    # Get git metadata
+    template_version = get_git_commit_sha()
+
+    # Process each product
+    all_adrs = []
+    adrs_by_product = {}
+    product_stats = {}
+
+    for product in products:
+        template_file = ADR_TEMPLATES_DIR / f"{product}.md"
+        template_source = f"adr_templates/{product}.md"
+
+        print(f"\n📄 Processing {product}...")
+
+        # Parse template file
+        adrs = parse_adr_template_file(template_file)
+        product_stats[product] = len(adrs)
+
+        # Pre-fill customer metadata
+        product_adrs = []
+        for adr in adrs:
+            adr_id = adr['id']
+            adr_content = adr['content']
+            title = extract_adr_title(adr_content)
+
+            # Pre-fill customer metadata
+            adr_content = prefill_customer_metadata(
+                adr_content,
+                customer,
+                template_source,
+                template_version,
+                engagement_date
+            )
+
+            product_adrs.append({
+                'id': adr_id,
+                'title': title,
+                'content': adr_content,
+                'product': product
+            })
+
+            all_adrs.append({'id': adr_id, 'title': title, 'product': product})
+
+            if args.verbose:
+                print(f"   ✓ {adr_id}: {title}")
+
+        adrs_by_product[product] = product_adrs
+
+    total_adrs = len(all_adrs)
+
+    print()
+    print("🔄 Creating Google Doc...")
+
+    # Create Google Doc
+    doc_result = create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, architect, args)
+
+    if not doc_result:
+        print()
+        print("❌ Failed to create Google Doc")
+        print("   Falling back to local markdown...")
+        output_dir = Path(f"./{slugify(customer)}-ADRs")
+        return generate_local_mode(customer, products, engagement_date, architect, output_dir, args)
+
+    # Calculate estimated workshop time
+    estimated_hours = (total_adrs * 10) / 60
+
+    # Success!
+    print()
+    print("="*80)
+    print("✅ Google Doc created successfully!")
+    print("="*80)
+    print()
+    print(f"🔗 Document URL:")
+    print(f"   {doc_result['url']}")
+    print()
+    print(f"📊 Total ADRs: {total_adrs}")
+    for product, count in product_stats.items():
+        print(f"   - {product}: {count}")
+    print(f"⏱️  Estimated workshop time: ~{estimated_hours:.0f} hours")
+    print()
+    print("📋 Next Steps:")
+    print()
+    print("  1. Share Google Doc with customer:")
+    print(f"     {doc_result['url']}")
+    print()
+    print("  2. During workshop:")
+    print("     - Project Google Doc on screen")
+    print("     - Fill Decision and Agreeing Parties in real-time")
+    print("     - Customer can see progress and collaborate")
+    print()
+    print("  3. Check completion anytime:")
+    print(f"     ./run_customer_adrs.sh check \"{doc_result['url']}\"")
+    print()
+    print("  4. Optional backup:")
+    print(f"     ./run_customer_adrs.sh export \"{doc_result['url']}\"")
+    print()
+
+
+def generate_local_mode(customer, products, engagement_date, architect, output_dir, args):
+    """Generate ADRs in local markdown mode (fallback)"""
 
     # Validate inputs
     if not customer:
@@ -332,14 +677,26 @@ def generate_customer_adrs(args):
 
     # Final summary
     print("\n" + "="*80)
-    print("✅ Generated ADR pack for " + customer)
+    print("✅ Generated offline ADR pack for " + customer)
     print("="*80)
     print(f"\n📁 Output: {output_dir}/")
     print(f"📊 Total ADRs: {total_adrs}")
     for product, count in product_stats.items():
         print(f"   - {product}: {count}")
     print(f"⏱️  Estimated workshop time: ~{estimated_hours:.0f} hours")
-    print(f"📖 Next: Review {output_dir}/README.md for instructions\n")
+    print()
+    print("🔒 Customer data protection:")
+    print(f"   • Directory {output_dir}/ is in .gitignore")
+    print("   • Customer ADRs will NOT be committed to git")
+    print("   • Safe to work with customer data locally")
+    print()
+    print(f"📖 Next: Review {output_dir}/README.md for instructions")
+    print()
+    print("💡 For Google Docs mode (recommended for workshops):")
+    print("   • Connect to internet")
+    print("   • Follow GOOGLE_API_SETUP.md")
+    print("   • Re-run: ./run_customer_adrs.sh")
+    print()
 
 
 def check_adr_completion(args):
@@ -773,6 +1130,8 @@ For detailed requirements, see: RUN_SCRIPTS_REQUIREMENTS.md
                                 help='Architect name (default: git config user.name)')
     generate_parser.add_argument('--force', action='store_true',
                                 help='Overwrite existing output directory')
+    generate_parser.add_argument('--local', action='store_true',
+                                help='Force local mode (skip Google Docs even if available)')
 
     # Check subcommand
     check_parser = subparsers.add_parser('check',
