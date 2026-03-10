@@ -95,7 +95,7 @@ During design workshops:
 3. **Design**: Formalize captures into ADRs in design document
 4. **Handover**: Provide consultants with complete context
 
-**Time commitment**: 15-30 minutes per ADR to formalize workshop outputs
+**Time commitment**: 5 minutes per ADR to formalize workshop outputs
 
 ### For Consultants
 
@@ -197,7 +197,7 @@ Use only standardized roles from `dictionaries/adr_parties_role_dictionnary.md`:
 2. **Architect → Consultant**: Provide full context for implementation
 3. **Design → Operations**: Create permanent record for future audits
 
-**The Opportunity**: Just 15-30 minutes per ADR transforms ephemeral workshop captures into complete design deliverables with smooth handover and reduced disputes.
+**The Opportunity**: Just 5 minutes per ADR transforms ephemeral workshop captures into complete design deliverables with smooth handover and reduced disputes.
 
 ## Contributing
 

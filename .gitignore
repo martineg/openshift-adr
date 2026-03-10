@@ -24,3 +24,8 @@ __pycache__/
 # Temporary files
 *.tmp
 *.swp
+
+# Summary and status files (internal tracking)
+GITHUB_READY.md
+*SUMMARY*.md
+*STATUS*.md

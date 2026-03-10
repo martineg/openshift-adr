@@ -353,73 +353,71 @@ def main():
             ],
             2: [  # Slide 3: ADR Structure
                 {'text': 'Each ADR follows a strict format:', 'level': 0, 'bold': False},
-                {'text': 'Title: Concise description', 'level': 1, 'bold': True},
-                {'text': 'Architectural Question: What choice is being made?', 'level': 1, 'bold': True},
-                {'text': 'Issue: Why is this decision needed?', 'level': 1, 'bold': True},
-                {'text': 'Assumptions: Dependencies or prerequisites', 'level': 1, 'bold': True},
-                {'text': 'Alternatives: 2+ viable options', 'level': 1, 'bold': True},
-                {'text': 'Decision: #TODO# until decided', 'level': 1, 'bold': True},
-                {'text': 'Justification: Why choose each alternative', 'level': 1, 'bold': True},
-                {'text': 'Implications: Consequences, trade-offs, risks', 'level': 1, 'bold': True},
-                {'text': 'Agreeing Parties: Customer + Red Hat roles', 'level': 1, 'bold': True},
+                {'text': 'Title: Concise description', 'level': 1, 'bold': False},
+                {'text': 'Architectural Question: What choice is being made?', 'level': 1, 'bold': False},
+                {'text': 'Issue: Why is this decision needed?', 'level': 1, 'bold': False},
+                {'text': 'Assumptions: Dependencies or prerequisites', 'level': 1, 'bold': False},
+                {'text': 'Alternatives: 2+ viable options', 'level': 1, 'bold': False},
+                {'text': 'Decision: #TODO# until decided', 'level': 1, 'bold': False},
+                {'text': 'Justification: Why choose each alternative', 'level': 1, 'bold': False},
+                {'text': 'Implications: Consequences, trade-offs, risks', 'level': 1, 'bold': False},
+                {'text': 'Agreeing Parties: Customer + Red Hat roles', 'level': 1, 'bold': False},
                 {'text': '→ See adr-structure-example.png for real example', 'level': 0, 'bold': False},
             ],
-            3: [  # Slide 4: ADR Repository Statistics
-                {'text': 'ADR Repository: 291 Documented Decisions', 'level': 0, 'bold': True},
-                {'text': 'OpenShift Platform (148 ADRs):', 'level': 0, 'bold': True},
-                {'text': 'OCP-BM: 58 (Bare Metal & Day 0)', 'level': 1},
-                {'text': 'OCP-NET: 44 (Networking)', 'level': 1},
-                {'text': 'OCP-SEC: 19 (Security)', 'level': 1},
-                {'text': 'OCP-BASE: 15 (Cross-cutting)', 'level': 1},
-                {'text': 'OCP-MGT: 12 (Management)', 'level': 1},
+            3: [  # Slide 4: ADR Template Repository
+                {'text': 'ADR Template Repository: 291 Documented Decisions', 'level': 0, 'bold': True},
+                {'text': 'https://github.com/redhat-ai-services/openshift-adr', 'level': 0, 'bold': False},
+                {'text': 'OpenShift Container Platform (148 ADRs):', 'level': 0, 'bold': True},
+                {'text': 'OCP-BM: 58 (Bare Metal & Day 0)', 'level': 1, 'bold': False},
+                {'text': 'OCP-NET: 44 (Networking)', 'level': 1, 'bold': False},
+                {'text': 'OCP-SEC: 19 (Security)', 'level': 1, 'bold': False},
+                {'text': 'OCP-BASE: 15 (Cross-cutting)', 'level': 1, 'bold': False},
+                {'text': 'OCP-MGT: 12 (Management)', 'level': 1, 'bold': False},
                 {'text': 'AI/ML & Data (62 ADRs):', 'level': 0, 'bold': True},
-                {'text': 'RHOAI-SM: 53 (OpenShift AI)', 'level': 1},
-                {'text': 'NVIDIA-GPU: 9 (GPU Infrastructure)', 'level': 1},
+                {'text': 'RHOAI-SM: 53 (OpenShift AI)', 'level': 1, 'bold': False},
+                {'text': 'NVIDIA-GPU: 9 (GPU Infrastructure)', 'level': 1, 'bold': False},
                 {'text': 'Platform Services (81 ADRs):', 'level': 0, 'bold': True},
-                {'text': 'ODF: 9 (Data Foundation)', 'level': 1},
-                {'text': 'OCP-STOR: 7, OCP-OSP: 8, OCP-MON: 6, OCP-HCP: 6', 'level': 1},
-                {'text': 'GITOPS: 6, PIPELINES: 8, VIRT: 7, LOG: 7, TRACING: 8', 'level': 1},
-                {'text': 'NETOBSERV: 6, POWERMON: 3', 'level': 1},
+                {'text': 'ODF, GitOps, Pipelines, Virt, Logging, Tracing, etc.', 'level': 1, 'bold': False},
             ],
             4: [  # Slide 5: Why ADRs Matter?
                 {'text': 'The Problem:', 'level': 0, 'bold': True},
-                {'text': 'Workshops happen, decisions captured (Miro/paper)', 'level': 1},
-                {'text': 'NOT formalized into design doc ❌', 'level': 1},
-                {'text': 'Workshop outputs vanish', 'level': 1},
-                {'text': 'Consultants implement without context', 'level': 1},
+                {'text': 'Workshops happen, decisions captured (Miro/paper)', 'level': 1, 'bold': False},
+                {'text': 'NOT formalized into design doc ❌', 'level': 1, 'bold': False},
+                {'text': 'Workshop outputs vanish', 'level': 1, 'bold': False},
+                {'text': 'Consultants implement without context', 'level': 1, 'bold': False},
                 {'text': 'The Opportunity:', 'level': 0, 'bold': True},
-                {'text': '15-30 min per ADR to formalize workshop outputs', 'level': 1},
-                {'text': 'Complete design deliverables with rationale', 'level': 1},
-                {'text': 'Smoother handover, reduced disputes', 'level': 1},
-                {'text': 'Permanent record for future audits', 'level': 1},
+                {'text': '5 min per ADR to formalize workshop outputs', 'level': 1, 'bold': False},
+                {'text': 'Complete design deliverables with rationale', 'level': 1, 'bold': False},
+                {'text': 'Smoother handover, reduced disputes', 'level': 1, 'bold': False},
+                {'text': 'Permanent record for future audits', 'level': 1, 'bold': False},
                 {'text': 'Note: CER decommissioned, ADRs go in design docs', 'level': 0, 'bold': False},
             ],
             5: [  # Slide 6: Who & When?
                 {'text': 'Three Consulting Phases:', 'level': 0, 'bold': True},
-                {'text': 'Design (Architect)', 'level': 1},
-                {'text': 'Implementation (Consultant)', 'level': 1},
-                {'text': 'Enablement (Consultant)', 'level': 1},
+                {'text': 'Design (Architect)', 'level': 1, 'bold': False},
+                {'text': 'Implementation (Consultant)', 'level': 1, 'bold': False},
+                {'text': 'Enablement (Consultant)', 'level': 1, 'bold': False},
                 {'text': 'ADR Workflow:', 'level': 0, 'bold': True},
-                {'text': 'Preparation: Extract decision points from docs', 'level': 1},
-                {'text': 'Workshop: Present questions, capture decisions', 'level': 1},
-                {'text': 'Design: Formalize Miro → ADRs in design doc', 'level': 1},
-                {'text': 'Handover: Consultant gets full context', 'level': 1},
+                {'text': 'Preparation: Extract decision points from docs', 'level': 1, 'bold': False},
+                {'text': 'Workshop: Present questions, capture decisions', 'level': 1, 'bold': False},
+                {'text': 'Design: Formalize Miro → ADRs in design doc', 'level': 1, 'bold': False},
+                {'text': 'Handover: Consultant gets full context', 'level': 1, 'bold': False},
                 {'text': 'Best Practice: Workshop → Miro → ADRs → Diagrams', 'level': 0, 'bold': True},
             ],
-            6: [  # Slide 7: Real Example
+            6: [  # Slide 7: The ADR Workshop Process
                 {'text': 'OCP-BASE-01: Cluster Isolation Strategy', 'level': 0, 'bold': True},
                 {'text': 'Question: How to separate Dev/Test/Prod workloads?', 'level': 0, 'bold': False},
                 {'text': 'Alternatives:', 'level': 0, 'bold': True},
-                {'text': 'Consolidated (Single Cluster)', 'level': 1},
-                {'text': 'Prod/Non-Prod Split', 'level': 1},
-                {'text': 'Per-Environment', 'level': 1},
+                {'text': 'Consolidated (Single Cluster)', 'level': 1, 'bold': False},
+                {'text': 'Prod/Non-Prod Split', 'level': 1, 'bold': False},
+                {'text': 'Per-Environment', 'level': 1, 'bold': False},
                 {'text': 'Decision: Separate by infrastructure type', 'level': 0, 'bold': True},
-                {'text': 'OpenStack: General purpose/dev workloads', 'level': 1},
-                {'text': 'Bare Metal: Performance/prod with GPUs', 'level': 1},
+                {'text': 'OpenStack: General purpose/dev workloads', 'level': 1, 'bold': False},
+                {'text': 'Bare Metal: Performance/prod with GPUs', 'level': 1, 'bold': False},
                 {'text': 'Agreeing Parties:', 'level': 0, 'bold': True},
-                {'text': 'J. Smith (AI/ML Platform Owner)', 'level': 1},
-                {'text': 'A. Johnson (Storage Expert)', 'level': 1},
-                {'text': 'M. Chen (Security Expert)', 'level': 1},
+                {'text': 'J. Smith (AI/ML Platform Owner)', 'level': 1, 'bold': False},
+                {'text': 'A. Johnson (Storage Expert)', 'level': 1, 'bold': False},
+                {'text': 'M. Chen (Security Expert)', 'level': 1, 'bold': False},
             ],
         }
 
@@ -431,39 +429,35 @@ def main():
 
 A configuration checklist is "set this parameter to this value" - there's no choice. Real architectural decisions have multiple valid alternatives: KServe vs custom deployment, internal vs external database, fast vs stable update channel.""",
 
-            2: """Every ADR follows the same structure with these fields shown here. Notice each field is bold: Title, Architectural Question, Issue, Assumptions, Alternatives, Decision (starts as #TODO#), Justification, Implications, Agreeing Parties.
+            2: """Every ADR follows the same structure with these fields. Title, Architectural Question, Issue, Assumptions, Alternatives, Decision (starts as #TODO#), Justification, Implications, Agreeing Parties.
 
 The screenshot shows a real example from our RHOAI repository - RHOAI-SM-47 about Model Registry database strategy.""",
 
-            3: """This repository contains 291 documented architectural decisions across all Red Hat products.
+            3: """This is the ADR template repository containing 291 documented architectural decisions across all Red Hat products, available at github.com/redhat-ai-services/openshift-adr.
 
-The breakdown: OpenShift Platform has 148 ADRs - the largest being OCP-BM with 58 decisions covering bare metal infrastructure and Day 0 installation, and OCP-NET with 44 networking decisions.
+OpenShift Container Platform has 148 ADRs covering bare metal, networking, security, and management. AI and ML has 62 ADRs including 53 for OpenShift AI. Platform services add 81 more ADRs.
 
-AI and ML capabilities have 62 ADRs - RHOAI-SM has 53 decisions covering all OpenShift AI components, and NVIDIA-GPU has 9 decisions for GPU infrastructure.
+Each ADR documents a real architectural choice with alternatives, justifications, and agreeing parties.""",
 
-Platform services add 81 more ADRs covering data foundation, storage, monitoring, GitOps, pipelines, virtualization, logging, and observability.
+            4: """Why do ADRs matter? The problem: Architects facilitate workshops and capture decisions on Miro or paper. But these aren't formalized into design documents. Workshop outputs vanish. Consultants implement without context.
 
-Each of these 291 ADRs documents a real architectural choice made during customer engagements, with alternatives, justifications, and agreeing parties captured.""",
+The opportunity: Just 5 minutes per ADR to formalize workshop outputs into design documents. This gives complete deliverables, smoother handover, and permanent records.
 
-            4: """Why do ADRs matter? The problem: Architects already facilitate workshops and capture decisions on Miro boards or paper. But these captures aren't formalized into the design document. Workshop outputs vanish. Consultants implement without understanding why choices were made.
+Note: CER is decommissioned. ADRs now go directly in design documents.""",
 
-The opportunity: Just 15-30 minutes per ADR to formalize workshop outputs into design documents. This gives complete deliverables with rationale, smoother handover, reduced disputes, and permanent records for future audits.
+            5: """Who creates ADRs and when? Consulting has three phases: Design by Architects, Implementation by Consultants, Enablement by Consultants.
 
-Note: CER is decommissioned due to the Tang project. ADRs now go directly in design documents.""",
+The workflow: Preparation - extract decision points. Workshop - present questions, capture decisions. Design - formalize into ADRs. Handover - consultant gets full context.
 
-            5: """Who creates ADRs and when? Consulting delivery has three phases: Design by Architects, Implementation by Consultants, Enablement by Consultants.
+Best practice: Workshop to Miro to ADRs to Diagrams.""",
 
-The ADR workflow: Preparation - extract decision points from Red Hat docs. Workshop - present questions, capture decisions on Miro or paper. Design phase - formalize those Miro captures into ADRs in the design document. Handover - consultant receives full context.
+            6: """This is a real ADR workshop process example: OCP-BASE-01 Cluster Isolation Strategy. The question was how to separate Dev, Test, and Prod workloads.
 
-Best practice flow: Workshop to Miro to ADRs to Diagrams. This ensures nothing is lost.""",
+Three alternatives: Consolidated single cluster, Prod/Non-Prod split, or per-environment.
 
-            6: """Real example showing the complete ADR structure. OCP-BASE-01: Cluster Isolation Strategy. The question was how to separate Dev, Test, and Prod workloads across OpenShift clusters.
+Decision: Separate by infrastructure type. OpenStack for general purpose, Bare Metal for performance workloads with GPUs.
 
-Three alternatives were considered: Consolidated single cluster, Prod/Non-Prod split, or per-environment separation.
-
-The decision: Separate clusters based on infrastructure type. OpenStack hosts general purpose and dev workloads. Bare Metal hosts performance-intensive production workloads with GPUs.
-
-Agreeing parties included the AI/ML Platform Owner, Storage Expert, and Security Expert. Names obfuscated here for demo purposes.""",
+Agreeing parties captured with names obfuscated for demo.""",
         }
 
         # Populate content slides
