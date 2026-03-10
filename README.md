@@ -1,6 +1,8 @@
-# Architecture Decision Records (ADR) Repository
+# Architecture Decision Records (ADR) Template Repository
 
-This repository contains Architecture Decision Records for Red Hat consulting engagements, documenting strategic architectural choices for OpenShift Container Platform and related products.
+This repository contains **ADR templates** for Red Hat consulting engagements. These templates document strategic architectural choices for OpenShift Container Platform and related products.
+
+**Important:** This repository contains **TEMPLATES**, not customer-specific ADRs. Architects use these templates to create customer ADR instances during engagements. Customer ADRs go in their design documents, not in this repository.
 
 ## What Are ADRs?
 
@@ -97,6 +99,8 @@ During design workshops:
 
 **Time commitment**: 5 minutes per ADR to formalize workshop outputs
 
+**See [ARCHITECT_WORKFLOW.md](ARCHITECT_WORKFLOW.md) for complete 4-phase workflow**
+
 ### For Consultants
 
 When implementing:
@@ -106,9 +110,41 @@ When implementing:
 3. Reference ADRs when questions arise during implementation
 4. Validate implementation matches agreed decisions
 
-### Renumbering ADRs
+---
 
-After adding/removing ADRs, renumber them sequentially:
+## Scripts Reference
+
+Scripts are organized into two categories:
+
+### RUN Scripts (Used by Architects During Engagements)
+
+These scripts help architects **use** the ADR templates in customer engagements:
+
+```bash
+# Generate customer-specific ADR pack from templates
+python scripts/generate_customer_adrs.py \
+    --customer "ACME Corp" \
+    --products "OCP-BASE,OCP-NET,RHOAI-SM" \
+    --output "./ACME-Corp-ADRs/"
+
+# Check completion status of customer ADRs
+python scripts/check_adr_completion.py ./ACME-Corp-ADRs/
+
+# Export completed customer ADRs to Google Docs
+python scripts/export_to_google_doc.py \
+    --input "./ACME-Corp-ADRs/" \
+    --output-format "google-doc"
+```
+
+**Status:** 🚧 Coming soon (see [ARCHITECT_WORKFLOW.md](ARCHITECT_WORKFLOW.md))
+
+### BUILD Scripts (Used to Maintain This Repository)
+
+These scripts help maintainers **build and update** the ADR template repository itself:
+
+**Renumbering ADR Templates**
+
+After adding/removing ADR templates in this repository:
 
 ```bash
 python scripts/renumber_adrs.py <PREFIX>
@@ -118,7 +154,35 @@ python scripts/renumber_adrs.py OCP-NET
 python scripts/renumber_adrs.py --dry-run OCP-BASE  # Preview changes
 ```
 
-### Splitting Large PDF Documentation
+**Updating ADR Templates for New Product Versions**
+
+When Red Hat releases new product versions, update templates:
+
+```bash
+# 1. Download new documentation
+cd doc_downloader
+vim download_config.yaml  # Update version numbers
+./download_all_docs.sh
+
+# 2. Analyze templates against new docs
+cd ..
+export ANTHROPIC_API_KEY="your-api-key"
+python scripts/update_adrs.py RHOAI-SM
+
+# 3. Review and apply changes manually
+# See UPDATE_GUIDE.md for complete workflow
+```
+
+**Building ADR Presentation**
+
+Generate the ADR presentation from Red Hat template:
+
+```bash
+python scripts/build_presentation.py
+# Requires credentials.json and token.json (Google API)
+```
+
+**Splitting Large PDF Documentation**
 
 ```bash
 python scripts/split_pdf.py <path_to_pdf> <max_size_mb>
@@ -126,6 +190,8 @@ python scripts/split_pdf.py <path_to_pdf> <max_size_mb>
 # Example:
 python scripts/split_pdf.py documentation.pdf 20
 ```
+
+---
 
 ## Governance Rules
 

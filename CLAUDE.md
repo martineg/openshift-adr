@@ -4,9 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-This is an Architecture Decision Records (ADR) repository for OpenShift Container Platform and related Red Hat products. ADRs document strategic architectural choices between valid alternatives during design phases of Red Hat consulting engagements.
+This is an **ADR Template Repository** for OpenShift Container Platform and related Red Hat products. It contains 291 pre-defined ADR templates that architects use as starting points for customer engagements.
 
-**Current Statistics**: 291 documented ADRs across 19 products
+**Templates vs. Instances:**
+- **Templates** (this repository): Reusable patterns for common architectural decisions
+- **Customer ADR Instances** (design documents): Completed ADRs specific to a customer engagement
+
+**Current Statistics**: 291 ADR templates across 19 products
 
 ## Repository Structure
 
@@ -108,7 +112,40 @@ Check `dictionaries/adr_exclusions.md` before creating/updating ADRs.
 
 ## Common Commands
 
-### Update ADRs for New Product Version
+Commands are organized into two categories:
+
+### RUN Commands (Architects Using Templates in Engagements)
+
+**Generate Customer ADR Pack** (🚧 Coming soon)
+```bash
+# Create customer-specific ADR instances from templates
+python scripts/generate_customer_adrs.py \
+    --customer "ACME Corp" \
+    --products "OCP-BASE,OCP-NET,RHOAI-SM" \
+    --output "./ACME-Corp-ADRs/"
+```
+
+**Check ADR Completion Status** (🚧 Coming soon)
+```bash
+# Verify all #TODO# markers filled before handover
+python scripts/check_adr_completion.py ./ACME-Corp-ADRs/
+```
+
+**Export to Google Docs** (🚧 Coming soon)
+```bash
+# Export completed customer ADRs to design document
+python scripts/export_to_google_doc.py \
+    --input "./ACME-Corp-ADRs/" \
+    --output-format "google-doc"
+```
+
+See [ARCHITECT_WORKFLOW.md](ARCHITECT_WORKFLOW.md) for complete workflow.
+
+---
+
+### BUILD Commands (Maintaining the Template Repository)
+
+**Update Templates for New Product Version**
 
 ```bash
 # 1. Download new documentation
@@ -133,10 +170,10 @@ python scripts/renumber_adrs.py RHOAI-SM
 
 See `UPDATE_GUIDE.md` for complete workflow details.
 
-### Renumber ADRs
+**Renumber ADR Templates**
 
 ```bash
-# After adding/removing ADRs, renumber sequentially
+# After adding/removing templates in repository
 python scripts/renumber_adrs.py <PREFIX>
 
 # Examples:
@@ -144,7 +181,7 @@ python scripts/renumber_adrs.py OCP-NET
 python scripts/renumber_adrs.py --dry-run OCP-BASE  # Preview changes
 ```
 
-### Build ADR Presentation
+**Build ADR Presentation**
 
 ```bash
 # Requires credentials.json and token.json (Google API)
