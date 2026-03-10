@@ -4,27 +4,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-This is an Architecture Decision Records (ADR) repository for OpenShift Container Platform and related Red Hat products. ADRs document strategic architectural choices between valid alternatives, not simple configuration decisions or right-vs-wrong choices (with specific exceptions).
+This is an Architecture Decision Records (ADR) repository for OpenShift Container Platform and related Red Hat products. ADRs document strategic architectural choices between valid alternatives during design phases of Red Hat consulting engagements.
+
+**Current Statistics**: 291 documented ADRs across 19 products
 
 ## Repository Structure
 
-- **`/adr/`**: ADR markdown files organized by product prefix (e.g., `OCP-BASE.md`, `OCP-NET.md`, `GITOPS.md`)
-  - Each file contains multiple numbered ADRs for that topic area (e.g., `OCP-BASE-01`, `OCP-BASE-02`)
+- **`/adr/`**: ADR markdown files organized by product prefix
+  - Each file contains multiple numbered ADRs (e.g., `OCP-BASE-01`, `OCP-BASE-02`)
+  - Naming: `OCP-BASE.md`, `OCP-NET.md`, `RHOAI-SM.md`, `GITOPS.md`, etc.
 
 - **`/dictionaries/`**: Governance and reference files
-  - `adr_governance_rules.md`: Strict validation rules for creating/updating/reviewing ADRs
-  - `adr_prefix_dictionary.md`: Maps products/topics to their official prefix codes
-  - `adr_parties_role_dictionnary.md`: Standardized roles for "Agreeing Parties" sections
+  - `adr_governance_rules.md`: Strict validation rules for ADR quality
+  - `adr_prefix_dictionary.md`: Maps products/topics to official prefix codes
+  - `adr_parties_role_dictionnary.md`: Standardized roles for "Agreeing Parties"
   - `adr_exclusions.md`: Forbidden topics and false positive suppressions
 
-- **`/prompts/`**: NotebookLM prompts for ADR maintenance
-  - `adr-create.md`: Prompt for discovering new ADRs from documentation
-  - `adr-update-review.md`: Prompt for reviewing existing ADRs for accuracy
-  - Other specialized prompts for auditing and visibility checks
+- **`/scripts/`**: Automation utilities
+  - `renumber_adrs.py`: Renumber ADRs sequentially after additions/removals
+  - `split_pdf.py`: Split large PDF documentation files
+  - `update_adrs.py`: Automated ADR updates using Claude API
+  - `build_presentation.py`: Generate ADR presentation from Red Hat template
 
-- **`/scripts/`**: Python utilities
-  - `renumber_adrs.py`: Renumbers ADR IDs sequentially within a file
-  - `split_pdf.py`: Splits large PDF documentation files
+- **`/doc_downloader/`**: Documentation automation
+  - `download_all_docs.sh`: Download Red Hat product documentation
+  - `download_config.yaml`: Configuration for documentation URLs and versions
+
+- **`UPDATE_GUIDE.md`**: Complete workflow for updating ADRs when product versions change
 
 ## ADR Structure Template
 
@@ -71,7 +77,7 @@ Each ADR follows this exact structure:
 
 ## Critical Governance Rules
 
-When working with ADRs, **strictly enforce** these rules from `dictionaries/adr_governance_rules.md`:
+**Strictly enforce** these rules from `dictionaries/adr_governance_rules.md`:
 
 ### Scope Hierarchy
 - **OCP-BASE**: Cross-cutting platform strategy (Topology, Sizing, Multi-site, Compliance)
@@ -79,9 +85,9 @@ When working with ADRs, **strictly enforce** these rules from `dictionaries/adr_
 - **Domain Specifics** (OCP-NET, OCP-SEC, OCP-STOR, etc.): Day 2 configurations and operator settings
 
 ### Quality Rules
-- **Valid ADR**: Choice between two or more supported, viable architectural strategies
-- **Invalid**: "Correct Configuration vs. Misconfiguration" (unless it falls under allowed exceptions)
-- **Invalid**: Documenting constraints that are forced by another decision
+- **Valid ADR**: Choice between 2+ supported, viable architectural strategies
+- **Invalid**: "Correct Configuration vs. Misconfiguration" (unless allowed exceptions apply)
+- **Invalid**: Documenting constraints forced by another decision
 
 ### Allowed Exceptions
 Document "right vs. wrong" decisions ONLY if they serve:
@@ -93,29 +99,65 @@ Document "right vs. wrong" decisions ONLY if they serve:
 6. Backing Service Selection (how to back core components)
 
 ### Versioning Policy
-- Document **current state only** for the current target version
+- Document **current state only** for current target version
 - **Never** mention specific version numbers (e.g., "4.12", "4.17")
 - **Never** describe legacy behaviors or version history
 
 ### Exclusion Rules
-Check `dictionaries/adr_exclusions.md` before creating/updating ADRs. Forbidden topics include:
-- Network Teaming (deprecated)
-- Mixed/Hybrid IPAM strategies
-- Default catalog source configurations in disconnected environments
+Check `dictionaries/adr_exclusions.md` before creating/updating ADRs.
 
 ## Common Commands
 
-### Renumber ADRs
-After adding/removing ADRs, renumber them sequentially:
+### Update ADRs for New Product Version
+
 ```bash
+# 1. Download new documentation
+cd doc_downloader
+vim download_config.yaml  # Update version numbers
+./download_all_docs.sh
+
+# 2. Analyze ADRs against new documentation
+cd ..
+export ANTHROPIC_API_KEY="your-api-key"
+python scripts/update_adrs.py RHOAI-SM
+
+# 3. Review generated report
+cat RHOAI-SM-Analysis-Report.md
+
+# 4. Apply changes manually to ADR file
+vim adr/RHOAI-SM.md
+
+# 5. Renumber if ADRs were added/removed
+python scripts/renumber_adrs.py RHOAI-SM
+```
+
+See `UPDATE_GUIDE.md` for complete workflow details.
+
+### Renumber ADRs
+
+```bash
+# After adding/removing ADRs, renumber sequentially
 python scripts/renumber_adrs.py <PREFIX>
 
-# Example:
+# Examples:
 python scripts/renumber_adrs.py OCP-NET
 python scripts/renumber_adrs.py --dry-run OCP-BASE  # Preview changes
 ```
 
+### Build ADR Presentation
+
+```bash
+# Requires credentials.json and token.json (Google API)
+python scripts/build_presentation.py
+
+# Creates presentation from Red Hat template
+# - 8 slides (title + 6 content + closing)
+# - Includes 291 ADR repository statistics
+# - Speaker notes for 10-minute delivery
+```
+
 ### Split Large PDF Documentation
+
 ```bash
 python scripts/split_pdf.py <path_to_pdf> <max_size_mb>
 
@@ -123,32 +165,63 @@ python scripts/split_pdf.py <path_to_pdf> <max_size_mb>
 python scripts/split_pdf.py documentation.pdf 20
 ```
 
-## Workflow for ADR Maintenance
+## Automated Update Workflow
 
-The repository uses a **NotebookLM-based workflow** with "Focused Notebooks":
+The `update_adrs.py` script uses Claude API to analyze ADRs against product documentation:
 
-1. Create a dedicated NotebookLM notebook for each topic
-2. Upload ONLY relevant files: the ADR file, dictionaries, and official Red Hat documentation (PDFs)
-3. Use prompts from `/prompts/` to review or create ADRs
-4. The "Focused Notebook" strategy prevents noisy, unreliable results
+**What it does:**
+1. Reads ADR file (e.g., `adr/RHOAI-SM.md`)
+2. Reads governance rules and exclusions
+3. Uses Claude to identify updates needed, removals recommended, new ADRs suggested
+4. Generates analysis report (e.g., `RHOAI-SM-Analysis-Report.md`)
 
-**Note**: While the primary workflow uses NotebookLM, Claude Code can assist with:
-- Formatting and structural consistency
-- Renumbering ADRs
-- Validating against governance rules
-- Editing specific sections
+**Prerequisites:**
+- Product documentation in `docs/<product>/` (use doc_downloader)
+- `ANTHROPIC_API_KEY` environment variable set
+- `pip install anthropic`
 
-## File Naming Convention
+**Human validation required:** Always review AI-generated recommendations before applying changes.
 
-- ADR files use uppercase prefix with `.md` extension: `OCP-NET.md`, `GITOPS.md`
-- Individual ADRs within files use format: `PREFIX-NN` (e.g., `OCP-BASE-01`, `OCP-NET-15`)
-- Numbers are zero-padded to 2 digits
+## Presentation Generation
+
+The `build_presentation.py` script generates a complete ADR presentation:
+
+**Architecture:**
+- Copies Red Hat Consulting template (ID: `1B5s3eIrvbW7ZXDX0BH5qKb8b09pYudWyYPJUjw1ruQI`)
+- Deletes unnecessary slides, keeps title + content template + closing
+- Duplicates content template to create 6 content slides
+- Populates slides with structured content (bullet levels 0/1/2)
+- Applies formatting: bold headers, bullet nesting (disc/circle style)
+- Adds speaker notes for 10-minute presentation
+
+**Content structure format:**
+```python
+[
+    {'text': 'Header text', 'level': 0, 'bold': True},   # No bullet
+    {'text': 'Main point', 'level': 1, 'bold': False},   # Disc bullet (●)
+    {'text': 'Sub-point', 'level': 2, 'bold': False},    # Circle bullet (○)
+]
+```
+
+**Bullet formatting approach:**
+1. Delete all existing bullets
+2. Apply bold formatting where needed
+3. Re-create bullets with `createParagraphBullets` API
+4. Apply indentation (18pt for level 1, 54pt for level 2)
+
+This "toggle" approach ensures consistent bullet alignment across all slides.
+
+## File Naming Conventions
+
+- ADR files: Uppercase prefix with `.md`: `OCP-NET.md`, `GITOPS.md`
+- Individual ADRs: Format `PREFIX-NN`: `OCP-BASE-01`, `OCP-NET-15`
+- Numbers: Zero-padded to 2 digits (01, 02, ..., 58)
 
 ## Standard Roles for Agreeing Parties
 
-Use only these standardized roles (from `dictionaries/adr_parties_role_dictionnary.md`):
+Use **only** these roles from `dictionaries/adr_parties_role_dictionnary.md`:
 - Enterprise Architect
-- Infra Leader
+- Infrastructure Leader
 - Network Expert
 - Storage Expert
 - Security Expert
@@ -158,3 +231,72 @@ Use only these standardized roles (from `dictionaries/adr_parties_role_dictionna
 - AI/ML Platform Owner
 - Lead Data Scientist
 - MLOps Engineer
+
+## Architecture Notes
+
+### ADR Update Workflow
+1. **Documentation Download**: `doc_downloader/` fetches PDFs from Red Hat docs site
+2. **Analysis**: `update_adrs.py` uses Claude API to compare ADRs against current docs
+3. **Report Generation**: Creates markdown report with specific changes needed
+4. **Manual Application**: Human reviews and applies recommended changes
+5. **Renumbering**: `renumber_adrs.py` ensures sequential numbering
+
+### Presentation Generation Workflow
+1. **Template Copy**: Uses Google Drive API to copy Red Hat template
+2. **Slide Deletion**: Removes 129 template slides, keeps 3 (title, content, closing)
+3. **Slide Duplication**: Creates 6 content slides from template
+4. **Content Population**: Three-phase approach (delete text → insert text → format)
+5. **Bullet Formatting**: Three-phase approach (delete bullets → format text → create bullets)
+6. **Speaker Notes**: Adds complete sentences for natural delivery
+
+### Time Estimates
+- **Formalizing one ADR**: 5 minutes (workshop capture → design doc)
+- **ADR analysis run**: 2-5 minutes (depends on file size and API)
+- **Presentation build**: 30-60 seconds (full automation)
+- **Updating ADRs for new version**: 15-30 minutes per product (download → analyze → review → apply)
+
+## Common Pitfalls
+
+### ADR Quality
+- **Don't** create ADRs for configuration vs. misconfiguration (unless exceptions apply)
+- **Don't** mention version numbers in ADR content
+- **Do** check exclusions list before creating new ADRs
+- **Do** ensure 2+ viable alternatives exist
+
+### Presentation Formatting
+- Google Slides API doesn't support `TEXT_AUTOFIT` - content must fit without shrinking
+- `nestingLevel` field doesn't exist - use manual indentation instead
+- Must delete bullets before re-creating for proper alignment
+- Bold formatting must be applied after text insertion but before bullet creation
+
+### Update Workflow
+- Always download latest documentation before running analysis
+- AI suggestions need human validation - false positives can occur
+- Renumber after adding/removing ADRs to maintain sequential IDs
+- Use `--dry-run` flag to preview renumbering changes
+
+## Git Workflow Notes
+
+- **Never commit**: `credentials.json`, `token.json`, `docs/` PDFs
+- **Avoid committing**: `*SUMMARY*.md`, `*STATUS*.md`, `GITHUB_READY.md` (internal tracking files)
+- **Always commit**: ADR changes, script updates, governance rule updates
+- Commit messages should reference specific ADR IDs when applicable
+
+## Integration Points
+
+### Google Slides API
+- Requires OAuth2 credentials (`credentials.json`)
+- Token stored in `token.json` (auto-refreshed)
+- Scopes: `presentations`, `drive`
+- Template ID hardcoded in `build_presentation.py`
+
+### Claude API
+- Requires `ANTHROPIC_API_KEY` environment variable
+- Model: `claude-sonnet-4-20250514`
+- Max tokens: 8000 for analysis responses
+- Used only in `update_adrs.py`
+
+### Documentation Sources
+- Red Hat documentation PDFs from `docs.redhat.com`
+- URLs and versions configured in `doc_downloader/download_config.yaml`
+- Downloaded to `docs/<product>/` (excluded from git)
