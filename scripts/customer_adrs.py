@@ -22,6 +22,7 @@ import re
 import subprocess
 import json
 import socket
+import time
 from pathlib import Path
 from datetime import datetime
 import yaml
@@ -122,64 +123,532 @@ def get_google_credentials():
 
 
 def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, architect, args):
-    """Create Google Doc with ADR templates"""
-    try:
-        creds = get_google_credentials()
-        docs_service = build('docs', 'v1', credentials=creds)
-        drive_service = build('drive', 'v3', credentials=creds)
+    """Create Google Doc with ADR templates in 2-column tables with retry logic"""
+    max_retries = 3
+    retry_delays = [0, 30, 60]  # First attempt: no delay, 2nd: 30s, 3rd: 60s
 
-        # Create new document
-        doc_title = f"ADR Pack - {customer}"
-        doc = docs_service.documents().create(body={'title': doc_title}).execute()
-        doc_id = doc['documentId']
-        doc_url = f"https://docs.google.com/document/d/{doc_id}/edit"
+    for attempt in range(max_retries):
+        try:
+            if attempt > 0:
+                print(f"⏱️  Waiting {retry_delays[attempt]} seconds before retry {attempt + 1}/{max_retries}...")
+                time.sleep(retry_delays[attempt])
+                print(f"🔄 Retrying Google Docs creation (attempt {attempt + 1}/{max_retries})...")
 
-        # Build document content
-        requests = []
+            creds = get_google_credentials()
+            docs_service = build('docs', 'v1', credentials=creds)
 
-        # Insert title
-        requests.append({
-            'insertText': {
-                'location': {'index': 1},
-                'text': f"Architecture Decision Records\n{customer}\n\nGenerated: {engagement_date}\nArchitect: {architect}\n\n"
-            }
-        })
+            # Create new document
+            doc_title = f"ADR Pack - {customer}"
+            doc = docs_service.documents().create(body={'title': doc_title}).execute()
+            doc_id = doc['documentId']
+            doc_url = f"https://docs.google.com/document/d/{doc_id}/edit"
 
-        # Insert ADRs by product
-        index = 1
-        for product, product_adrs in adrs_by_product.items():
-            # Product section header
+            # Insert header
+            requests = []
+            header_text = f"Architecture Decision Records\n{customer}\n\nGenerated: {engagement_date}\nArchitect: {architect}\n\n"
             requests.append({
                 'insertText': {
-                    'location': {'index': index},
-                    'text': f"\n{'='*80}\n{product} ({len(product_adrs)} ADRs)\n{'='*80}\n\n"
+                    'location': {'index': 1},
+                    'text': header_text
                 }
             })
 
-            # Insert each ADR
-            for adr in product_adrs:
-                adr_text = adr['content']
-                # Remove metadata comments
-                adr_text = re.sub(r'<!--.*?-->', '', adr_text, flags=re.DOTALL).strip()
+            docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+
+            # Apply heading style in separate batch
+            heading_text = "Architecture Decision Records"
+            style_requests = []
+            style_requests.append({
+                'updateParagraphStyle': {
+                    'range': {'startIndex': 1, 'endIndex': 1 + len(heading_text)},
+                    'paragraphStyle': {'namedStyleType': 'HEADING_1'},
+                    'fields': 'namedStyleType'
+                }
+            })
+            docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': style_requests}).execute()
+
+            # Note: Footer creation with createFooter API currently causes 500 errors
+            # Footer and page numbers must be added manually via Google Docs UI
+            # (Insert > Headers & footers > Page number)
+
+            # Product name mapping (prefix to full name)
+            PRODUCT_NAMES = {
+                'GITOPS': 'OpenShift GitOps',
+                'LOG': 'OpenShift Logging',
+                'NETOBSERV': 'Network Observability',
+                'NVIDIA-GPU': 'NVIDIA GPU Operator',
+                'OCP-BASE': 'OpenShift Container Platform - General Platform',
+                'OCP-BM': 'OpenShift Container Platform - Bare Metal Installation',
+                'OCP-HCP': 'OpenShift Container Platform - Hosted Control Planes',
+                'OCP-MGT': 'OpenShift Container Platform - Cluster Management & Day2 Ops',
+                'OCP-MON': 'OpenShift Container Platform - Monitoring (Metrics)',
+                'OCP-NET': 'OpenShift Container Platform - Networking',
+                'OCP-OSP': 'OpenShift Container Platform - OpenStack Installation',
+                'OCP-SEC': 'OpenShift Container Platform - Security & Compliance',
+                'OCP-STOR': 'OpenShift Container Platform - Storage',
+                'ODF': 'OpenShift Data Foundation',
+                'PIPELINES': 'OpenShift Pipelines',
+                'POWERMON': 'OpenShift Power Monitoring (Kepler)',
+                'RHOAI-SM': 'Red Hat OpenShift AI Self-Managed',
+                'TRACING': 'Red Hat Distributed Tracing',
+                'VIRT': 'OpenShift Virtualization'
+            }
+
+            # Helper function to strip **text** and return text with bold/color markers
+            def process_bold_markdown(text, add_removal_hint=False):
+                """Convert **text** to plain text with bold markers, #TODO# with yellow, and optional removal hints"""
+                # First, find all #TODO...# patterns and **text** patterns
+                # We need to process them in order to avoid overlap
+
+                patterns = []
+                # Find #TODO...# patterns
+                for match in re.finditer(r'#TODO.*?#', text):
+                    patterns.append({
+                        'start': match.start(),
+                        'end': match.end(),
+                        'text': match.group(0),
+                        'type': 'todo'
+                    })
+                # Find **text** patterns
+                for match in re.finditer(r'\*\*(.+?)\*\*', text):
+                    patterns.append({
+                        'start': match.start(),
+                        'end': match.end(),
+                        'text': match.group(1),  # Without asterisks
+                        'type': 'bold'
+                    })
+
+                # Sort by start position
+                patterns.sort(key=lambda p: p['start'])
+
+                # Build parts list
+                parts = []
+                current_pos = 0
+
+                for pattern in patterns:
+                    # Add text before this pattern (if any)
+                    if pattern['start'] > current_pos:
+                        parts.append({'text': text[current_pos:pattern['start']], 'bold': False, 'color': None, 'bg_color': None})
+
+                    # Add the pattern itself
+                    if pattern['type'] == 'todo':
+                        parts.append({'text': pattern['text'], 'bold': False, 'color': None, 'bg_color': 'yellow'})
+                        current_pos = pattern['end']
+                    elif pattern['type'] == 'bold':
+                        parts.append({'text': pattern['text'], 'bold': True, 'color': None, 'bg_color': None})
+                        current_pos = pattern['end']  # match.end() already includes the closing **
+
+                # Add remaining text
+                if current_pos < len(text):
+                    parts.append({'text': text[current_pos:], 'bold': False, 'color': None, 'bg_color': None})
+
+                # Add removal hint if requested (for Justification/Implications)
+                if add_removal_hint and parts:
+                    parts.append({'text': ' [REMOVE IF NOT APPLICABLE]', 'bold': False, 'color': 'red', 'bg_color': None})
+
+                return parts
+
+            # Process each product
+            for product, product_adrs in adrs_by_product.items():
+                doc = docs_service.documents().get(documentId=doc_id).execute()
+                current_index = doc.get('body').get('content')[-1].get('endIndex') - 1
+
+                # Add product heading with full name (heading style adds its own paragraph break)
+                requests = []
+                product_full_name = PRODUCT_NAMES.get(product, product)
                 requests.append({
                     'insertText': {
-                        'location': {'index': index},
-                        'text': adr_text + "\n\n" + "-"*80 + "\n\n"
+                        'location': {'index': current_index},
+                        'text': product_full_name + '\n'
                     }
                 })
+                # Apply heading style
+                requests.append({
+                    'updateParagraphStyle': {
+                        'range': {'startIndex': current_index, 'endIndex': current_index + len(product_full_name)},
+                        'paragraphStyle': {'namedStyleType': 'HEADING_2'},
+                        'fields': 'namedStyleType'
+                    }
+                })
+                docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
 
-        # Apply formatting (batch update)
-        if requests:
-            docs_service.documents().batchUpdate(
-                documentId=doc_id,
-                body={'requests': requests}
-            ).execute()
+                # Process each ADR
+                for adr in product_adrs:
+                    adr_id = adr['id']
+                    adr_title = adr['title']
+                    adr_content = adr['content']
 
-        return {'url': doc_url, 'id': doc_id}
+                    # Remove metadata comments and headers
+                    adr_content = re.sub(r'<!--.*?-->', '', adr_content, flags=re.DOTALL).strip()
+                    adr_content = re.sub(r'^##\s+.+$', '', adr_content, flags=re.MULTILINE).strip()
 
-    except HttpError as error:
-        print(f"❌ Google API Error: {error}")
-        return None
+                    # Parse ADR fields
+                    fields = {}
+                    current_field = None
+                    field_content = []
+
+                    for line in adr_content.split('\n'):
+                        # Check if this is a field header
+                        if line.strip().startswith('**') and line.strip().endswith('**'):
+                            # Save previous field
+                            if current_field:
+                                fields[current_field] = '\n'.join(field_content).strip()
+                            # Start new field
+                            current_field = line.strip().strip('*')
+                            field_content = []
+                        elif current_field:
+                            field_content.append(line)
+
+                    # Save last field
+                    if current_field:
+                        fields[current_field] = '\n'.join(field_content).strip()
+
+                    # Get current index
+                    doc = docs_service.documents().get(documentId=doc_id).execute()
+                    current_index = doc.get('body').get('content')[-1].get('endIndex') - 1
+
+                    # Define field order and labels
+                    field_order = [
+                        ('ID', adr_id),
+                        ('Title', fields.get('Title', '')),
+                        ('Architectural Question', fields.get('Architectural Question', '')),
+                        ('Issue or Problem', fields.get('Issue or Problem', '')),
+                        ('Assumption', fields.get('Assumption', 'N/A')),
+                        ('Alternatives', fields.get('Alternatives', '')),
+                        ('Decision', fields.get('Decision', '')),
+                        ('Justification', fields.get('Justification', '')),
+                        ('Implications', fields.get('Implications', '')),
+                        ('Agreeing Parties', fields.get('Agreeing Parties', ''))
+                    ]
+
+                    # Create 2-column table with custom column widths
+                    requests = []
+                    requests.append({
+                        'insertTable': {
+                            'rows': len(field_order),
+                            'columns': 2,
+                            'location': {'index': current_index}
+                        }
+                    })
+                    docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+
+                    # Set column widths (column 0 = 145pt to fit "Architectural Question", column 1 = auto)
+                    # Need to get table location first
+                    doc = docs_service.documents().get(documentId=doc_id).execute()
+                    table_start_index = None
+                    for element in doc.get('body').get('content'):
+                        if 'table' in element and element.get('startIndex') >= current_index:
+                            table_start_index = element.get('startIndex')
+                            break
+
+                    if table_start_index:
+                        requests = []
+                        requests.append({
+                            'updateTableColumnProperties': {
+                                'tableStartLocation': {'index': table_start_index},
+                                'columnIndices': [0],
+                                'tableColumnProperties': {
+                                    'widthType': 'FIXED_WIDTH',
+                                    'width': {'magnitude': 145, 'unit': 'PT'}
+                                },
+                                'fields': 'widthType,width'
+                            }
+                        })
+                        docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+
+                    # Get fresh document to find table
+                    doc = docs_service.documents().get(documentId=doc_id).execute()
+                    table_start_index = None
+                    for element in doc.get('body').get('content'):
+                        if 'table' in element and element.get('startIndex') >= current_index:
+                            table_start_index = element.get('startIndex')
+                            break
+
+                    if not table_start_index:
+                        continue
+
+                    # Fill table row by row (must get fresh indices each time due to text insertion)
+                    for row_idx, (field_label, field_value) in enumerate(field_order):
+                        # Get fresh document state
+                        doc = docs_service.documents().get(documentId=doc_id).execute()
+
+                        # Find the table again
+                        table_elem = None
+                        for element in doc.get('body').get('content'):
+                            if 'table' in element and element.get('startIndex') == table_start_index:
+                                table_elem = element.get('table')
+                                break
+
+                        if not table_elem or row_idx >= len(table_elem.get('tableRows', [])):
+                            continue
+
+                        row = table_elem['tableRows'][row_idx]
+                        cells = row.get('tableCells', [])
+
+                        if len(cells) < 2:
+                            continue
+
+                        # Get cell start indices
+                        label_cell_start = cells[0].get('content')[0].get('startIndex')
+                        value_cell_start = cells[1].get('content')[0].get('startIndex')
+
+                        requests = []
+
+                        # Insert label text (left column)
+                        requests.append({
+                            'insertText': {
+                                'location': {'index': label_cell_start},
+                                'text': field_label
+                            }
+                        })
+
+                        # Make label bold and set font size to 10pt
+                        requests.append({
+                            'updateTextStyle': {
+                                'range': {
+                                    'startIndex': label_cell_start,
+                                    'endIndex': label_cell_start + len(field_label)
+                                },
+                                'textStyle': {
+                                    'bold': True,
+                                    'fontSize': {'magnitude': 10, 'unit': 'PT'}
+                                },
+                                'fields': 'bold,fontSize'
+                            }
+                        })
+
+                        # Apply gray background to label cell
+                        requests.append({
+                            'updateTableCellStyle': {
+                                'tableRange': {
+                                    'tableCellLocation': {
+                                        'tableStartLocation': {'index': table_start_index},
+                                        'rowIndex': row_idx,
+                                        'columnIndex': 0
+                                    },
+                                    'rowSpan': 1,
+                                    'columnSpan': 1
+                                },
+                                'tableCellStyle': {
+                                    'backgroundColor': {
+                                        'color': {
+                                            'rgbColor': {
+                                                'red': 0.9,
+                                                'green': 0.9,
+                                                'blue': 0.9
+                                            }
+                                        }
+                                    }
+                                },
+                                'fields': 'backgroundColor'
+                            }
+                        })
+
+                        # Process value text with bold markdown
+                        if field_value:
+                            # Initialize value_parts
+                            value_parts = []
+
+                            # Special handling for Agreeing Parties (will be a nested table)
+                            if field_label == 'Agreeing Parties':
+                                # Parse agreeing parties into rows
+                                # Format: "- Person: NAME, Role: ROLE"
+                                parties_lines = [l.strip() for l in field_value.split('\n') if l.strip().startswith('- Person:')]
+
+                                if not parties_lines:
+                                    # Fallback to regular text if parsing fails
+                                    value_parts = process_bold_markdown(field_value, add_removal_hint=False)
+                                # If parties_lines exists, we'll handle it below with nested table
+                            else:
+                                # Check if we need to add removal hints (for Justification/Implications)
+                                add_hints = field_label in ['Justification', 'Implications']
+
+                                # For Justification/Implications, process line by line to add hints per bullet
+                                if add_hints:
+                                    lines = field_value.split('\n')
+                                    processed_lines = []
+                                    for line in lines:
+                                        # Replace - with • for bullets
+                                        if line.strip().startswith('- **'):
+                                            # Change - to •
+                                            line = line.replace('- **', '• **', 1)
+                                            # This is a bullet point with an alternative name - add hint
+                                            processed_lines.append(process_bold_markdown(line, add_removal_hint=True))
+                                        elif line.strip().startswith('- '):
+                                            # Change - to •
+                                            line = line.replace('- ', '• ', 1)
+                                            processed_lines.append(process_bold_markdown(line, add_removal_hint=False))
+                                        else:
+                                            # Regular line
+                                            processed_lines.append(process_bold_markdown(line, add_removal_hint=False))
+
+                                    # Flatten all parts
+                                    value_parts = []
+                                    for line_parts in processed_lines:
+                                        value_parts.extend(line_parts)
+                                        # Add newline between lines
+                                        if line_parts:
+                                            value_parts.append({'text': '\n', 'bold': False, 'color': None, 'bg_color': None})
+                                else:
+                                    # Regular processing without hints
+                                    value_parts = process_bold_markdown(field_value, add_removal_hint=False)
+
+                            # Format Agreeing Parties as simple bullets (simpler than nested table)
+                            if field_label == 'Agreeing Parties':
+                                # Parse and reformat
+                                parties_lines = [l.strip() for l in field_value.split('\n') if l.strip().startswith('- Person:')]
+                                value_parts = []
+
+                                for line in parties_lines:
+                                    # Parse: "- Person: NAME, Role: ROLE"
+                                    person_match = re.search(r'Person:\s*(.+?)(?:,\s*Role:|$)', line)
+                                    role_match = re.search(r'Role:\s*(.+?)$', line)
+
+                                    person = person_match.group(1).strip() if person_match else ""
+                                    role = role_match.group(1).strip() if role_match else ""
+
+                                    # Format as: "• NAME - ROLE" and process for #TODO# highlighting
+                                    formatted_line = f"• {person} - {role}"
+                                    line_parts = process_bold_markdown(formatted_line, add_removal_hint=False)
+                                    value_parts.extend(line_parts)
+                                    # Add newline after each party
+                                    value_parts.append({'text': '\n', 'bold': False, 'color': None, 'bg_color': None})
+
+                            full_value_text = ''.join([p['text'] for p in value_parts]) if 'value_parts' in locals() else ''
+
+                            if full_value_text:
+                                # Insert value text (right column)
+                                # NOTE: value_cell_start index has shifted due to label insertion
+                                # We need to account for the length of text inserted in label cell
+                                adjusted_value_start = value_cell_start + len(field_label)
+
+                                requests.append({
+                                    'insertText': {
+                                        'location': {'index': adjusted_value_start},
+                                        'text': full_value_text
+                                    }
+                                })
+
+                                # Set font size to 10pt for entire value cell
+                                requests.append({
+                                    'updateTextStyle': {
+                                        'range': {
+                                            'startIndex': adjusted_value_start,
+                                            'endIndex': adjusted_value_start + len(full_value_text)
+                                        },
+                                        'textStyle': {
+                                            'fontSize': {'magnitude': 10, 'unit': 'PT'}
+                                        },
+                                        'fields': 'fontSize'
+                                    }
+                                })
+
+                                # Apply bold formatting and color to parts
+                                text_offset = 0
+                                for part in value_parts:
+                                    part_len = len(part['text'])
+
+                                    # Apply bold if needed
+                                    if part['bold'] and part_len > 0:
+                                        requests.append({
+                                            'updateTextStyle': {
+                                                'range': {
+                                                    'startIndex': adjusted_value_start + text_offset,
+                                                    'endIndex': adjusted_value_start + text_offset + part_len
+                                                },
+                                                'textStyle': {'bold': True},
+                                                'fields': 'bold'
+                                            }
+                                        })
+
+                                    # Apply red foreground color if needed
+                                    if part.get('color') == 'red' and part_len > 0:
+                                        requests.append({
+                                            'updateTextStyle': {
+                                                'range': {
+                                                    'startIndex': adjusted_value_start + text_offset,
+                                                    'endIndex': adjusted_value_start + text_offset + part_len
+                                                },
+                                                'textStyle': {
+                                                    'foregroundColor': {
+                                                        'color': {
+                                                            'rgbColor': {
+                                                                'red': 0.8,
+                                                                'green': 0.0,
+                                                                'blue': 0.0
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                'fields': 'foregroundColor'
+                                            }
+                                        })
+
+                                    # Apply yellow background color if needed (for #TODO#)
+                                    if part.get('bg_color') == 'yellow' and part_len > 0:
+                                        requests.append({
+                                            'updateTextStyle': {
+                                                'range': {
+                                                    'startIndex': adjusted_value_start + text_offset,
+                                                    'endIndex': adjusted_value_start + text_offset + part_len
+                                                },
+                                                'textStyle': {
+                                                    'backgroundColor': {
+                                                        'color': {
+                                                            'rgbColor': {
+                                                                'red': 1.0,
+                                                                'green': 1.0,
+                                                                'blue': 0.0
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                'fields': 'backgroundColor'
+                                            }
+                                        })
+
+                                    text_offset += part_len
+
+                        # Execute requests for this row
+                        if requests:
+                            docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+
+                    # Add spacing
+                    doc = docs_service.documents().get(documentId=doc_id).execute()
+                    current_index = doc.get('body').get('content')[-1].get('endIndex') - 1
+                    requests = []
+                    requests.append({
+                        'insertText': {
+                            'location': {'index': current_index},
+                            'text': '\n'
+                        }
+                    })
+                    docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+
+            return {'url': doc_url, 'id': doc_id}
+
+        except HttpError as error:
+            # Check if it's a rate limit error (429)
+            if error.resp.status == 429:
+                if attempt < max_retries - 1:
+                    print(f"⚠️  Google API rate limit exceeded (429)")
+                    # Continue to next retry attempt
+                    continue
+                else:
+                    # All retries exhausted
+                    print(f"❌ Google API rate limit exceeded after {max_retries} attempts")
+                    print(f"   Rate limit: 60 requests per minute")
+                    return None
+            else:
+                # Other HTTP errors - fail immediately
+                print(f"❌ Google API Error: {error}")
+                return None
+        except Exception as error:
+            print(f"❌ Error creating Google Doc: {error}")
+            return None
+
+    # If we get here, all retries were exhausted (should not happen, but safety)
+    return None
 
 
 def extract_doc_id_from_url(url):
@@ -195,7 +664,7 @@ def extract_doc_id_from_url(url):
 
 
 def read_google_doc(doc_url_or_id):
-    """Read content from Google Doc"""
+    """Read content from Google Doc including tables"""
     try:
         creds = get_google_credentials()
         docs_service = build('docs', 'v1', credentials=creds)
@@ -206,14 +675,43 @@ def read_google_doc(doc_url_or_id):
 
         doc = docs_service.documents().get(documentId=doc_id).execute()
 
-        # Extract text content
+        # Recursive function to extract text from any content structure
+        def extract_text_from_content(content_list, in_table_cell=False):
+            text = ''
+            for element in content_list:
+                # Extract from paragraphs
+                if 'paragraph' in element:
+                    for text_run in element['paragraph'].get('elements', []):
+                        if 'textRun' in text_run:
+                            text += text_run['textRun'].get('content', '')
+
+                # Extract from tables (2-column format: label | value)
+                elif 'table' in element:
+                    for row in element['table'].get('tableRows', []):
+                        cells = row.get('tableCells', [])
+                        if len(cells) >= 2:
+                            # Extract label (left column)
+                            label_text = extract_text_from_content(cells[0].get('content', []), in_table_cell=True).strip()
+                            # Extract value (right column)
+                            value_text = extract_text_from_content(cells[1].get('content', []), in_table_cell=True).strip()
+                            # Format as "Label: Value" to preserve structure
+                            if label_text and value_text:
+                                text += f"{label_text}: {value_text}\n"
+                            elif label_text:
+                                text += f"{label_text}:\n"
+                        else:
+                            # Fallback for single-column tables
+                            for cell in cells:
+                                cell_content = cell.get('content', [])
+                                text += extract_text_from_content(cell_content, in_table_cell=True)
+                                text += '\n'
+                    text += '\n'  # Extra newline after table
+
+            return text
+
+        # Extract text content from body
         content = doc.get('body', {}).get('content', [])
-        text = ''
-        for element in content:
-            if 'paragraph' in element:
-                for text_run in element['paragraph'].get('elements', []):
-                    if 'textRun' in text_run:
-                        text += text_run['textRun'].get('content', '')
+        text = extract_text_from_content(content)
 
         return text
 
@@ -228,6 +726,54 @@ def slugify(text):
     text = re.sub(r'[^\w\s-]', '', text)
     text = re.sub(r'[-\s]+', '-', text)
     return text
+
+
+def parse_google_doc_adrs(doc_content):
+    """Parse ADRs from Google Doc text content (2-column table format)"""
+    # Extract customer name from header
+    customer_match = re.search(r'Architecture Decision Records\s*\n(.+?)\n', doc_content)
+    customer = customer_match.group(1).strip() if customer_match else 'Unknown'
+
+    # Find all ADR sections by looking for "ID: ADR-ID" pattern
+    # In 2-column tables, each ADR starts with "ID: GITOPS-01" (or similar)
+    adr_pattern = r'ID:\s*([A-Z]+-[A-Z]+-\d+|[A-Z]+-\d+)'
+    adr_matches = list(re.finditer(adr_pattern, doc_content))
+
+    adrs = []
+    for i, match in enumerate(adr_matches):
+        adr_id = match.group(1)
+        start_pos = match.end()
+
+        # Find end position (next ADR ID or end of document)
+        if i + 1 < len(adr_matches):
+            end_pos = adr_matches[i + 1].start()
+        else:
+            # Last ADR - end of document
+            end_pos = len(doc_content)
+
+        # Extract ADR content (everything after "ID: ADR-ID" until next ID)
+        adr_content_block = doc_content[start_pos:end_pos].strip()
+
+        # Extract title from "Title: ..." line
+        title_match = re.search(r'Title:\s*(.+?)(?:\n|$)', adr_content_block)
+        title = title_match.group(1).strip() if title_match else "Untitled"
+
+        # Rebuild full content in markdown-like format for validation
+        # This allows existing validation logic to work
+        full_content = f"**Title**\n{title}\n\n"
+        full_content += adr_content_block
+
+        adrs.append({
+            'id': adr_id,
+            'title': title,
+            'content': full_content,
+            'filename': f"{adr_id}.md"
+        })
+
+    return {
+        'customer': customer,
+        'adrs': adrs
+    }
 
 
 def get_git_commit_sha():
@@ -701,43 +1247,85 @@ def generate_local_mode(customer, products, engagement_date, architect, output_d
 
 def check_adr_completion(args):
     """Check ADR completion status"""
-    input_dir = Path(args.input)
+    input_path = args.input
 
-    if not input_dir.exists():
-        print(f"❌ Error: ADR directory not found: {input_dir}")
-        sys.exit(2)
+    # Check if input is a Google Docs URL
+    is_google_doc = input_path.startswith('http') and 'docs.google.com' in input_path
 
-    # Read metadata
-    metadata_file = input_dir / 'metadata.yaml'
-    if not metadata_file.exists():
-        print(f"❌ Error: metadata.yaml not found in {input_dir}")
-        sys.exit(2)
+    if is_google_doc:
+        # Google Docs mode
+        if not GOOGLE_API_AVAILABLE:
+            print("❌ Error: Google API not available")
+            print("   Install: pip install -r requirements-google.txt")
+            sys.exit(2)
 
-    with open(metadata_file, 'r', encoding='utf-8') as f:
-        metadata = yaml.safe_load(f)
+        print("🔄 Reading Google Doc...")
+        doc_content = read_google_doc(input_path)
+        if not doc_content:
+            print("❌ Error: Failed to read Google Doc")
+            sys.exit(2)
 
-    customer = metadata.get('customer', 'Unknown')
+        # Parse ADRs from Google Doc content
+        adrs_data = parse_google_doc_adrs(doc_content)
+        if not adrs_data:
+            print("❌ Error: No ADRs found in Google Doc")
+            sys.exit(2)
 
-    # Find all ADR files
-    adr_files = list(input_dir.glob('*.md'))
-    adr_files = [f for f in adr_files if f.name != 'README.md']
+        customer = adrs_data.get('customer', 'Unknown')
+        adr_contents = adrs_data.get('adrs', [])
 
-    if not adr_files:
-        print(f"❌ Error: No ADR markdown files found in {input_dir}")
-        sys.exit(2)
+    else:
+        # Local directory mode
+        input_dir = Path(input_path)
+
+        if not input_dir.exists():
+            print(f"❌ Error: ADR directory not found: {input_dir}")
+            sys.exit(2)
+
+        # Read metadata
+        metadata_file = input_dir / 'metadata.yaml'
+        if not metadata_file.exists():
+            print(f"❌ Error: metadata.yaml not found in {input_dir}")
+            sys.exit(2)
+
+        with open(metadata_file, 'r', encoding='utf-8') as f:
+            metadata = yaml.safe_load(f)
+
+        customer = metadata.get('customer', 'Unknown')
+
+        # Find all ADR files
+        adr_files = list(input_dir.glob('*.md'))
+        adr_files = [f for f in adr_files if f.name != 'README.md']
+
+        if not adr_files:
+            print(f"❌ Error: No ADR markdown files found in {input_dir}")
+            sys.exit(2)
+
+        # Read ADR contents from files
+        adr_contents = []
+        for adr_file in sorted(adr_files):
+            with open(adr_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            # Extract ADR ID from filename
+            adr_id = adr_file.stem.split('-')[0] + '-' + adr_file.stem.split('-')[1]
+            title = extract_adr_title(content)
+            adr_contents.append({
+                'id': adr_id,
+                'title': title,
+                'content': content,
+                'filename': adr_file.name
+            })
 
     # Analysis results
     completed_adrs = []
     incomplete_adrs = []
     not_discussed_adrs = []
 
-    for adr_file in sorted(adr_files):
-        with open(adr_file, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        # Extract ADR ID from filename or content
-        adr_id = adr_file.stem.split('-')[0] + '-' + adr_file.stem.split('-')[1]
-        title = extract_adr_title(content)
+    for adr_data in adr_contents:
+        adr_id = adr_data['id']
+        title = adr_data['title']
+        content = adr_data['content']
+        filename = adr_data.get('filename', f"{adr_id}.md")
 
         # Check Decision field
         decision_match = re.search(r'\*\*Decision\*\*\s*\n(.+?)(?:\n\n|\*\*)', content, re.DOTALL)
@@ -770,7 +1358,7 @@ def check_adr_completion(args):
             not_discussed_adrs.append({
                 'id': adr_id,
                 'title': title,
-                'filename': adr_file.name
+                'filename': filename
             })
         elif has_decision_todo or has_parties_todo or invalid_roles:
             # Partially complete
@@ -785,7 +1373,7 @@ def check_adr_completion(args):
             incomplete_adrs.append({
                 'id': adr_id,
                 'title': title,
-                'filename': adr_file.name,
+                'filename': filename,
                 'issues': issues
             })
         else:
@@ -793,11 +1381,11 @@ def check_adr_completion(args):
             completed_adrs.append({
                 'id': adr_id,
                 'title': title,
-                'filename': adr_file.name
+                'filename': filename
             })
 
     # Generate report based on format
-    total_adrs = len(adr_files)
+    total_adrs = len(adr_contents)
 
     if args.format == 'json':
         report = {
@@ -863,14 +1451,20 @@ def check_adr_completion(args):
             print("✅ Ready for export: All discussed ADRs are complete")
             print()
             print("Next steps:")
-            print(f"  python scripts/customer_adrs.py export --input {input_dir}")
+            if is_google_doc:
+                print(f"  ./run_customer_adrs.sh export \"{input_path}\"")
+            else:
+                print(f"  ./run_customer_adrs.sh export {input_path}")
         elif len(incomplete_adrs) == 0:
             print("⚠️  No ADRs have been discussed yet (all are #TODO#)")
             print()
             print("Next steps:")
             print("  1. Conduct design workshops")
             print("  2. Fill Decision and Agreeing Parties fields")
-            print(f"  3. Re-run: python scripts/customer_adrs.py check {input_dir}")
+            if is_google_doc:
+                print(f"  3. Re-run: ./run_customer_adrs.sh check \"{input_path}\"")
+            else:
+                print(f"  3. Re-run: ./run_customer_adrs.sh check {input_path}")
         else:
             print(f"❌ Not ready: {len(incomplete_adrs)} incomplete ADR(s) must be completed first")
             print()
@@ -878,7 +1472,10 @@ def check_adr_completion(args):
             print("  1. Review incomplete ADRs listed above")
             print("  2. Fill missing Decision fields")
             print("  3. Complete Agreeing Parties sections")
-            print(f"  4. Re-run: python scripts/customer_adrs.py check {input_dir}")
+            if is_google_doc:
+                print(f"  4. Re-run: ./run_customer_adrs.sh check \"{input_path}\"")
+            else:
+                print(f"  4. Re-run: ./run_customer_adrs.sh check {input_path}")
         print()
 
     # Exit code
@@ -890,41 +1487,84 @@ def check_adr_completion(args):
 
 def export_adrs(args):
     """Export ADRs to various formats"""
-    input_dir = Path(args.input)
+    input_path = args.input
 
-    if not input_dir.exists():
-        print(f"❌ Error: ADR directory not found: {input_dir}")
-        sys.exit(2)
+    # Check if input is a Google Docs URL
+    is_google_doc = input_path.startswith('http') and 'docs.google.com' in input_path
 
-    # Read metadata
-    metadata_file = input_dir / 'metadata.yaml'
-    if not metadata_file.exists():
-        print(f"❌ Error: metadata.yaml not found in {input_dir}")
-        sys.exit(2)
+    if is_google_doc:
+        # Google Docs mode
+        if not GOOGLE_API_AVAILABLE:
+            print("❌ Error: Google API not available")
+            print("   Install: pip install -r requirements-google.txt")
+            sys.exit(2)
 
-    with open(metadata_file, 'r', encoding='utf-8') as f:
-        metadata = yaml.safe_load(f)
+        print("🔄 Reading Google Doc...")
+        doc_content = read_google_doc(input_path)
+        if not doc_content:
+            print("❌ Error: Failed to read Google Doc")
+            sys.exit(2)
 
-    customer = args.customer if args.customer else metadata.get('customer', 'Unknown')
-    products = metadata.get('products', [])
+        # Parse ADRs from Google Doc content
+        adrs_data = parse_google_doc_adrs(doc_content)
+        if not adrs_data:
+            print("❌ Error: No ADRs found in Google Doc")
+            sys.exit(2)
 
-    # Find all ADR files
-    adr_files = list(input_dir.glob('*.md'))
-    adr_files = [f for f in adr_files if f.name != 'README.md']
+        customer = args.customer if args.customer else adrs_data.get('customer', 'Unknown')
+        adr_contents = adrs_data.get('adrs', [])
 
-    if not adr_files:
-        print(f"❌ Error: No ADR markdown files found in {input_dir}")
-        sys.exit(2)
+        # Extract products from ADR IDs
+        products = list(set([adr['id'].rsplit('-', 1)[0] for adr in adr_contents]))
+
+    else:
+        # Local directory mode
+        input_dir = Path(input_path)
+
+        if not input_dir.exists():
+            print(f"❌ Error: ADR directory not found: {input_dir}")
+            sys.exit(2)
+
+        # Read metadata
+        metadata_file = input_dir / 'metadata.yaml'
+        if not metadata_file.exists():
+            print(f"❌ Error: metadata.yaml not found in {input_dir}")
+            sys.exit(2)
+
+        with open(metadata_file, 'r', encoding='utf-8') as f:
+            metadata = yaml.safe_load(f)
+
+        customer = args.customer if args.customer else metadata.get('customer', 'Unknown')
+        products = metadata.get('products', [])
+
+        # Find all ADR files
+        adr_files = list(input_dir.glob('*.md'))
+        adr_files = [f for f in adr_files if f.name != 'README.md']
+
+        if not adr_files:
+            print(f"❌ Error: No ADR markdown files found in {input_dir}")
+            sys.exit(2)
+
+        # Read ADR contents from files
+        adr_contents = []
+        for adr_file in sorted(adr_files):
+            with open(adr_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            # Extract ADR ID from filename
+            adr_id = adr_file.stem.split('-')[0] + '-' + adr_file.stem.split('-')[1]
+            title = extract_adr_title(content)
+            adr_contents.append({
+                'id': adr_id,
+                'title': title,
+                'content': content
+            })
 
     # Parse ADRs
     adrs = []
-    for adr_file in sorted(adr_files):
-        with open(adr_file, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        # Extract ADR ID
-        adr_id = adr_file.stem.split('-')[0] + '-' + adr_file.stem.split('-')[1]
-        title = extract_adr_title(content)
+    for adr_data in adr_contents:
+        adr_id = adr_data['id']
+        title = adr_data['title']
+        content = adr_data['content']
 
         # Check if discussed
         decision_match = re.search(r'\*\*Decision\*\*\s*\n(.+?)(?:\n\n|\*\*)', content, re.DOTALL)

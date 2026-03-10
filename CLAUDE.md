@@ -25,16 +25,27 @@ This is an **ADR Template Repository** for OpenShift Container Platform and rela
   - `adr_exclusions.md`: Forbidden topics and false positive suppressions
 
 - **`/scripts/`**: Automation utilities
+  - `customer_adrs.py`: Customer ADR workflow (generate, check, export)
   - `renumber_adrs.py`: Renumber ADRs sequentially after additions/removals
   - `split_pdf.py`: Split large PDF documentation files
   - `update_adrs.py`: Automated ADR updates using Claude API
   - `build_presentation.py`: Generate ADR presentation from Red Hat template
 
+- **`/tests/`**: Automated test suite
+  - `test_customer_adrs.py`: Non-regression tests for customer workflow
+
+- **`/docs/`**: Organized documentation
+  - `setup/`: Installation and configuration guides
+  - `usage/`: User workflows and best practices
+  - `development/`: Technical specifications
+
 - **`/doc_downloader/`**: Documentation automation
   - `download_all_docs.sh`: Download Red Hat product documentation
   - `download_config.yaml`: Configuration for documentation URLs and versions
 
-- **`UPDATE_GUIDE.md`**: Complete workflow for updating ADRs when product versions change
+- **`SETUP.md`**: Quick installation guide for architects
+- **`USER_MANUAL.md`**: Complete workflow guide for architects
+- **`MAINTENANCE.md`**: Repository maintenance guide for maintainers
 
 ## ADR Structure Template
 
@@ -112,38 +123,53 @@ Check `dictionaries/adr_exclusions.md` before creating/updating ADRs.
 
 ## Common Commands
 
-Commands are organized into two categories:
+Commands are organized for two audiences:
 
-### RUN Commands (Architects Using Templates in Engagements)
+### For Architects (Using ADR Workflow)
 
-**Generate Customer ADR Pack** (🚧 Coming soon)
+**Complete documentation:** [USER_MANUAL.md](USER_MANUAL.md)
+
+**Generate Customer ADR Pack**
 ```bash
-# Create customer-specific ADR instances from templates
-python scripts/customer_adrs.py generate \
+# Interactive mode (recommended)
+./run_customer_adrs.sh
+
+# Non-interactive
+python3 scripts/customer_adrs.py generate \
     --customer "ACME Corp" \
-    --products "OCP-BASE,OCP-NET,RHOAI-SM" \
-    --output "./ACME-Corp-ADRs/"
+    --products "OCP-BASE,OCP-NET,RHOAI-SM"
 ```
 
-**Check ADR Completion Status** (🚧 Coming soon)
+**Check ADR Completion Status**
 ```bash
-# Verify all #TODO# markers filled before handover
-python scripts/customer_adrs.py check ./ACME-Corp-ADRs/
+# Check Google Doc
+./run_customer_adrs.sh check "https://docs.google.com/document/d/ABC123/edit"
+
+# Check local directory
+./run_customer_adrs.sh check ./customer-acme-corp-ADRs/
 ```
 
-**Export to Google Docs** (🚧 Coming soon)
+**Export to Design Document**
 ```bash
-# Export completed customer ADRs to design document
-python scripts/customer_adrs.py export \
-    --input "./ACME-Corp-ADRs/" \
-    --output-format "google-doc"
+# Export as Markdown
+./run_customer_adrs.sh export "<google-doc-url>" --format markdown
+
+# Export as HTML
+./run_customer_adrs.sh export ./customer-acme-corp-ADRs/ --format html
 ```
 
-See [ARCHITECT_WORKFLOW.md](ARCHITECT_WORKFLOW.md) for complete workflow.
+**Run Tests**
+```bash
+python3 tests/test_customer_adrs.py
+```
+
+See [docs/usage/ARCHITECT_WORKFLOW.md](docs/usage/ARCHITECT_WORKFLOW.md) for complete workflow.
 
 ---
 
-### BUILD Commands (Maintaining the Template Repository)
+### For Maintainers (Maintaining the Template Repository)
+
+**Complete documentation:** [MAINTENANCE.md](MAINTENANCE.md)
 
 **Update Templates for New Product Version**
 

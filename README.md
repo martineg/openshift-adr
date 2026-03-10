@@ -1,8 +1,16 @@
-# Architecture Decision Records (ADR) Template Repository
+# Architecture Decision Records (ADR) Repository
 
-This repository contains **ADR templates** for Red Hat consulting engagements. These templates document strategic architectural choices for OpenShift Container Platform and related products.
+**291 ADR templates for OpenShift and Red Hat product consulting engagements**
 
-**Important:** This repository contains **TEMPLATES**, not customer-specific ADRs. Architects use these templates to create customer ADR instances during engagements. Customer ADRs go in their design documents, not in this repository.
+This repository provides:
+- **ADR Templates**: 291 pre-defined architectural decision records across 19 products
+- **Customer ADR Workflow**: Automated tools for generating customer-specific ADR packs
+- **Governance Rules**: Quality standards and validation for consistent ADRs
+
+**Documentation:**
+- **For Users (Architects):** [SETUP.md](SETUP.md) → [USER_MANUAL.md](USER_MANUAL.md)
+- **For Maintainers:** [MAINTENANCE.md](MAINTENANCE.md)
+- **Complete Index:** [docs/README.md](docs/README.md)
 
 ## What Are ADRs?
 
@@ -20,27 +28,37 @@ Architecture Decision Records (ADRs) document strategic choices between valid ar
 ## Repository Structure
 
 ```
-/adr_templates/         # ADR template markdown files by product
-  ├── OCP-BASE.md       # Cross-cutting platform decisions
-  ├── OCP-BM.md         # Bare metal and Day 0
-  ├── OCP-NET.md        # Networking decisions
-  ├── OCP-SEC.md        # Security decisions
-  ├── OCP-STOR.md       # Storage decisions
-  ├── RHOAI-SM.md       # OpenShift AI Self-Managed
-  ├── GITOPS.md         # GitOps decisions
-  └── ...
+/adr_templates/         # 291 ADR templates (19 products)
+  ├── OCP-BASE.md       # Cross-cutting platform (15 ADRs)
+  ├── OCP-NET.md        # Networking (41 ADRs)
+  ├── OCP-BM.md         # Bare metal installation (28 ADRs)
+  ├── RHOAI-SM.md       # OpenShift AI (24 ADRs)
+  └── ...               # 15 more product files
 
-/dictionaries/          # Governance and reference files
-  ├── adr_governance_rules.md        # Validation rules
-  ├── adr_prefix_dictionary.md       # Product prefix codes
-  ├── adr_parties_role_dictionnary.md # Standardized roles
+/dictionaries/          # Governance and validation
+  ├── adr_governance_rules.md        # Quality rules
+  ├── adr_prefix_dictionary.md       # Product codes
+  ├── adr_parties_role_dictionnary.md # Standard roles
   └── adr_exclusions.md              # Forbidden topics
 
-/scripts/               # Utility scripts
-  ├── renumber_adrs.py  # Renumber ADRs sequentially
-  └── split_pdf.py      # Split large PDF docs
+/scripts/               # Automation tools
+  ├── customer_adrs.py  # Customer ADR workflow
+  ├── renumber_adrs.py  # ADR renumbering
+  ├── split_pdf.py      # PDF utilities
+  └── update_adrs.py    # Template updates
 
-/presentation_scripts/  # Google Slides presentation tools
+/docs/                  # Documentation
+  ├── setup/           # Installation guides
+  ├── usage/           # User workflows
+  └── development/     # Technical specs
+
+/tests/                 # Automated tests
+  └── test_customer_adrs.py # Non-regression tests
+
+BUILD.md               # Setup instructions
+RUN.md                 # Usage guide
+USER_MANUAL.md         # Complete user manual
+CLAUDE.md              # AI assistant instructions
 ```
 
 ## ADR Structure
@@ -86,109 +104,103 @@ Each ADR follows this template:
 - Person: #TODO#, Role: [Role from dictionary]
 ```
 
-## Using This Repository
+## Quick Start
 
-### For Architects
+### 1. Setup (5 minutes)
 
-During design workshops:
+```bash
+# Clone repository
+git clone <repository-url>
+cd adr
 
-1. **Preparation**: Extract decision points from Red Hat documentation
-2. **Workshop**: Present architectural questions, capture decisions (Miro/paper)
-3. **Design**: Formalize captures into ADRs in design document
-4. **Handover**: Provide consultants with complete context
+# Install dependencies
+pip install -r requirements.txt
+pip install -r requirements-google.txt  # Optional: for Google Docs
 
-**Time commitment**: 5 minutes per ADR to formalize workshop outputs
+# Run tests
+python3 tests/test_customer_adrs.py
+```
 
-**See [ARCHITECT_WORKFLOW.md](ARCHITECT_WORKFLOW.md) for complete 4-phase workflow**
+**See [SETUP.md](SETUP.md) for detailed installation instructions**
 
-### For Consultants
+### 2. Generate Customer ADR Pack
 
-When implementing:
+```bash
+# Interactive mode
+./run_customer_adrs.sh
 
-1. Review ADRs in the design document
-2. Understand the "why" behind each architectural choice
-3. Reference ADRs when questions arise during implementation
-4. Validate implementation matches agreed decisions
+# Non-interactive
+python3 scripts/customer_adrs.py generate \
+    --customer "ACME Corp" \
+    --products "OCP-BASE,OCP-NET,RHOAI-SM"
+```
+
+**Output:** Google Doc URL (online) or local directory (offline)
+
+### 3. Conduct Workshop
+
+- Share Google Doc with customer stakeholders
+- Project on screen during workshop
+- Fill **Decision** and **Agreeing Parties** collaboratively
+- Real-time updates visible to all
+
+### 4. Validate and Export
+
+```bash
+# Check completion
+./run_customer_adrs.sh check "<google-doc-url>"
+
+# Export to design document
+./run_customer_adrs.sh export "<google-doc-url>" --format markdown
+```
+
+**See [USER_MANUAL.md](USER_MANUAL.md) for complete usage guide**
 
 ---
 
-## Scripts Reference
+## Features
 
-Scripts are organized into two categories:
+### Customer ADR Workflow
+- ✅ **Google Docs Integration** - Real-time collaboration during workshops
+- ✅ **Offline Mode** - Works without internet or Google account
+- ✅ **Automated Validation** - Check completion before export
+- ✅ **Multiple Export Formats** - Markdown, HTML with Red Hat styling
+- ✅ **Rate Limit Handling** - Automatic retry with backoff
+- ✅ **Customer Data Protection** - Never commits customer ADRs to git
 
-### RUN Scripts (Used by Architects During Engagements)
+### Template Management
+- ✅ **291 ADR Templates** - Covering 19 Red Hat products
+- ✅ **Automated Renumbering** - Keep ADR IDs sequential
+- ✅ **Version Updates** - Tools for updating templates with new product versions
+- ✅ **Quality Governance** - Validation rules and standards
 
-These scripts help architects **use** the ADR templates in customer engagements:
+### Documentation Highlights
+- **Yellow #TODO# Highlighting** - Visual indicators for incomplete fields
+- **Bold Markdown Processing** - Professional formatting in Google Docs
+- **10pt Table Font** - Consistent, readable formatting
+- **2-Column Tables** - Field labels with gray background
+- **Red Removal Hints** - "[REMOVE IF NOT APPLICABLE]" markers
 
+---
+
+## Maintenance Scripts
+
+### For Repository Maintainers
+
+**Renumber ADRs after changes:**
 ```bash
-# Generate customer-specific ADR pack from templates
-python scripts/customer_adrs.py generate \
-    --customer "ACME Corp" \
-    --products "OCP-BASE,OCP-NET,RHOAI-SM" \
-    --output "./ACME-Corp-ADRs/"
-
-# Check completion status of customer ADRs
-python scripts/customer_adrs.py check ./ACME-Corp-ADRs/
-
-# Export completed customer ADRs to Google Docs
-python scripts/customer_adrs.py export \
-    --input "./ACME-Corp-ADRs/" \
-    --output-format "google-doc"
+python3 scripts/renumber_adrs.py OCP-NET
 ```
 
-**Status:** 🚧 Coming soon (see [ARCHITECT_WORKFLOW.md](ARCHITECT_WORKFLOW.md))
-
-### BUILD Scripts (Used to Maintain This Repository)
-
-These scripts help maintainers **build and update** the ADR template repository itself:
-
-**Renumbering ADR Templates**
-
-After adding/removing ADR templates in this repository:
-
+**Update templates for new product versions:**
 ```bash
-python scripts/renumber_adrs.py <PREFIX>
-
-# Example:
-python scripts/renumber_adrs.py OCP-NET
-python scripts/renumber_adrs.py --dry-run OCP-BASE  # Preview changes
+# See docs/development/ for complete workflow
+python3 scripts/update_adrs.py RHOAI-SM
 ```
 
-**Updating ADR Templates for New Product Versions**
-
-When Red Hat releases new product versions, update templates:
-
+**Run automated tests:**
 ```bash
-# 1. Download new documentation
-cd doc_downloader
-vim download_config.yaml  # Update version numbers
-./download_all_docs.sh
-
-# 2. Analyze templates against new docs
-cd ..
-export ANTHROPIC_API_KEY="your-api-key"
-python scripts/update_adrs.py RHOAI-SM
-
-# 3. Review and apply changes manually
-# See UPDATE_GUIDE.md for complete workflow
-```
-
-**Building ADR Presentation**
-
-Generate the ADR presentation from Red Hat template:
-
-```bash
-python scripts/build_presentation.py
-# Requires credentials.json and token.json (Google API)
-```
-
-**Splitting Large PDF Documentation**
-
-```bash
-python scripts/split_pdf.py <path_to_pdf> <max_size_mb>
-
-# Example:
-python scripts/split_pdf.py documentation.pdf 20
+python3 tests/test_customer_adrs.py
 ```
 
 ---
@@ -245,14 +257,22 @@ Use only standardized roles from `dictionaries/adr_parties_role_dictionnary.md`:
 - Lead Data Scientist
 - MLOps Engineer
 
-## Current Statistics
+## Product Coverage
 
-**291 documented architectural decisions** across:
-- OpenShift Container Platform (OCP-BASE, OCP-BM, OCP-NET, OCP-SEC, OCP-STOR, etc.)
-- Red Hat OpenShift AI Self-Managed (RHOAI-SM: 53 ADRs)
-- GitOps
-- Advanced Cluster Management
-- And more...
+**291 ADRs across 19 products:**
+
+| Product | ADRs | Product | ADRs |
+|---------|------|---------|------|
+| OCP-NET | 41 | OCP-BM | 28 |
+| RHOAI-SM | 24 | VIRT | 23 |
+| OCP-STOR | 22 | ODF | 18 |
+| OCP-SEC | 17 | OCP-MGT | 16 |
+| OCP-OSP | 16 | OCP-BASE | 15 |
+| OCP-MON | 13 | LOG | 12 |
+| OCP-HCP | 10 | PIPELINES | 8 |
+| NVIDIA-GPU | 7 | TRACING | 7 |
+| GITOPS | 6 | NETOBSERV | 4 |
+| POWERMON | 4 | | |
 
 ## Why ADRs Matter
 

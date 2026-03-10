@@ -10,7 +10,8 @@ customer-*/
 pipeline.log
 
 # Documentation PDFs (large files)
-docs
+docs/*.pdf
+docs/**/*.pdf
 
 # Python cache
 __pycache__/

@@ -1,0 +1,9 @@
+# Base requirements for Customer ADR Workflow
+#
+# Install with: pip install -r requirements.txt
+#
+# This is the minimum required for offline mode.
+# For Google Docs integration, also install: pip install -r requirements-google.txt
+
+# YAML parsing for metadata files
+PyYAML>=6.0
