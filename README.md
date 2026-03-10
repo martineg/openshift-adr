@@ -122,16 +122,16 @@ These scripts help architects **use** the ADR templates in customer engagements:
 
 ```bash
 # Generate customer-specific ADR pack from templates
-python scripts/generate_customer_adrs.py \
+python scripts/customer_adrs.py generate \
     --customer "ACME Corp" \
     --products "OCP-BASE,OCP-NET,RHOAI-SM" \
     --output "./ACME-Corp-ADRs/"
 
 # Check completion status of customer ADRs
-python scripts/check_adr_completion.py ./ACME-Corp-ADRs/
+python scripts/customer_adrs.py check ./ACME-Corp-ADRs/
 
 # Export completed customer ADRs to Google Docs
-python scripts/export_to_google_doc.py \
+python scripts/customer_adrs.py export \
     --input "./ACME-Corp-ADRs/" \
     --output-format "google-doc"
 ```

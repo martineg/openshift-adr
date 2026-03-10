@@ -119,7 +119,7 @@ Commands are organized into two categories:
 **Generate Customer ADR Pack** (🚧 Coming soon)
 ```bash
 # Create customer-specific ADR instances from templates
-python scripts/generate_customer_adrs.py \
+python scripts/customer_adrs.py generate \
     --customer "ACME Corp" \
     --products "OCP-BASE,OCP-NET,RHOAI-SM" \
     --output "./ACME-Corp-ADRs/"
@@ -128,13 +128,13 @@ python scripts/generate_customer_adrs.py \
 **Check ADR Completion Status** (🚧 Coming soon)
 ```bash
 # Verify all #TODO# markers filled before handover
-python scripts/check_adr_completion.py ./ACME-Corp-ADRs/
+python scripts/customer_adrs.py check ./ACME-Corp-ADRs/
 ```
 
 **Export to Google Docs** (🚧 Coming soon)
 ```bash
 # Export completed customer ADRs to design document
-python scripts/export_to_google_doc.py \
+python scripts/customer_adrs.py export \
     --input "./ACME-Corp-ADRs/" \
     --output-format "google-doc"
 ```

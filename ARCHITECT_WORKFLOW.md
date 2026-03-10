@@ -45,7 +45,7 @@ cp selected-templates/*.md ACME-Corp-ADRs/
 **Automated process (TO BE IMPLEMENTED):**
 ```bash
 # Generate customer ADR pack in one command
-python scripts/generate_customer_adrs.py \
+python scripts/customer_adrs.py generate \
     --customer "ACME Corp" \
     --products "OCP-BASE,OCP-NET,RHOAI-SM" \
     --engagement-date "2026-03-10" \
@@ -133,7 +133,7 @@ vim ACME-Corp-ADRs/OCP-BASE-01-cluster-topology.md
 **Automated process (TO BE IMPLEMENTED):**
 ```bash
 # Check completion status first
-python scripts/check_adr_completion.py ./ACME-Corp-ADRs/
+python scripts/customer_adrs.py check ./ACME-Corp-ADRs/
 
 # Output:
 #   ✅ 45 ADRs completed (no #TODO# markers)
@@ -144,7 +144,7 @@ python scripts/check_adr_completion.py ./ACME-Corp-ADRs/
 #   Missing decisions: OCP-BASE-12
 
 # Export completed ADRs to Google Doc
-python scripts/export_to_google_doc.py \
+python scripts/customer_adrs.py export \
     --input "./ACME-Corp-ADRs/" \
     --customer "ACME Corp" \
     --output-format "google-doc" \
@@ -166,7 +166,7 @@ python scripts/export_to_google_doc.py \
 **Alternative: Insert directly into design doc template**
 ```bash
 # Insert into existing design document
-python scripts/export_to_google_doc.py \
+python scripts/customer_adrs.py export \
     --input "./ACME-Corp-ADRs/" \
     --design-doc-id "XYZ789..." \
     --section "5. Architecture Decisions" \

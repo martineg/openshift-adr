@@ -1,6 +1,6 @@
-# RUN Scripts Requirements Specification
+# RUN Script Requirements Specification
 
-This document defines the requirements for automation scripts that architects use during customer engagements.
+This document defines the requirements for the automation script that architects use during customer engagements.
 
 ---
 
@@ -8,16 +8,40 @@ This document defines the requirements for automation scripts that architects us
 
 **Purpose:** Automate the workflow of using ADR templates in customer engagements
 
-**Scope:** Three scripts for the 4-phase architect workflow:
-1. `generate_customer_adrs.py` - Phase 1: Preparation
-2. `check_adr_completion.py` - Phase 3: Validation
-3. `export_to_google_doc.py` - Phase 3: Documentation
+**Implementation:** Single script with three subcommands for the 4-phase architect workflow:
+- `customer_adrs.py generate` - Phase 1: Preparation
+- `customer_adrs.py check` - Phase 3: Validation
+- `customer_adrs.py export` - Phase 3: Documentation
 
 **Key Constraint:** No customer ADR storage in git. Output is Google Docs only.
 
+**Design Rationale:**
+- Single entry point for all customer ADR operations
+- Shared code for metadata reading, validation, error handling
+- Familiar UX pattern (like `git`, `docker`, `gh` commands)
+- `--help` discoverability for all subcommands
+
 ---
 
-## Script 1: generate_customer_adrs.py
+## Script: customer_adrs.py
+
+### Global Options
+
+Available for all subcommands:
+- `--verbose` / `-v` - Verbose output
+- `--help` / `-h` - Show help message
+
+### Usage Pattern
+
+```bash
+python scripts/customer_adrs.py <subcommand> [options]
+python scripts/customer_adrs.py --help  # Show all subcommands
+python scripts/customer_adrs.py generate --help  # Show generate options
+```
+
+---
+
+## Subcommand 1: generate
 
 ### Purpose
 Generate customer-specific ADR pack from templates for workshop preparation.
@@ -136,7 +160,7 @@ Generate customer-specific ADR pack from templates for workshop preparation.
 
 ```bash
 # Generate ADR pack for RHOAI engagement
-python scripts/generate_customer_adrs.py \
+python scripts/customer_adrs.py generate \
     --customer "ACME Corp" \
     --products "OCP-BASE,RHOAI-SM" \
     --output "./ACME-Corp-ADRs/"
@@ -152,7 +176,7 @@ python scripts/generate_customer_adrs.py \
 
 ---
 
-## Script 2: check_adr_completion.py
+## Subcommand 2: check
 
 ### Purpose
 Validate customer ADR pack before export to ensure no #TODO# markers remain.
@@ -223,7 +247,7 @@ Next steps:
 1. Review incomplete ADRs listed above
 2. Fill missing Decision fields
 3. Complete Agreeing Parties sections
-4. Re-run: python scripts/check_adr_completion.py ./ACME-Corp-ADRs/
+4. Re-run: python scripts/customer_adrs.py check ./ACME-Corp-ADRs/
 ```
 
 **JSON Format (`--format json`):**
@@ -259,10 +283,10 @@ Next steps:
 
 ```bash
 # Check completion status
-python scripts/check_adr_completion.py ./ACME-Corp-ADRs/
+python scripts/customer_adrs.py check ./ACME-Corp-ADRs/
 
 # For CI/CD pipeline
-python scripts/check_adr_completion.py \
+python scripts/customer_adrs.py check \
     ./ACME-Corp-ADRs/ \
     --fail-on-incomplete \
     --format json > completion-report.json
@@ -270,7 +294,7 @@ python scripts/check_adr_completion.py \
 
 ---
 
-## Script 3: export_to_google_doc.py
+## Subcommand 3: export
 
 ### Purpose
 Export completed customer ADRs to Google Docs format for insertion into design document.
@@ -446,18 +470,18 @@ Export to Google Docs Complete
 
 ```bash
 # Export to Google Docs (default)
-python scripts/export_to_google_doc.py \
+python scripts/customer_adrs.py export \
     --input "./ACME-Corp-ADRs/" \
     --customer "ACME Corp"
 
 # Export to markdown (no Google API needed)
-python scripts/export_to_google_doc.py \
+python scripts/customer_adrs.py export \
     --input "./ACME-Corp-ADRs/" \
     --customer "ACME Corp" \
     --output-format markdown
 
 # Export excluding deferred ADRs
-python scripts/export_to_google_doc.py \
+python scripts/customer_adrs.py export \
     --input "./ACME-Corp-ADRs/" \
     --customer "ACME Corp" \
     --exclude-not-discussed
@@ -497,21 +521,25 @@ SCOPES = [
 
 ### Common Errors
 
-**generate_customer_adrs.py:**
+**Subcommand: generate**
 - Template file not found → Clear message: "Template 'OCP-XYZ.md' not found in adr_templates/"
 - Invalid product code → List valid products from adr_templates/
 - Directory exists → Prompt: "Use --force to overwrite, or specify different --output"
 
-**check_adr_completion.py:**
+**Subcommand: check**
 - Directory not found → "ADR directory not found: ./path/"
 - No ADR files → "No ADR markdown files found in ./path/"
 - Invalid role → "Role 'XYZ' not in dictionaries/adr_parties_role_dictionnary.md"
 
-**export_to_google_doc.py:**
-- Google API auth failure → "Run: python scripts/setup_google_auth.py"
+**Subcommand: export**
+- Google API auth failure → "Run: python scripts/customer_adrs.py setup-auth"
 - Network error → Retry 3 times with exponential backoff
 - Rate limit → Wait and retry with backoff
 - Incomplete ADRs → Warn but continue: "Warning: 3 ADRs have #TODO# markers (use --exclude-not-discussed)"
+
+**Global errors:**
+- Invalid subcommand → Show available subcommands and usage
+- Missing required arguments → Show subcommand-specific help
 
 ---
 
@@ -519,46 +547,53 @@ SCOPES = [
 
 ### Unit Tests
 
-**test_generate_customer_adrs.py:**
+**test_customer_adrs.py:**
+
+Test `generate` subcommand:
 - Test template parsing
 - Test metadata generation
 - Test pre-filling customer name
 - Test invalid product codes
 - Test directory creation
 
-**test_check_adr_completion.py:**
+Test `check` subcommand:
 - Test #TODO# detection
 - Test agreeing parties validation
 - Test JSON output format
 - Test exit codes
 
-**test_export_to_google_doc.py:**
+Test `export` subcommand:
 - Test markdown generation
 - Test grouping (by product, category)
 - Test TOC generation
 - Mock Google API calls
+
+Test shared utilities:
+- Test metadata.yaml reading
+- Test validation functions
+- Test error handling
 
 ### Integration Tests
 
 **test_full_workflow.sh:**
 ```bash
 #!/bin/bash
-# End-to-end test
+# End-to-end test of all subcommands
 
 # Generate
-python scripts/generate_customer_adrs.py \
+python scripts/customer_adrs.py generate \
     --customer "Test Corp" \
     --products "OCP-BASE" \
     --output "./test-output/"
 
 # Manually fill one ADR
-echo "Decision: Alternative 1" >> ./test-output/OCP-BASE-01.md
+echo "Decision: Alternative 1" >> ./test-output/OCP-BASE-01-cluster-topology.md
 
-# Check completion
-python scripts/check_adr_completion.py ./test-output/
+# Check completion (should show incomplete)
+python scripts/customer_adrs.py check ./test-output/
 
 # Export to markdown
-python scripts/export_to_google_doc.py \
+python scripts/customer_adrs.py export \
     --input "./test-output/" \
     --customer "Test Corp" \
     --output-format markdown
@@ -571,25 +606,29 @@ rm -rf ./test-output/
 
 ## Performance Requirements
 
-**generate_customer_adrs.py:**
+**Subcommand: generate**
 - Process 291 templates: < 5 seconds
 - Generate 100 ADR pack: < 10 seconds
 
-**check_adr_completion.py:**
+**Subcommand: check**
 - Scan 100 ADRs: < 2 seconds
 - Generate report: < 1 second
 
-**export_to_google_doc.py:**
+**Subcommand: export**
 - Generate markdown: < 3 seconds
 - Create Google Doc: < 30 seconds (API latency)
 - Document with 100 ADRs: < 60 seconds
+
+**Script startup:**
+- Import time: < 500ms
+- Help display: < 100ms
 
 ---
 
 ## Future Enhancements (Out of Scope for V1)
 
 1. **Interactive Mode**
-   - `python scripts/generate_customer_adrs.py --interactive`
+   - `python scripts/customer_adrs.py generate --interactive`
    - Prompt for customer, products, etc.
 
 2. **Product Selection Wizard**
@@ -613,14 +652,14 @@ rm -rf ./test-output/
 ## Success Criteria
 
 **V1 is complete when:**
-1. ✅ Architect can generate ADR pack in < 1 minute
-2. ✅ Architect can validate completion in < 30 seconds
-3. ✅ Architect can export to Google Docs in < 2 minutes
+1. ✅ Architect can generate ADR pack in < 1 minute (`customer_adrs.py generate`)
+2. ✅ Architect can validate completion in < 30 seconds (`customer_adrs.py check`)
+3. ✅ Architect can export to Google Docs in < 2 minutes (`customer_adrs.py export`)
 4. ✅ Total automation saves 5+ hours per engagement
 5. ✅ Zero customer ADR data stored in git (Google Docs only)
-6. ✅ All scripts have --help documentation
+6. ✅ Script has comprehensive --help for all subcommands
 7. ✅ README.md updated with usage examples
-8. ✅ ARCHITECT_WORKFLOW.md references scripts
+8. ✅ ARCHITECT_WORKFLOW.md references script
 
 ---
 
