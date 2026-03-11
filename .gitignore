@@ -1,6 +1,7 @@
 # Google API credentials - DO NOT COMMIT
 credentials.json
 token.json
+token_slides.json
 
 # Customer data - NEVER commit customer ADRs
 customer-*/

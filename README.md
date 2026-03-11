@@ -30,9 +30,9 @@ Architecture Decision Records (ADRs) document strategic choices between valid ar
 ```
 /adr_templates/         # 291 ADR templates (19 products)
   ├── OCP-BASE.md       # Cross-cutting platform (15 ADRs)
-  ├── OCP-NET.md        # Networking (41 ADRs)
-  ├── OCP-BM.md         # Bare metal installation (28 ADRs)
-  ├── RHOAI-SM.md       # OpenShift AI (24 ADRs)
+  ├── OCP-NET.md        # Networking (44 ADRs)
+  ├── OCP-BM.md         # Bare metal installation (58 ADRs)
+  ├── RHOAI-SM.md       # OpenShift AI (53 ADRs)
   └── ...               # 15 more product files
 
 /dictionaries/          # Governance and validation
@@ -263,16 +263,16 @@ Use only standardized roles from `dictionaries/adr_parties_role_dictionnary.md`:
 
 | Product | ADRs | Product | ADRs |
 |---------|------|---------|------|
-| OCP-NET | 41 | OCP-BM | 28 |
-| RHOAI-SM | 24 | VIRT | 23 |
-| OCP-STOR | 22 | ODF | 18 |
-| OCP-SEC | 17 | OCP-MGT | 16 |
-| OCP-OSP | 16 | OCP-BASE | 15 |
-| OCP-MON | 13 | LOG | 12 |
-| OCP-HCP | 10 | PIPELINES | 8 |
-| NVIDIA-GPU | 7 | TRACING | 7 |
-| GITOPS | 6 | NETOBSERV | 4 |
-| POWERMON | 4 | | |
+| OCP-BM | 58 | RHOAI-SM | 53 |
+| OCP-NET | 44 | OCP-SEC | 19 |
+| OCP-BASE | 15 | OCP-MGT | 12 |
+| ODF | 9 | NVIDIA-GPU | 9 |
+| TRACING | 8 | PIPELINES | 8 |
+| OCP-OSP | 8 | VIRT | 7 |
+| OCP-STOR | 7 | LOG | 7 |
+| OCP-MON | 6 | OCP-HCP | 6 |
+| NETOBSERV | 6 | GITOPS | 6 |
+| POWERMON | 3 | | |
 
 ## Why ADRs Matter
 
