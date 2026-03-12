@@ -124,6 +124,34 @@ def get_google_credentials():
 
 def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, architect, args):
     """Create Google Doc with ADR templates in 2-column tables with retry logic"""
+
+    # Rate limiter class to respect Google API quota (60 requests/minute)
+    class RateLimiter:
+        def __init__(self, max_requests_per_minute=55):  # 55 to be safe (under 60 limit)
+            self.max_requests = max_requests_per_minute
+            self.requests = []
+            self.start_time = time.time()
+
+        def wait_if_needed(self):
+            """Wait if we're approaching the rate limit"""
+            now = time.time()
+            # Remove requests older than 60 seconds
+            self.requests = [t for t in self.requests if now - t < 60]
+
+            if len(self.requests) >= self.max_requests:
+                # Calculate how long to wait
+                oldest_request = min(self.requests)
+                wait_time = 60 - (now - oldest_request) + 1  # +1 second buffer
+                if wait_time > 0:
+                    print(f"⏱️  Rate limit: {len(self.requests)} requests/min. Waiting {int(wait_time)}s...")
+                    time.sleep(wait_time)
+                    # Clean up old requests after waiting
+                    now = time.time()
+                    self.requests = [t for t in self.requests if now - t < 60]
+
+            # Record this request
+            self.requests.append(time.time())
+
     max_retries = 3
     retry_delays = [0, 30, 60]  # First attempt: no delay, 2nd: 30s, 3rd: 60s
 
@@ -134,12 +162,28 @@ def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, arch
                 time.sleep(retry_delays[attempt])
                 print(f"🔄 Retrying Google Docs creation (attempt {attempt + 1}/{max_retries})...")
 
+            # Initialize rate limiter
+            rate_limiter = RateLimiter(max_requests_per_minute=55)
+
             creds = get_google_credentials()
             docs_service = build('docs', 'v1', credentials=creds)
 
+            # Wrapper functions for rate-limited API calls
+            def rate_limited_get(doc_id):
+                rate_limiter.wait_if_needed()
+                return docs_service.documents().get(documentId=doc_id).execute()
+
+            def rate_limited_batch_update(doc_id, requests):
+                rate_limiter.wait_if_needed()
+                return docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+
+            def rate_limited_create(body):
+                rate_limiter.wait_if_needed()
+                return docs_service.documents().create(body=body).execute()
+
             # Create new document
             doc_title = f"ADR Pack - {customer}"
-            doc = docs_service.documents().create(body={'title': doc_title}).execute()
+            doc = rate_limited_create({'title': doc_title})
             doc_id = doc['documentId']
             doc_url = f"https://docs.google.com/document/d/{doc_id}/edit"
 
@@ -153,7 +197,7 @@ def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, arch
                 }
             })
 
-            docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+            rate_limited_batch_update(doc_id, requests)
 
             # Apply heading style in separate batch
             heading_text = "Architecture Decision Records"
@@ -165,7 +209,7 @@ def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, arch
                     'fields': 'namedStyleType'
                 }
             })
-            docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': style_requests}).execute()
+            rate_limited_batch_update(doc_id, style_requests)
 
             # Note: Footer creation with createFooter API currently causes 500 errors
             # Footer and page numbers must be added manually via Google Docs UI
@@ -249,8 +293,11 @@ def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, arch
                 return parts
 
             # Process each product
+            total_adrs = sum(len(adrs) for adrs in adrs_by_product.values())
+            processed_adrs = 0
+
             for product, product_adrs in adrs_by_product.items():
-                doc = docs_service.documents().get(documentId=doc_id).execute()
+                doc = rate_limited_get(doc_id)
                 current_index = doc.get('body').get('content')[-1].get('endIndex') - 1
 
                 # Add product heading with full name (heading style adds its own paragraph break)
@@ -270,10 +317,12 @@ def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, arch
                         'fields': 'namedStyleType'
                     }
                 })
-                docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+                rate_limited_batch_update(doc_id, requests)
 
                 # Process each ADR
                 for adr in product_adrs:
+                    processed_adrs += 1
+                    print(f"   Processing ADR {processed_adrs}/{total_adrs}: {adr['id']}...")
                     adr_id = adr['id']
                     adr_title = adr['title']
                     adr_content = adr['content']
@@ -304,7 +353,7 @@ def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, arch
                         fields[current_field] = '\n'.join(field_content).strip()
 
                     # Get current index
-                    doc = docs_service.documents().get(documentId=doc_id).execute()
+                    doc = rate_limited_get(doc_id)
                     current_index = doc.get('body').get('content')[-1].get('endIndex') - 1
 
                     # Define field order and labels
@@ -330,11 +379,11 @@ def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, arch
                             'location': {'index': current_index}
                         }
                     })
-                    docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+                    rate_limited_batch_update(doc_id, requests)
 
                     # Set column widths (column 0 = 145pt to fit "Architectural Question", column 1 = auto)
                     # Need to get table location first
-                    doc = docs_service.documents().get(documentId=doc_id).execute()
+                    doc = rate_limited_get(doc_id)
                     table_start_index = None
                     for element in doc.get('body').get('content'):
                         if 'table' in element and element.get('startIndex') >= current_index:
@@ -354,10 +403,10 @@ def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, arch
                                 'fields': 'widthType,width'
                             }
                         })
-                        docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+                        rate_limited_batch_update(doc_id, requests)
 
                     # Get fresh document to find table
-                    doc = docs_service.documents().get(documentId=doc_id).execute()
+                    doc = rate_limited_get(doc_id)
                     table_start_index = None
                     for element in doc.get('body').get('content'):
                         if 'table' in element and element.get('startIndex') >= current_index:
@@ -370,7 +419,7 @@ def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, arch
                     # Fill table row by row (must get fresh indices each time due to text insertion)
                     for row_idx, (field_label, field_value) in enumerate(field_order):
                         # Get fresh document state
-                        doc = docs_service.documents().get(documentId=doc_id).execute()
+                        doc = rate_limited_get(doc_id)
 
                         # Find the table again
                         table_elem = None
@@ -611,10 +660,10 @@ def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, arch
 
                         # Execute requests for this row
                         if requests:
-                            docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+                            rate_limited_batch_update(doc_id, requests)
 
                     # Add spacing
-                    doc = docs_service.documents().get(documentId=doc_id).execute()
+                    doc = rate_limited_get(doc_id)
                     current_index = doc.get('body').get('content')[-1].get('endIndex') - 1
                     requests = []
                     requests.append({
@@ -623,7 +672,7 @@ def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, arch
                             'text': '\n'
                         }
                     })
-                    docs_service.documents().batchUpdate(documentId=doc_id, body={'requests': requests}).execute()
+                    rate_limited_batch_update(doc_id, requests)
 
             return {'url': doc_url, 'id': doc_id}
 
