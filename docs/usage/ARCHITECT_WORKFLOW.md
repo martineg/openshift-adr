@@ -42,32 +42,42 @@ mkdir ACME-Corp-ADRs/
 cp selected-templates/*.md ACME-Corp-ADRs/
 ```
 
-**Automated process (TO BE IMPLEMENTED):**
+**Automated process (RECOMMENDED):**
 ```bash
-# Generate customer ADR pack in one command
+# Generate customer ADR pack in Google Docs (fast - 4-11 seconds)
 python scripts/customer_adrs.py generate \
     --customer "ACME Corp" \
     --products "OCP-BASE,OCP-NET,RHOAI-SM" \
     --engagement-date "2026-03-10" \
-    --output "./ACME-Corp-ADRs/"
+    --architect "Jane Smith"
 
-# Output:
-#   ACME-Corp-ADRs/
+# Output: Google Doc URL for real-time collaboration
+# Example: https://docs.google.com/document/d/ABC123/edit
+
+# OR generate local markdown files (offline mode)
+python scripts/customer_adrs.py generate \
+    --customer "ACME Corp" \
+    --products "OCP-BASE,OCP-NET,RHOAI-SM" \
+    --local
+
+# Output directory:
+#   ./acme-corp-ADRs/
 #   ├── metadata.yaml (customer name, date, products)
 #   ├── OCP-BASE-01-cluster-topology.md
 #   ├── OCP-BASE-02-sizing-strategy.md
 #   ├── OCP-NET-01-network-topology.md
-#   ├── ... (all templates for selected products)
-#   └── README.md (summary of ADRs)
+#   └── ... (all templates for selected products)
 ```
 
-**What gets pre-filled:**
-- Customer organization name in "Agreeing Parties" placeholders
-- Engagement date in metadata
-- Template version/date for traceability
-- Everything else remains as #TODO# (filled during workshop)
+**What gets generated:**
+- Google Doc with all ADR templates in structured tables
+- Yellow highlighting on #TODO# markers
+- Red cleanup instructions for non-selected alternatives
+- Nested table for "Agreeing Parties" (Person/Role columns)
+- Product headings and proper formatting
+- Everything remains as #TODO# (filled during workshop)
 
-**Time estimate:** 15 minutes (automated) vs. 2 hours (manual)
+**Time estimate:** 4-11 seconds (Google Docs) vs. 2 hours (manual)
 
 ---
 

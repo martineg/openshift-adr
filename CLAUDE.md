@@ -297,6 +297,30 @@ Use **only** these roles from `dictionaries/adr_parties_role_dictionnary.md`:
 
 ## Architecture Notes
 
+### Customer ADR Generation Workflow (HTML Approach)
+**Fast generation using HTML → Google Docs conversion:**
+
+1. **ADR Parsing**: Read and parse ADR template files
+2. **HTML Generation**: Convert ADR markdown to structured HTML with:
+   - Tables for each ADR (2-column: field label + content)
+   - Yellow highlighting for #TODO# markers
+   - Red instruction text for cleanup guidance
+   - Nested table for "Agreeing Parties" (Person/Role columns)
+   - Bold text and bullet point formatting
+3. **Drive API Upload**: Single API call to upload HTML and convert to Google Docs
+4. **Result**: Shareable Google Doc URL
+
+**Performance:**
+- 15 ADRs: ~4 seconds
+- 128 ADRs: ~11 seconds
+- **800x faster** than previous Google Docs API approach
+
+**Key implementation details:**
+- Uses `MediaIoBaseUpload` with `text/html` mimetype
+- Drive API converts HTML to native Google Docs format
+- Single API call eliminates rate limiting issues
+- Nested tables created with inline CSS styling
+
 ### ADR Update Workflow
 1. **Documentation Download**: `doc_downloader/` fetches PDFs from Red Hat docs site
 2. **Analysis**: `update_adrs.py` uses Claude API to compare ADRs against current docs
@@ -313,6 +337,7 @@ Use **only** these roles from `dictionaries/adr_parties_role_dictionnary.md`:
 6. **Speaker Notes**: Adds complete sentences for natural delivery
 
 ### Time Estimates
+- **Customer ADR generation**: 4-11 seconds (up to 128 ADRs)
 - **Formalizing one ADR**: 5 minutes (workshop capture → design doc)
 - **ADR analysis run**: 2-5 minutes (depends on file size and API)
 - **Presentation build**: 30-60 seconds (full automation)
@@ -325,6 +350,13 @@ Use **only** these roles from `dictionaries/adr_parties_role_dictionnary.md`:
 - **Don't** mention version numbers in ADR content
 - **Do** check exclusions list before creating new ADRs
 - **Do** ensure 2+ viable alternatives exist
+
+### Customer ADR Generation
+- HTML approach eliminates rate limiting issues completely
+- Single Drive API call converts HTML to Google Docs
+- Nested tables require inline CSS (Google Docs doesn't support all CSS)
+- Yellow background on #TODO#: `<span style="background-color: #FFFF00;">`
+- Red instructions: `<p style="color: red; font-weight: bold;">`
 
 ### Presentation Formatting
 - Google Slides API doesn't support `TEXT_AUTOFIT` - content must fit without shrinking
@@ -347,9 +379,16 @@ Use **only** these roles from `dictionaries/adr_parties_role_dictionnary.md`:
 
 ## Integration Points
 
-### Google Slides API
+### Google Drive API (Customer ADRs)
 - Requires OAuth2 credentials (`credentials.json`)
 - Token stored in `token.json` (auto-refreshed)
+- Scopes: `documents`, `drive.file`
+- Uses `files().create()` with `mimeType='application/vnd.google-apps.document'`
+- Uploads HTML via `MediaIoBaseUpload` with automatic conversion to Google Docs
+
+### Google Slides API (Presentations)
+- Requires OAuth2 credentials (`credentials.json`)
+- Token stored in `token_slides.json` (auto-refreshed)
 - Scopes: `presentations`, `drive`
 - Template ID hardcoded in `build_presentation.py`
 

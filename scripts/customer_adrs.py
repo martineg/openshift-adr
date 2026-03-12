@@ -35,6 +35,8 @@ try:
     from google_auth_oauthlib.flow import InstalledAppFlow
     from googleapiclient.discovery import build
     from googleapiclient.errors import HttpError
+    from googleapiclient.http import MediaIoBaseUpload
+    import io
     GOOGLE_API_AVAILABLE = True
 except ImportError:
     pass
@@ -120,6 +122,335 @@ def get_google_credentials():
             token.write(creds.to_json())
 
     return creds
+
+
+def convert_markdown_to_html(text):
+    """Convert markdown formatting to HTML with yellow background for #TODO#"""
+    # Convert #TODO# to yellow background
+    text = re.sub(r'#TODO.*?#', lambda m: f'<span style="background-color: #FFFF00;">{m.group(0)}</span>', text)
+
+    # Convert **bold** to <strong>
+    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+
+    # Convert bullet points to proper list items
+    lines = text.split('\n')
+    html_lines = []
+    in_list = False
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith('- '):
+            if not in_list:
+                html_lines.append('<ul>')
+                in_list = True
+            html_lines.append(f'  <li>{stripped[2:]}</li>')
+        else:
+            if in_list:
+                html_lines.append('</ul>')
+                in_list = False
+            if stripped:
+                html_lines.append(f'<p>{stripped}</p>')
+
+    if in_list:
+        html_lines.append('</ul>')
+
+    return '\n'.join(html_lines)
+
+
+def convert_agreeing_parties_to_table(text):
+    """Convert Agreeing Parties text to nested HTML table with Person and Role columns"""
+    # Parse lines like: Person: #TODO# (Customer), Role: Enterprise Architect
+    lines = text.strip().split('\n')
+    parties = []
+
+    for line in lines:
+        line = line.strip()
+        if not line or line == '---':
+            continue
+
+        # Extract Person and Role
+        person_match = re.search(r'Person:\s*(.+?),\s*Role:', line)
+        role_match = re.search(r'Role:\s*(.+?)$', line)
+
+        if person_match and role_match:
+            person = person_match.group(1).strip()
+            role = role_match.group(1).strip()
+
+            # Apply yellow background to #TODO#
+            person = re.sub(r'#TODO.*?#', lambda m: f'<span style="background-color: #FFFF00;">{m.group(0)}</span>', person)
+
+            parties.append({'person': person, 'role': role})
+
+    if not parties:
+        return ''
+
+    # Build nested table
+    table_html = '''<table style="width: 100%; border-collapse: collapse; margin: 0;">
+        <tr>
+            <th style="background-color: #E8E8E8; border: 1px solid #999; padding: 5px; width: 50%; font-size: 9pt;">Person</th>
+            <th style="background-color: #E8E8E8; border: 1px solid #999; padding: 5px; width: 50%; font-size: 9pt;">Role</th>
+        </tr>
+'''
+
+    for party in parties:
+        table_html += f'''        <tr>
+            <td style="border: 1px solid #999; padding: 5px; font-size: 9pt;">{party['person']}</td>
+            <td style="border: 1px solid #999; padding: 5px; font-size: 9pt;">{party['role']}</td>
+        </tr>
+'''
+
+    table_html += '    </table>'
+
+    return table_html
+
+
+def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architect):
+    """Generate complete HTML document from ADR data"""
+
+    # Product name mapping
+    PRODUCT_NAMES = {
+        'GITOPS': 'OpenShift GitOps',
+        'LOG': 'OpenShift Logging',
+        'NETOBSERV': 'Network Observability',
+        'NVIDIA-GPU': 'NVIDIA GPU Operator',
+        'OCP-BASE': 'OpenShift Container Platform - General Platform',
+        'OCP-BM': 'OpenShift Container Platform - Bare Metal Installation',
+        'OCP-HCP': 'OpenShift Container Platform - Hosted Control Planes',
+        'OCP-MGT': 'OpenShift Container Platform - Cluster Management & Day2 Ops',
+        'OCP-MON': 'OpenShift Container Platform - Monitoring (Metrics)',
+        'OCP-NET': 'OpenShift Container Platform - Networking',
+        'OCP-OSP': 'OpenShift Container Platform - OpenStack Installation',
+        'OCP-SEC': 'OpenShift Container Platform - Security & Compliance',
+        'OCP-STOR': 'OpenShift Container Platform - Storage',
+        'ODF': 'OpenShift Data Foundation',
+        'PIPELINES': 'OpenShift Pipelines',
+        'POWERMON': 'OpenShift Power Monitoring (Kepler)',
+        'RHOAI-SM': 'Red Hat OpenShift AI Self-Managed',
+        'TRACING': 'Red Hat Distributed Tracing',
+        'VIRT': 'OpenShift Virtualization'
+    }
+
+    html_parts = []
+
+    # HTML header with styles
+    html_parts.append('''<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            font-size: 11pt;
+        }
+        h1 {
+            font-size: 20pt;
+            margin-bottom: 10px;
+        }
+        h2 {
+            font-size: 16pt;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            vertical-align: top;
+            font-size: 10pt;
+        }
+        th {
+            background-color: #D3D3D3;
+            font-weight: bold;
+            width: 145pt;
+            text-align: left;
+        }
+        p {
+            margin: 5px 0;
+        }
+        ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+        li {
+            margin: 2px 0;
+        }
+        .header-info {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+''')
+
+    # Document header
+    html_parts.append(f'''
+    <h1>Architecture Decision Records</h1>
+    <div class="header-info">
+        <p><strong>{customer}</strong></p>
+        <p>Generated: {engagement_date}</p>
+        <p>Architect: {architect}</p>
+    </div>
+''')
+
+    # Process each product
+    total_adrs = sum(len(adrs) for adrs in adrs_by_product.values())
+    processed_adrs = 0
+
+    for product, product_adrs in adrs_by_product.items():
+        # Add product heading
+        product_full_name = PRODUCT_NAMES.get(product, product)
+        html_parts.append(f'\n    <h2>{product_full_name}</h2>\n')
+
+        # Process each ADR
+        for adr in product_adrs:
+            processed_adrs += 1
+            print(f"   Processing ADR {processed_adrs}/{total_adrs}: {adr['id']}...")
+
+            adr_id = adr['id']
+            adr_content = adr['content']
+
+            # Remove metadata comments and headers
+            adr_content = re.sub(r'<!--.*?-->', '', adr_content, flags=re.DOTALL).strip()
+            adr_content = re.sub(r'^##\s+.+$', '', adr_content, flags=re.MULTILINE).strip()
+
+            # Parse ADR fields
+            fields = {}
+            current_field = None
+            field_content = []
+
+            for line in adr_content.split('\n'):
+                # Check if this is a field header
+                if line.strip().startswith('**') and line.strip().endswith('**'):
+                    # Save previous field
+                    if current_field:
+                        fields[current_field] = '\n'.join(field_content).strip()
+                    # Start new field
+                    current_field = line.strip().strip('*')
+                    field_content = []
+                elif current_field:
+                    field_content.append(line)
+
+            # Save last field
+            if current_field:
+                fields[current_field] = '\n'.join(field_content).strip()
+
+            # Define field order
+            field_order = [
+                ('ID', adr_id),
+                ('Title', fields.get('Title', '')),
+                ('Architectural Question', fields.get('Architectural Question', '')),
+                ('Issue or Problem', fields.get('Issue or Problem', '')),
+                ('Assumption', fields.get('Assumption', 'N/A')),
+                ('Alternatives', fields.get('Alternatives', '')),
+                ('Decision', fields.get('Decision', '')),
+                ('Justification', fields.get('Justification', '')),
+                ('Implications', fields.get('Implications', '')),
+                ('Agreeing Parties', fields.get('Agreeing Parties', ''))
+            ]
+
+            # Create table for this ADR
+            html_parts.append('    <table>\n')
+            for field_label, field_value in field_order:
+                # Special handling for Agreeing Parties - convert to nested table
+                if field_label == 'Agreeing Parties' and field_value:
+                    field_html = convert_agreeing_parties_to_table(field_value)
+                else:
+                    # Convert markdown to HTML for other fields
+                    field_html = convert_markdown_to_html(field_value) if field_value else ''
+
+                # Add red instruction text for specific fields
+                if field_label == 'Alternatives' and field_value:
+                    field_html += '<p style="color: red; font-weight: bold; margin-top: 10px;">[INSTRUCTIONS: After making your decision, delete the alternatives you did NOT choose from the list above]</p>'
+                elif field_label == 'Justification' and field_value:
+                    field_html += '<p style="color: red; font-weight: bold; margin-top: 10px;">[INSTRUCTIONS: Delete justification points for alternatives you did NOT choose]</p>'
+                elif field_label == 'Implications' and field_value:
+                    field_html += '<p style="color: red; font-weight: bold; margin-top: 10px;">[INSTRUCTIONS: Delete implication points for alternatives you did NOT choose]</p>'
+
+                html_parts.append(f'        <tr>\n')
+                html_parts.append(f'            <th>{field_label}</th>\n')
+                html_parts.append(f'            <td>{field_html}</td>\n')
+                html_parts.append(f'        </tr>\n')
+
+            html_parts.append('    </table>\n')
+
+    # Close HTML
+    html_parts.append('''
+</body>
+</html>
+''')
+
+    return ''.join(html_parts)
+
+
+def upload_html_to_google_docs(html_content, customer):
+    """Upload HTML content to Google Docs via Drive API"""
+
+    creds = get_google_credentials()
+    drive_service = build('drive', 'v3', credentials=creds)
+
+    # Prepare file metadata
+    file_metadata = {
+        'name': f'ADR Pack - {customer}',
+        'mimeType': 'application/vnd.google-apps.document'
+    }
+
+    # Prepare media upload
+    media = MediaIoBaseUpload(
+        io.BytesIO(html_content.encode('utf-8')),
+        mimetype='text/html',
+        resumable=True
+    )
+
+    # Upload and convert to Google Docs
+    print("📤 Uploading HTML to Google Docs...")
+    file = drive_service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields='id,webViewLink'
+    ).execute()
+
+    return {
+        'id': file.get('id'),
+        'url': file.get('webViewLink')
+    }
+
+
+def create_google_doc_from_html(customer, adrs_by_product, engagement_date, architect, args):
+    """Create Google Doc using HTML conversion approach (fast)"""
+
+    try:
+        start_time = time.time()
+
+        print("📝 Generating HTML from ADR templates...")
+        html_content = generate_html_from_adrs(customer, adrs_by_product, engagement_date, architect)
+
+        html_gen_time = time.time() - start_time
+        print(f"✅ HTML generated in {html_gen_time:.1f} seconds")
+
+        # Upload to Google Docs
+        upload_start = time.time()
+        result = upload_html_to_google_docs(html_content, customer)
+
+        upload_time = time.time() - upload_start
+        total_time = time.time() - start_time
+
+        print(f"✅ Upload completed in {upload_time:.1f} seconds")
+        print(f"⏱️  Total time: {total_time:.1f} seconds")
+
+        return result
+
+    except Exception as e:
+        print(f"❌ Error creating Google Doc from HTML: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
 
 
 def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, architect, args):
@@ -911,12 +1242,7 @@ def prefill_customer_metadata(adr_content, customer_name, template_source, templ
 
 """
 
-    # Replace #TODO# in Agreeing Parties with #TODO# (Customer Name)
-    adr_content = re.sub(
-        r'Person: #TODO#',
-        f'Person: #TODO# ({customer_name})',
-        adr_content
-    )
+    # Keep #TODO# as-is (no customer name added)
 
     return metadata_header + adr_content
 
@@ -1052,8 +1378,8 @@ def generate_google_doc_mode(customer, products, engagement_date, architect, arg
     print()
     print("🔄 Creating Google Doc...")
 
-    # Create Google Doc
-    doc_result = create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, architect, args)
+    # Create Google Doc using fast HTML conversion approach
+    doc_result = create_google_doc_from_html(customer, adrs_by_product, engagement_date, architect, args)
 
     if not doc_result:
         print()

@@ -162,10 +162,10 @@ python3 scripts/customer_adrs.py generate \
 
 ### Customer ADR Workflow
 - ✅ **Google Docs Integration** - Real-time collaboration during workshops
+- ✅ **Ultra-Fast Generation** - 128 ADRs in 11 seconds (HTML conversion approach)
 - ✅ **Offline Mode** - Works without internet or Google account
 - ✅ **Automated Validation** - Check completion before export
 - ✅ **Multiple Export Formats** - Markdown, HTML with Red Hat styling
-- ✅ **Rate Limit Handling** - Automatic retry with backoff
 - ✅ **Customer Data Protection** - Never commits customer ADRs to git
 
 ### Template Management
@@ -176,10 +176,11 @@ python3 scripts/customer_adrs.py generate \
 
 ### Documentation Highlights
 - **Yellow #TODO# Highlighting** - Visual indicators for incomplete fields
+- **Nested Agreeing Parties Table** - Clean Person/Role columns
+- **Red Cleanup Instructions** - Guidance for removing non-selected alternatives
 - **Bold Markdown Processing** - Professional formatting in Google Docs
 - **10pt Table Font** - Consistent, readable formatting
 - **2-Column Tables** - Field labels with gray background
-- **Red Removal Hints** - "[REMOVE IF NOT APPLICABLE]" markers
 
 ---
 

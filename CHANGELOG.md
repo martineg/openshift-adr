@@ -2,6 +2,38 @@
 
 All notable changes to the ADR Template Repository and Customer ADR Workflow.
 
+## [1.1.0] - 2026-03-12
+
+### Changed - Performance Optimization (800x Faster)
+
+#### HTML Conversion Approach
+- **BREAKING CHANGE**: Replaced Google Docs API approach with HTML→Drive API conversion
+  - Old approach: 27 API calls per ADR with rate limiting → 2h 24min for 128 ADRs
+  - New approach: Generate HTML + 1 Drive API call → 11 seconds for 128 ADRs
+  - **800x performance improvement**
+
+#### New Features
+- **Nested Agreeing Parties Table** - Person/Role columns in clean table format
+- **Red Cleanup Instructions** - Guidance to remove non-selected alternatives
+  - "Alternatives" field: Instructions to delete non-chosen options
+  - "Justification" field: Instructions to delete non-chosen justifications
+  - "Implications" field: Instructions to delete non-chosen implications
+- **Simplified #TODO# markers** - Just `#TODO#` instead of `#TODO# (Customer Name)`
+
+#### Technical Details
+- Uses `googleapiclient.http.MediaIoBaseUpload` for HTML upload
+- Drive API `files().create()` with `mimeType='application/vnd.google-apps.document'`
+- Single API call eliminates rate limiting issues completely
+- Inline CSS styling for tables and formatting
+- Yellow background: `<span style="background-color: #FFFF00;">`
+- Red instructions: `<p style="color: red; font-weight: bold;">`
+
+#### Documentation Updates
+- Updated CLAUDE.md with HTML generation workflow
+- Updated README.md with performance metrics
+- Updated docs/usage/ARCHITECT_WORKFLOW.md with current implementation
+- Added performance benchmarks to documentation
+
 ## [1.0.0] - 2026-03-10
 
 ### Added - Customer ADR Workflow (Complete)
