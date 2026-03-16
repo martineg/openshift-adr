@@ -2,6 +2,48 @@
 
 All notable changes to the ADR Template Repository and Customer ADR Workflow.
 
+## [1.2.0] - 2026-03-16
+
+### Added - Document Outline Navigation
+
+#### Navigation Solution
+- **Document Outline Navigation** - Uses native Google Docs outline sidebar
+  - Removed Table of Contents (HTML anchor links don't work in Google Docs)
+  - Added navigation banner with clear instructions
+  - Desktop: View → Show document outline (Ctrl+Alt+A Ctrl+Alt+H)
+  - Mobile: Kebab menu (⋮) → Document outline
+  - Hierarchical structure: Products (H2) contain ADRs (H4)
+  - Always-visible sidebar shows current position
+  - Instant navigation to any ADR with single click
+
+#### User Experience Improvements
+- **Navigation Banner** - Blue info box at document top
+  - Shows total ADR count
+  - Platform-specific instructions (desktop vs mobile)
+  - Professional styling (background: #e3f2fd, border: #2196f3)
+- **Heading Structure** - Each ADR gets H4 heading with ID and title
+  - Auto-generates document outline tree structure
+  - Collapsible product sections in outline
+  - Current position highlighted in sidebar
+
+#### Performance
+- **Faster generation** - Removed TOC processing overhead
+  - 15 ADRs: ~4 seconds (same as before)
+  - 128 ADRs: ~19 seconds (was 23.6s with TOC)
+  - 4.6 seconds faster for large documents
+
+#### Technical Details
+- Removed TOC generation code (`toc_data` collection)
+- Added H4 headings before each ADR table
+- Navigation banner uses inline CSS for Google Docs compatibility
+- Product headings (H2) and ADR headings (H4) create outline hierarchy
+
+#### Documentation Updates
+- Updated CLAUDE.md with navigation solution details
+- Updated README.md with accurate timing (19s for 128 ADRs)
+- Added "Native Document Outline Navigation" to feature list
+- Documented navigation banner implementation
+
 ## [1.1.0] - 2026-03-12
 
 ### Changed - Performance Optimization (800x Faster)

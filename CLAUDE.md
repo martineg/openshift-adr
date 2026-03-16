@@ -302,24 +302,35 @@ Use **only** these roles from `dictionaries/adr_parties_role_dictionnary.md`:
 
 1. **ADR Parsing**: Read and parse ADR template files
 2. **HTML Generation**: Convert ADR markdown to structured HTML with:
+   - Navigation banner with Document Outline instructions
+   - Product headings (H2) and ADR headings (H4) for outline structure
    - Tables for each ADR (2-column: field label + content)
    - Yellow highlighting for #TODO# markers
    - Red instruction text for cleanup guidance
    - Nested table for "Agreeing Parties" (Person/Role columns)
    - Bold text and bullet point formatting
 3. **Drive API Upload**: Single API call to upload HTML and convert to Google Docs
-4. **Result**: Shareable Google Doc URL
+4. **Result**: Shareable Google Doc URL with native outline navigation
 
 **Performance:**
 - 15 ADRs: ~4 seconds
-- 128 ADRs: ~11 seconds
+- 128 ADRs: ~19 seconds
 - **800x faster** than previous Google Docs API approach
+
+**Navigation Solution:**
+- **No Table of Contents** - HTML anchor links don't work in Google Docs
+- **Uses Google Docs Document Outline** - Native sidebar navigation
+- **Navigation banner** instructs users: View → Show document outline (Ctrl+Alt+A Ctrl+Alt+H)
+- **Hierarchical structure** - Products (H2) contain ADRs (H4) for outline tree
+- **Always visible sidebar** - Shows current position, instant navigation
+- **Mobile support** - Kebab menu (⋮) → Document outline
 
 **Key implementation details:**
 - Uses `MediaIoBaseUpload` with `text/html` mimetype
 - Drive API converts HTML to native Google Docs format
 - Single API call eliminates rate limiting issues
 - Nested tables created with inline CSS styling
+- Blue banner with navigation instructions (background: #e3f2fd, border: #2196f3)
 
 ### ADR Update Workflow
 1. **Documentation Download**: `doc_downloader/` fetches PDFs from Red Hat docs site
@@ -337,7 +348,7 @@ Use **only** these roles from `dictionaries/adr_parties_role_dictionnary.md`:
 6. **Speaker Notes**: Adds complete sentences for natural delivery
 
 ### Time Estimates
-- **Customer ADR generation**: 4-11 seconds (up to 128 ADRs)
+- **Customer ADR generation**: 4-19 seconds (15-128 ADRs with navigation)
 - **Formalizing one ADR**: 5 minutes (workshop capture → design doc)
 - **ADR analysis run**: 2-5 minutes (depends on file size and API)
 - **Presentation build**: 30-60 seconds (full automation)

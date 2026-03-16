@@ -253,6 +253,26 @@ def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architec
             margin-bottom: 15px;
             color: #333;
         }
+        h3 {
+            font-size: 13pt;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        h4 {
+            font-size: 12pt;
+            margin-top: 25px;
+            margin-bottom: 8px;
+            color: #000;
+            font-weight: bold;
+        }
+        a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -299,8 +319,24 @@ def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architec
     </div>
 ''')
 
-    # Process each product
+    # Navigation tip banner
     total_adrs = sum(len(adrs) for adrs in adrs_by_product.values())
+    html_parts.append(f'''
+    <div style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0; font-size: 10pt;">
+        <p style="margin: 0 0 10px 0;"><strong>📋 NAVIGATION TIP</strong></p>
+        <p style="margin: 5px 0;">For easy navigation through all {total_adrs} ADRs during workshops:</p>
+        <ul style="margin: 5px 0; padding-left: 20px;">
+            <li><strong>Desktop:</strong> View → Show document outline (Ctrl+Alt+A Ctrl+Alt+H)</li>
+            <li><strong>Mobile:</strong> Tap the ⋮ menu → Document outline</li>
+        </ul>
+        <p style="margin: 5px 0 0 0;">This displays all ADRs in a clickable sidebar for instant navigation.</p>
+    </div>
+''')
+
+    # Separator
+    html_parts.append('\n    <hr style="border: none; border-top: 2px solid #ccc; margin: 30px 0;">\n')
+
+    # Process each product
     processed_adrs = 0
 
     for product, product_adrs in adrs_by_product.items():
@@ -354,6 +390,10 @@ def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architec
                 ('Implications', fields.get('Implications', '')),
                 ('Agreeing Parties', fields.get('Agreeing Parties', ''))
             ]
+
+            # Add heading for TOC bookmarking (Google Docs creates bookmarks from headings)
+            title = fields.get('Title', 'Untitled')
+            html_parts.append(f'    <h4 id="{adr_id}">{adr_id}: {title}</h4>\n')
 
             # Create table for this ADR
             html_parts.append('    <table>\n')
