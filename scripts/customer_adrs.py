@@ -333,6 +333,21 @@ def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architec
     </div>
 ''')
 
+    # Progress Tracker Instructions
+    html_parts.append(f'''
+    <div style="border: 2px solid #28a745; padding: 20px; margin: 20px 0; background-color: #f8f9fa;">
+        <h2 style="margin-top: 0; color: #28a745; border-bottom: 2px solid #28a745; padding-bottom: 10px;">📊 Workshop Progress Tracker</h2>
+        <p style="margin: 10px 0; font-size: 11pt;"><strong>How to track progress:</strong></p>
+        <ul style="margin: 10px 0; font-size: 11pt;">
+            <li>Each ADR heading starts with a checkbox: <strong>☐ OCP-BASE-01: Title</strong></li>
+            <li>When you complete an ADR, change <strong>☐</strong> to <strong>☑</strong> directly in the heading</li>
+            <li>The Document Outline sidebar will show your progress (☐ = pending, ☑ = done)</li>
+            <li>No need to scroll - just edit the heading where you're working!</li>
+        </ul>
+        <p style="margin: 10px 0; font-size: 11pt;"><strong>Total ADRs:</strong> {total_adrs} &nbsp;|&nbsp; <strong>Quick view:</strong> Use Document Outline (Ctrl+Alt+A Ctrl+Alt+H) to see all checkboxes</p>
+    </div>
+''')
+
     # Separator
     html_parts.append('\n    <hr style="border: none; border-top: 2px solid #ccc; margin: 30px 0;">\n')
 
@@ -391,9 +406,9 @@ def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architec
                 ('Agreeing Parties', fields.get('Agreeing Parties', ''))
             ]
 
-            # Add heading for TOC bookmarking (Google Docs creates bookmarks from headings)
+            # Add heading with checkbox for progress tracking
             title = fields.get('Title', 'Untitled')
-            html_parts.append(f'    <h4 id="{adr_id}">{adr_id}: {title}</h4>\n')
+            html_parts.append(f'    <h4 id="{adr_id}">☐ {adr_id}: {title}</h4>\n')
 
             # Create table for this ADR
             html_parts.append('    <table>\n')

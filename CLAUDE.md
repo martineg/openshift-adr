@@ -303,18 +303,19 @@ Use **only** these roles from `dictionaries/adr_parties_role_dictionnary.md`:
 1. **ADR Parsing**: Read and parse ADR template files
 2. **HTML Generation**: Convert ADR markdown to structured HTML with:
    - Navigation banner with Document Outline instructions
-   - Product headings (H2) and ADR headings (H4) for outline structure
+   - Progress tracker with instructions (checkbox-in-heading approach)
+   - Product headings (H2) and ADR headings (H4) with checkboxes for outline structure
    - Tables for each ADR (2-column: field label + content)
    - Yellow highlighting for #TODO# markers
    - Red instruction text for cleanup guidance
    - Nested table for "Agreeing Parties" (Person/Role columns)
    - Bold text and bullet point formatting
 3. **Drive API Upload**: Single API call to upload HTML and convert to Google Docs
-4. **Result**: Shareable Google Doc URL with native outline navigation
+4. **Result**: Shareable Google Doc URL with native outline navigation and progress tracking
 
 **Performance:**
 - 15 ADRs: ~4 seconds
-- 128 ADRs: ~19 seconds
+- 128 ADRs: ~15 seconds
 - **800x faster** than previous Google Docs API approach
 
 **Navigation Solution:**
@@ -324,6 +325,14 @@ Use **only** these roles from `dictionaries/adr_parties_role_dictionnary.md`:
 - **Hierarchical structure** - Products (H2) contain ADRs (H4) for outline tree
 - **Always visible sidebar** - Shows current position, instant navigation
 - **Mobile support** - Kebab menu (⋮) → Document outline
+
+**Progress Tracking Solution:**
+- **Checkbox in each ADR heading** - Format: `☐ OCP-BASE-01: Title`
+- **Edit in place** - Change ☐ to ☑ directly in the heading when ADR is complete
+- **No scrolling required** - Track progress where you're working, not at page top
+- **Visual in outline** - Document Outline shows all checkboxes (☑ = done, ☐ = pending)
+- **Instructions banner** - Green box explains how to use checkbox tracking
+- **Solves UX issues** - No broken links, no forgetting ADR numbers, no scrolling back
 
 **Key implementation details:**
 - Uses `MediaIoBaseUpload` with `text/html` mimetype

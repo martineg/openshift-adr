@@ -2,6 +2,42 @@
 
 All notable changes to the ADR Template Repository and Customer ADR Workflow.
 
+## [1.3.0] - 2026-03-16
+
+### Added - Progress Tracking Dashboard
+
+#### Progress Tracking Solution
+- **Checkbox in ADR headings** - Each ADR heading starts with ☐ for progress tracking
+  - Format: `☐ OCP-BASE-01: Environment Isolation Strategy`
+  - Users change ☐ to ☑ when ADR is complete
+  - Edit in place - no scrolling back to page 1 required
+  - Visual progress in Document Outline sidebar
+- **Progress tracker instructions** - Green banner explains checkbox usage
+  - Shows total ADR count
+  - Explains how to track progress
+  - Links to Document Outline for visual overview
+
+#### UX Improvements
+- **No broken links** - Removed clickable TOC links that didn't work in Google Docs
+- **No scrolling required** - Track progress where you're working
+- **Visual in outline** - Sidebar shows ☑ (done) vs ☐ (pending) at a glance
+- **Simplified workflow** - Complete ADR → Change checkbox → Continue
+
+#### Performance Optimization
+- **15 ADRs:** 4 seconds (unchanged)
+- **128 ADRs:** 15 seconds (improved from 19s)
+- Lighter HTML without broken link structure
+
+#### Technical Details
+- Checkbox character added to H4 headings in HTML generation
+- Progress tracker instructions replace broken TOC links
+- Green banner styling (background: #f8f9fa, border: #28a745)
+
+#### Documentation Updates
+- Updated CLAUDE.md with progress tracking solution
+- Updated README.md with checkbox feature and performance
+- Added v1.3.0 entry to CHANGELOG.md
+
 ## [1.2.0] - 2026-03-16
 
 ### Added - Document Outline Navigation
