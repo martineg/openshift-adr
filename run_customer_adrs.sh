@@ -404,24 +404,9 @@ EXIT_CODE=$?
 
 echo ""
 if [ $EXIT_CODE -eq 0 ]; then
-    echo "================================================================================"
-    print_success "ADR pack generation complete!"
-    echo "================================================================================"
-    echo ""
-    echo "Next steps:"
-    echo ""
-    echo "  1. Review the generated ADRs:"
-    echo "     cd $OUTPUT_DIR"
-    echo "     cat README.md"
-    echo ""
-    echo "  2. During workshops, fill Decision and Agreeing Parties fields"
-    echo ""
-    echo "  3. Validate completion:"
-    echo "     ./run_customer_adrs.sh check $OUTPUT_DIR"
-    echo ""
-    echo "  4. Export to Google Docs:"
-    echo "     ./run_customer_adrs.sh export $OUTPUT_DIR"
-    echo ""
+    # Success - Python script already printed mode-specific instructions
+    # (Google Docs mode: URL + navigation, Local mode: directory + export)
+    :
 else
     print_error "ADR pack generation failed (exit code: $EXIT_CODE)"
     exit $EXIT_CODE
