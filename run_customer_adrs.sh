@@ -4,10 +4,10 @@
 # Checks prerequisites and provides interactive product selection
 #
 # Usage:
-#   ./run_customer_adrs.sh              # Interactive generate mode
-#   ./run_customer_adrs.sh generate     # Interactive generate mode
-#   ./run_customer_adrs.sh check <dir>  # Check completion
-#   ./run_customer_adrs.sh export <dir> # Export to Google Docs
+#   ./run_customer_adrs.sh                    # Interactive generate mode
+#   ./run_customer_adrs.sh generate           # Interactive generate mode
+#   ./run_customer_adrs.sh check <input>      # Check completion (directory or URL)
+#   ./run_customer_adrs.sh export <input>     # Export to file (from directory or URL)
 #
 
 set -e
@@ -119,8 +119,19 @@ if [ "$SUBCOMMAND" != "generate" ]; then
         fi
     fi
 
-    # Pass all arguments to Python script
-    exec python3 scripts/customer_adrs.py "$@"
+    # Transform arguments for check/export commands
+    # check <input> -> check --input <input>
+    # export <input> -> export --input <input>
+    if [ "$SUBCOMMAND" = "check" ] || [ "$SUBCOMMAND" = "export" ]; then
+        if [ -n "$2" ]; then
+            exec python3 scripts/customer_adrs.py "$SUBCOMMAND" --input "$2" "${@:3}"
+        else
+            exec python3 scripts/customer_adrs.py "$@"
+        fi
+    else
+        # Pass all arguments as-is for other subcommands
+        exec python3 scripts/customer_adrs.py "$@"
+    fi
 fi
 
 # Continue with interactive generate mode
