@@ -150,8 +150,8 @@ python3 scripts/customer_adrs.py generate \
 # Check completion
 ./run_customer_adrs.sh check "<google-doc-url>"
 
-# Export to design document
-./run_customer_adrs.sh export "<google-doc-url>" --format markdown
+# Export to design document (markdown backup)
+./run_customer_adrs.sh export "<google-doc-url>"
 ```
 
 **See [USER_MANUAL.md](USER_MANUAL.md) for complete usage guide**

@@ -2136,22 +2136,6 @@ def export_adrs(args):
         print(f"\n💡 Open with: open {output_file}")
         print()
 
-    elif args.format == 'google-doc':
-        print("="*80)
-        print("⚠️  Google Docs Export")
-        print("="*80)
-        print()
-        print("Google Docs export requires API credentials setup.")
-        print()
-        print("For now, use markdown or HTML export:")
-        print(f"  python scripts/customer_adrs.py export --input {input_dir} --format markdown")
-        print()
-        print("Then manually copy content into Google Docs.")
-        print()
-        print("Future enhancement: Direct Google Docs API integration")
-        print("  See: RUN_SCRIPTS_REQUIREMENTS.md for specifications")
-        print()
-        sys.exit(0)
 
 
 def main():
@@ -2222,9 +2206,9 @@ For detailed requirements, see: RUN_SCRIPTS_REQUIREMENTS.md
     export_parser.add_argument('--customer',
                               help='Customer name (or read from metadata.yaml)')
     export_parser.add_argument('--output-format', dest='format',
-                              choices=['google-doc', 'markdown', 'html'],
-                              default='google-doc',
-                              help='Export format (default: google-doc)')
+                              choices=['markdown', 'html'],
+                              default='markdown',
+                              help='Export format (default: markdown)')
     export_parser.add_argument('--exclude-not-discussed', action='store_true',
                               help='Skip ADRs with #TODO# in Decision field')
     export_parser.add_argument('--group-by', choices=['product', 'category', 'none'],

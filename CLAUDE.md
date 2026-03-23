@@ -151,11 +151,14 @@ python3 scripts/customer_adrs.py generate \
 
 **Export to Design Document**
 ```bash
-# Export as Markdown
-./run_customer_adrs.sh export "<google-doc-url>" --format markdown
+# Export from Google Doc to Markdown (default)
+./run_customer_adrs.sh export "<google-doc-url>"
 
-# Export as HTML
-./run_customer_adrs.sh export ./customer-acme-corp-ADRs/ --format html
+# Export from Google Doc to HTML
+./run_customer_adrs.sh export "<google-doc-url>" --output-format html
+
+# Export from local directory to Markdown
+./run_customer_adrs.sh export ./customer-acme-corp-ADRs/
 ```
 
 **Run Tests**
