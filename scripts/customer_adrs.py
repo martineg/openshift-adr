@@ -72,10 +72,16 @@ GOOGLE_SCOPES = [
 def check_internet():
     """Check if internet connection is available"""
     try:
-        socket.create_connection(("8.8.8.8", 53), timeout=3)
+        # Try to connect to Google APIs on HTTPS port (more reliable in corporate networks)
+        socket.create_connection(("www.googleapis.com", 443), timeout=3)
         return True
     except OSError:
-        return False
+        try:
+            # Fallback: try DNS port on Google DNS
+            socket.create_connection(("8.8.8.8", 53), timeout=3)
+            return True
+        except OSError:
+            return False
 
 
 def check_google_prerequisites():
