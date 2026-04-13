@@ -158,7 +158,7 @@ On first use, the script will open a browser for authentication:
 
 **Authentication is now complete!** Future runs won't require browser authentication.
 
-**See GOOGLE_API_SETUP.md for detailed troubleshooting.**
+**See docs/setup/GOOGLE_API_SETUP.md for detailed troubleshooting.**
 
 ---
 
@@ -199,7 +199,7 @@ If Google API is not set up, you'll see:
 ```
 ⚠️  Google API not available
    Reasons:
-   - credentials.json not found (see GOOGLE_API_SETUP.md)
+   - credentials.json not found (see docs/setup/GOOGLE_API_SETUP.md)
 
 📁 Falling back to local markdown generation
 ```
@@ -771,7 +771,7 @@ A: Check your Google Drive - the document is saved there. Or re-run the check/ex
 | Error | Cause | Solution |
 |-------|-------|----------|
 | `No internet connection` | Offline | Connect to internet or use `--local` flag |
-| `credentials.json not found` | OAuth client not set up | Follow GOOGLE_API_SETUP.md |
+| `credentials.json not found` | OAuth client not set up | Follow docs/setup/GOOGLE_API_SETUP.md |
 | `Token expired` | Old authentication | `rm token.json` and re-authenticate |
 | `Invalid scope` | Wrong token scopes | `rm token.json` and re-authenticate |
 | `Module not found` | Missing packages | `pip install -r requirements-google.txt` |

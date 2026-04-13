@@ -1,6 +1,8 @@
 # Google API Setup for Customer ADR Workflow
 
-This document explains how to set up Google API credentials to enable direct Google Docs creation and editing.
+This guide walks you through setting up Google API credentials to enable direct Google Docs creation for customer ADR packs.
+
+**Time required:** ~5 minutes
 
 ---
 
@@ -8,17 +10,17 @@ This document explains how to set up Google API credentials to enable direct Goo
 
 The customer ADR workflow creates and manages Architecture Decision Records in Google Docs:
 
-1. **Generate** → Creates Google Doc with ADR templates
+1. **Generate** → Creates Google Doc with ADR templates (15 seconds)
 2. **Workshop** → Architect fills Decision and Agreeing Parties in Google Doc
 3. **Check** → Script reads Google Doc to validate completion
-4. **Export** → Optional backup to local markdown/html
+4. **Export** → Optional backup to local markdown/HTML
 
 **Benefits:**
 - Real-time collaboration during workshops
 - Professional appearance (no markdown editing)
 - Version history and comments
-- No manual copy/paste to design documents
-- Check completion from anywhere with internet
+- Progress tracking with checkboxes
+- Document Outline navigation for 100+ ADRs
 
 ---
 
@@ -43,6 +45,8 @@ The customer ADR workflow creates and manages Architecture Decision Records in G
 
 5. Wait for project creation (~30 seconds)
 
+6. Make sure your new project is selected in the top bar
+
 ---
 
 ## Step 2: Enable Google Docs API
@@ -53,73 +57,120 @@ The customer ADR workflow creates and manages Architecture Decision Records in G
 
 3. Click **"Google Docs API"** → **"Enable"**
 
-4. Search for: `Google Drive API`
-
-5. Click **"Google Drive API"** → **"Enable"**
+**Note:** You do NOT need to enable Google Drive API separately. The Google Docs API automatically provides access to the Drive scopes needed for creating and managing Google Docs files.
 
 ---
 
-## Step 3: Create OAuth Credentials
+## Step 3: Configure OAuth Consent Screen
 
-1. Go to **"APIs & Services"** → **"Credentials"**
+1. Click **"APIs & Services"** in left menu → **"OAuth consent screen"**
 
-2. Click **"Configure Consent Screen"**
-   - User Type: **External** (for personal Gmail) or **Internal** (for Google Workspace)
-   - Click **"Create"**
+2. Click the blue **"Get started"** button
 
-3. Fill OAuth consent screen:
+3. **App Information screen:**
    - App name: `ADR Workflow`
-   - User support email: Your email
-   - Developer contact: Your email
-   - Click **"Save and Continue"**
+   - User support email: Select your email from dropdown
+   - Click **"Next"**
 
-4. Scopes:
-   - Click **"Add or Remove Scopes"**
-   - Search and select:
-     - `Google Docs API` → `.../auth/documents`
-     - `Google Drive API` → `.../auth/drive.file`
-   - Click **"Update"** → **"Save and Continue"**
+4. **Audience screen:**
+   - Select **"External"** (for personal Gmail)
+   - Or select **"Internal"** (for Google Workspace - only if your organization allows it)
+   - Click **"Next"**
 
-5. Test users (if External):
-   - Add your email address
-   - Click **"Save and Continue"**
+5. **Contact Information screen:**
+   - Email addresses: Enter your email
+   - Click **"Next"**
 
-6. Click **"Back to Dashboard"**
+6. **Finish screen:**
+   - Check the box: ☑ "I agree to the Google API Services: User Data Policy"
+   - Click **"Continue"**
+   - Click blue **"Create"** button
 
-7. Go to **"Credentials"** tab
+7. You'll see a green message: "OAuth configuration created!"
 
-8. Click **"Create Credentials"** → **"OAuth client ID"**
-   - Application type: **Desktop app**
+---
+
+## Step 4: Add Required Scopes
+
+1. In the left sidebar, click **"Data Access"**
+
+2. Click **"Add or remove scopes"** button
+
+3. In the popup window, check these two scopes:
+   - ☑ `Google Docs API` → `.../auth/documents`
+     - Description: "See, edit, create, and delete all your Google Docs documents"
+   - ☑ `Google Docs API` → `.../auth/drive.file`
+     - Description: "See, edit, create, and delete only the specific Google Drive files you use with this app"
+
+4. Click blue **"Update"** button at bottom of popup
+
+5. Back on the Data Access page, click blue **"Save"** button
+
+**Note:** Both scopes show "Google Docs API" even though one mentions Drive. This is correct - Google Docs API includes the Drive scopes needed to create and manage document files.
+
+---
+
+## Step 5: Add Test Users
+
+**Only for External apps** - Skip this if you selected "Internal" user type.
+
+1. In the left sidebar, click **"Audience"**
+
+2. Scroll down to **"Test users"** section
+
+3. Click **"+ Add users"** button
+
+4. Enter your email address
+
+5. Click **"Save"**
+
+Your email should now appear in the "Test users" list with "1 user (1 test, 0 other)".
+
+---
+
+## Step 6: Create OAuth Client Credentials
+
+1. In the left sidebar, click **"Clients"**
+
+2. Click **"+ Create client"** button at the top
+
+3. **Create OAuth client ID screen:**
+   - Click **"Application type"** dropdown
+   - Select **"Desktop app"**
    - Name: `ADR Workflow Desktop`
    - Click **"Create"**
 
-9. **Download JSON**:
+4. A popup appears with your credentials:
    - Click **"Download JSON"** button
-   - Save as `credentials.json`
+   - The file downloads with a long auto-generated name like:
+     `client_secret_123456789-abcdefg.apps.googleusercontent.com.json`
+   - Click **"OK"** to close the popup
 
 ---
 
-## Step 4: Install credentials.json
+## Step 7: Install credentials.json
 
-1. Copy `credentials.json` to your ADR repository root:
+1. **Rename and copy** the downloaded file to your ADR repository:
+
    ```bash
-   cp ~/Downloads/credentials.json /path/to/adr/credentials.json
+   cd ~/workspace/adr
+   cp ~/Downloads/client_secret_*.json ./credentials.json
    ```
 
-2. Verify placement:
+2. **Verify placement:**
    ```bash
    ls -la credentials.json
-   # Should show: -rw-r--r-- credentials.json
+   # Should show: -rw-r--r-- ... credentials.json
    ```
 
 3. **Important:** `credentials.json` is in `.gitignore` and will NOT be committed to git
 
 ---
 
-## Step 5: Install Python Dependencies
+## Step 8: Install Python Dependencies
 
 ```bash
-cd /path/to/adr
+cd ~/workspace/adr
 
 # Install Google API client libraries
 pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
@@ -132,7 +183,7 @@ pip install -r requirements-google.txt
 
 ---
 
-## Step 6: First-Time Authentication
+## Step 9: First-Time Authentication
 
 On first use, the script will open a browser for authentication:
 
@@ -140,17 +191,23 @@ On first use, the script will open a browser for authentication:
 ./run_customer_adrs.sh
 ```
 
-**Browser will open:**
+**Browser will open automatically:**
+
 1. Select your Google account
-2. Click **"Allow"** to grant permissions
-3. **Important:** If you see "Google hasn't verified this app"
+
+2. You'll see a warning: **"Google hasn't verified this app"**
+   - This is normal! It's YOUR app, not a third-party app
    - Click **"Advanced"**
-   - Click **"Go to ADR Workflow (unsafe)"** (it's safe - it's your own app!)
-4. Grant permissions to create/edit Google Docs
+   - Click **"Go to ADR Workflow (unsafe)"** (it's safe - it's your own project!)
+
+3. Review permissions:
+   - "See, edit, create, and delete all your Google Docs documents"
+   - "See, edit, create, and delete only specific Google Drive files used with this app"
+   - Click **"Allow"**
 
 **Result:**
-- `token.json` created automatically
-- Stored in repository root
+- Browser shows "The authentication flow has completed"
+- `token.json` created automatically in repository root
 - Also in `.gitignore` (won't be committed)
 
 **Authentication is now complete!** Future runs won't require browser authentication.
@@ -162,14 +219,18 @@ On first use, the script will open a browser for authentication:
 Test that everything works:
 
 ```bash
-# This should create a Google Doc (not local files)
 ./run_customer_adrs.sh
 
-# Select products, enter customer name
+# Select a product (e.g., "8" for OCP-BASE)
+# Enter customer name (e.g., "Test Customer")
+# Press Enter through other prompts
+
 # Script should output:
-#   ✅ Google Doc created successfully
-#   🔗 URL: https://docs.google.com/document/d/...
+#   ✅ Google Doc created successfully!
+#   🔗 Document URL: https://docs.google.com/document/d/...
 ```
+
+If you see the Google Doc URL, setup is complete! 🎉
 
 ---
 
@@ -178,20 +239,31 @@ Test that everything works:
 If you're offline or credentials are missing, the script automatically falls back to local markdown:
 
 ```
-⚠️  Google API not available
-    Reason: No internet connection
+⚠️  Google Docs Not Available
 
-📁 Falling back to local markdown generation
-    Output: ./customer-slug-ADRs/
+  • No internet connection
 
-💡 To enable Google Docs:
-    1. Connect to internet
-    2. Follow GOOGLE_API_SETUP.md
+📖 To enable Google Docs mode, see: docs/setup/GOOGLE_API_SETUP.md
+
+────────────────────────────────────────────────────────────────────────────────
+
+Generate offline document instead? [Y/n]
 ```
+
+This is normal! You can use offline mode or complete the Google API setup.
 
 ---
 
 ## Troubleshooting
+
+### "No internet connection" (but you're online)
+
+**Cause:** Corporate firewall blocking connectivity check
+
+**Solution:** Already fixed in latest version. Update your repository:
+```bash
+git pull
+```
 
 ### "credentials.json not found"
 
@@ -200,8 +272,9 @@ If you're offline or credentials are missing, the script automatically falls bac
 # Check file exists
 ls credentials.json
 
-# If missing, download from Google Cloud Console:
-# APIs & Services → Credentials → OAuth 2.0 Client IDs → Download JSON
+# If missing, re-download from Google Cloud Console:
+# APIs & Services → Clients → Click your client → Download JSON
+# Then rename and copy to repository root
 ```
 
 ### "Token has been expired or revoked"
@@ -216,15 +289,16 @@ rm token.json
 
 ### "Access blocked: This app's request is invalid"
 
-**Cause:** OAuth consent screen not configured or scopes missing
+**Cause:** Scopes not configured correctly
 
 **Solution:**
 1. Go to Google Cloud Console
-2. APIs & Services → OAuth consent screen
-3. Add required scopes:
-   - `https://www.googleapis.com/auth/documents`
-   - `https://www.googleapis.com/auth/drive.file`
-4. Re-authenticate:
+2. APIs & Services → Data Access
+3. Verify both scopes are added:
+   - `.../auth/documents`
+   - `.../auth/drive.file`
+4. Click "Save"
+5. Re-authenticate:
    ```bash
    rm token.json
    ./run_customer_adrs.sh
@@ -239,12 +313,14 @@ pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 
 ### "This app is blocked"
 
-**Cause:** Using personal Gmail with External app type in "Testing" mode
+**Cause:** Using External app type without adding yourself as test user
 
 **Solution:**
-1. Google Cloud Console → OAuth consent screen
-2. Click **"Publish App"**
-3. Or add your email to "Test users" list
+1. Google Cloud Console → APIs & Services → Audience
+2. Scroll to "Test users"
+3. Click "+ Add users"
+4. Enter your email
+5. Click "Save"
 
 ---
 
@@ -253,7 +329,7 @@ pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 ### credentials.json
 - Contains OAuth client ID and secret
 - Safe to keep in repository root (in .gitignore)
-- Only allows authentication, not direct access
+- Only allows authentication flow, not direct access
 - User must still approve permissions
 
 ### token.json
@@ -278,7 +354,7 @@ To revoke ADR Workflow's access to your Google account:
 After setup, you should have:
 
 ```
-/path/to/adr/
+/home/ltourrea/workspace/adr/
 ├── credentials.json     ← OAuth client credentials (in .gitignore)
 ├── token.json          ← Your access token (in .gitignore)
 ├── .gitignore          ← Already configured
@@ -294,7 +370,7 @@ After setup, you should have:
 **Free!**
 
 - Google Docs API: Free for personal use
-- Google Drive API: Free for personal use
+- Google Drive API: Free (scopes provided by Docs API)
 - No credit card required for basic usage
 - Quotas:
   - Read: 60,000 requests/minute (more than enough)
@@ -346,7 +422,7 @@ Once setup is complete:
 If you encounter issues:
 
 1. Check `.gitignore` includes `credentials.json` and `token.json`
-2. Verify scopes are correct in OAuth consent screen
+2. Verify scopes are correct: Data Access → both scopes checked
 3. Delete `token.json` and re-authenticate
 4. Check internet connection
 5. Review error messages - they include specific solutions

@@ -99,7 +99,7 @@ def check_google_prerequisites():
     # Check credentials.json
     credentials_file = REPO_ROOT / 'credentials.json'
     if not credentials_file.exists():
-        issues.append("credentials.json not found (see GOOGLE_API_SETUP.md)")
+        issues.append("credentials.json not found (see docs/setup/GOOGLE_API_SETUP.md)")
 
     return issues
 
@@ -1336,7 +1336,7 @@ def generate_customer_adrs(args):
         for issue in google_issues:
             print(f"  • {issue}")
         print()
-        print("📖 To enable Google Docs mode, see: GOOGLE_API_SETUP.md")
+        print("📖 To enable Google Docs mode, see: docs/setup/GOOGLE_API_SETUP.md")
         print()
         print("─"*80)
         print()
@@ -1350,7 +1350,7 @@ def generate_customer_adrs(args):
                 print()
                 print("💡 To generate Google Doc:")
                 print("   1. Connect to internet")
-                print("   2. Follow GOOGLE_API_SETUP.md")
+                print("   2. Follow docs/setup/GOOGLE_API_SETUP.md")
                 print("   3. Run: ./run_customer_adrs.sh")
                 print()
                 sys.exit(0)
@@ -1676,7 +1676,7 @@ def generate_local_mode(customer, products, engagement_date, architect, output_d
     print()
     print("💡 For Google Docs mode (recommended for workshops):")
     print("   • Connect to internet")
-    print("   • Follow GOOGLE_API_SETUP.md")
+    print("   • Follow docs/setup/GOOGLE_API_SETUP.md")
     print("   • Re-run: ./run_customer_adrs.sh")
     print()
 
