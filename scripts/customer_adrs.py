@@ -193,15 +193,15 @@ def convert_agreeing_parties_to_table(text):
     # Build nested table
     table_html = '''<table style="width: 100%; border-collapse: collapse; margin: 0;">
         <tr>
-            <th style="background-color: #E8E8E8; border: 1px solid #999; padding: 5px; width: 50%; font-size: 9pt;">Person</th>
-            <th style="background-color: #E8E8E8; border: 1px solid #999; padding: 5px; width: 50%; font-size: 9pt;">Role</th>
+            <th style="background-color: #E8E8E8; border: 1px solid #999; padding: 7px; width: 50%; font-size: 11pt;">Person</th>
+            <th style="background-color: #E8E8E8; border: 1px solid #999; padding: 7px; width: 50%; font-size: 11pt;">Role</th>
         </tr>
 '''
 
     for party in parties:
         table_html += f'''        <tr>
-            <td style="border: 1px solid #999; padding: 5px; font-size: 9pt;">{party['person']}</td>
-            <td style="border: 1px solid #999; padding: 5px; font-size: 9pt;">{party['role']}</td>
+            <td style="border: 1px solid #999; padding: 7px; font-size: 11pt;">{party['person']}</td>
+            <td style="border: 1px solid #999; padding: 7px; font-size: 11pt;">{party['role']}</td>
         </tr>
 '''
 
@@ -247,7 +247,8 @@ def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architec
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            font-size: 11pt;
+            font-size: 12pt;
+            line-height: 1.5;
         }
         h1 {
             font-size: 20pt;
@@ -257,7 +258,9 @@ def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architec
             font-size: 16pt;
             margin-top: 30px;
             margin-bottom: 15px;
-            color: #333;
+            color: #CC0000;
+            border-bottom: 2px solid #CC0000;
+            padding-bottom: 4px;
         }
         h3 {
             font-size: 13pt;
@@ -266,7 +269,7 @@ def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architec
             color: #555;
         }
         h4 {
-            font-size: 12pt;
+            font-size: 13pt;
             margin-top: 25px;
             margin-bottom: 8px;
             color: #000;
@@ -287,12 +290,12 @@ def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architec
         }
         th, td {
             border: 1px solid #000;
-            padding: 8px;
+            padding: 10px;
             vertical-align: top;
-            font-size: 10pt;
+            font-size: 11pt;
         }
         th {
-            background-color: #D3D3D3;
+            background-color: #EBEBEB;
             font-weight: bold;
             width: 145pt;
             text-align: left;
@@ -328,7 +331,7 @@ def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architec
     # Navigation tip banner
     total_adrs = sum(len(adrs) for adrs in adrs_by_product.values())
     html_parts.append(f'''
-    <div style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0; font-size: 10pt;">
+    <div style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0; font-size: 12pt;">
         <p style="margin: 0 0 10px 0;"><strong>📋 NAVIGATION TIP</strong></p>
         <p style="margin: 5px 0;">For easy navigation through all {total_adrs} ADRs during workshops:</p>
         <ul style="margin: 5px 0; padding-left: 20px;">
@@ -343,14 +346,14 @@ def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architec
     html_parts.append(f'''
     <div style="border: 2px solid #28a745; padding: 20px; margin: 20px 0; background-color: #f8f9fa;">
         <h2 style="margin-top: 0; color: #28a745; border-bottom: 2px solid #28a745; padding-bottom: 10px;">📊 Workshop Progress Tracker</h2>
-        <p style="margin: 10px 0; font-size: 11pt;"><strong>How to track progress:</strong></p>
-        <ul style="margin: 10px 0; font-size: 11pt;">
+        <p style="margin: 10px 0; font-size: 12pt;"><strong>How to track progress:</strong></p>
+        <ul style="margin: 10px 0; font-size: 12pt;">
             <li>Each ADR heading starts with a checkbox: <strong>☐ OCP-BASE-01: Title</strong></li>
             <li>When you complete an ADR, change <strong>☐</strong> to <strong>☑</strong> directly in the heading</li>
             <li>The Document Outline sidebar will show your progress (☐ = pending, ☑ = done)</li>
             <li>No need to scroll - just edit the heading where you're working!</li>
         </ul>
-        <p style="margin: 10px 0; font-size: 11pt;"><strong>Total ADRs:</strong> {total_adrs} &nbsp;|&nbsp; <strong>Quick view:</strong> Use Document Outline (Ctrl+Alt+A Ctrl+Alt+H) to see all checkboxes</p>
+        <p style="margin: 10px 0; font-size: 12pt;"><strong>Total ADRs:</strong> {total_adrs} &nbsp;|&nbsp; <strong>Quick view:</strong> Use Document Outline (Ctrl+Alt+A Ctrl+Alt+H) to see all checkboxes</p>
     </div>
 ''')
 
@@ -360,7 +363,10 @@ def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architec
     # Process each product
     processed_adrs = 0
 
-    for product, product_adrs in adrs_by_product.items():
+    for i, (product, product_adrs) in enumerate(adrs_by_product.items()):
+        # Add spacing between product sections (Google Docs ignores CSS margin-top after tables)
+        if i > 0:
+            html_parts.append('\n    <p style="margin: 0; line-height: 3;">&nbsp;</p>\n')
         # Add product heading
         product_full_name = PRODUCT_NAMES.get(product, product)
         html_parts.append(f'\n    <h2>{product_full_name}</h2>\n')
