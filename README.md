@@ -172,6 +172,7 @@ python3 scripts/customer_adrs.py generate \
 
 ### Template Management
 - ✅ **291 ADR Templates** - Covering 19 Red Hat products
+- ✅ **Governed Template Addition** - `add-adr` skill validates governance rules, checks for duplicates, and generates fully-fleshed ADR content before writing
 - ✅ **Automated Renumbering** - Keep ADR IDs sequential
 - ✅ **Version Updates** - Tools for updating templates with new product versions
 - ✅ **Quality Governance** - Validation rules and standards
@@ -293,7 +294,13 @@ Use only standardized roles from `dictionaries/adr_parties_role_dictionnary.md`:
 
 ## Contributing
 
-When creating or updating ADRs:
+**Recommended:** Use the `add-adr` skill in Claude Code — it handles governance validation, duplicate detection, content generation, and renumbering automatically:
+
+```
+Add a new ADR about <topic> for <domain>
+```
+
+**Manual process** (when not using the skill):
 
 1. Follow the ADR template structure exactly
 2. Check `dictionaries/adr_governance_rules.md` for quality rules
