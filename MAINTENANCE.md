@@ -8,59 +8,25 @@ This guide is for **maintainers** of the ADR Template Repository. If you're an *
 
 ### 1. Adding New ADR Templates
 
-When adding new ADR templates to the repository:
+Use the `add-adr` skill in Claude Code. It handles the full workflow: prefix selection, governance validation (exclusion check, quality rules, duplicate detection), content generation, file append, and renumbering.
+
+```
+# In Claude Code (from this repository):
+Add a new ADR about <topic> for <domain>
+```
+
+The skill enforces governance rules and blocks invalid or duplicate ADRs before writing anything.
+
+**Manual fallback** (if not using Claude Code):
 
 **Step 1: Edit Template File**
 
 ```bash
-# Edit the appropriate product file
 vim adr_templates/OCP-NET.md
-
-# Add new ADR section following the template structure
-```
-
-**ADR Template Structure:**
-```markdown
-## OCP-NET-XX
-
-**Title**
-[Concise title]
-
-**Architectural Question**
-[The strategic question being answered]
-
-**Issue or Problem**
-[Why this decision is needed]
-
-**Assumption**
-[N/A or stated dependency]
-
-**Alternatives**
-
-- [Alternative 1]
-- [Alternative 2]
-
-**Decision**
-#TODO: Document the decision.#
-
-**Justification**
-
-- **[Alternative 1]:** [Why choose this option]
-- **[Alternative 2]:** [Why choose this option]
-
-**Implications**
-
-- **[Alternative 1]:** [Consequences/risks/requirements]
-- **[Alternative 2]:** [Consequences/risks/requirements]
-
-**Agreeing Parties**
-
-- Person: #TODO#, Role: [Role from dictionary]
+# Add new ADR section following the structure in CLAUDE.md
 ```
 
 **Step 2: Renumber ADRs**
-
-After adding/removing ADRs, renumber them sequentially:
 
 ```bash
 python3 scripts/renumber_adrs.py OCP-NET
@@ -71,7 +37,6 @@ python3 scripts/renumber_adrs.py OCP-NET --dry-run
 
 **Step 3: Validate**
 
-Check governance rules:
 ```bash
 # Verify against dictionaries/adr_governance_rules.md
 # Ensure roles match dictionaries/adr_parties_role_dictionnary.md

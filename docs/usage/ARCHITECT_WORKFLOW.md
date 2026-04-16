@@ -353,6 +353,10 @@ An engagement is successful when:
 - **Problem:** Modifying template repository instead of creating customer instances
 - **Solution:** Always use generate_customer_adrs.py to create separate customer pack
 
+**Pitfall 5: Missing ADR for a decision that comes up in workshop**
+- **Problem:** Customer raises an architectural decision not covered by existing templates
+- **Solution:** Note it during the workshop; after the engagement use the `add-adr` skill in Claude Code to contribute it back to the template library with proper governance validation
+
 ---
 
 ## Next Steps

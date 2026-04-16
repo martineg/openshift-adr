@@ -199,6 +199,17 @@ python scripts/renumber_adrs.py RHOAI-SM
 
 See `UPDATE_GUIDE.md` for complete workflow details.
 
+**Add a New ADR Template**
+
+Use the `add-adr` skill in Claude Code. It handles the full workflow: prefix selection, governance validation (exclusion check, quality rules, duplicate detection), content generation, file append, and renumbering.
+
+```
+# In Claude Code (from this repository):
+Add a new ADR about <topic> for <domain>
+```
+
+The skill enforces governance rules and blocks invalid or duplicate ADRs before writing anything.
+
 **Renumber ADR Templates**
 
 ```bash
