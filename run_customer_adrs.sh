@@ -149,30 +149,11 @@ if [ ${#PRODUCTS[@]} -eq 0 ]; then
     exit 1
 fi
 
-# Product descriptions lookup (bash 3.2 compatible, no associative arrays)
+# Product name lookup — delegates to scripts/products.py (single source of truth).
+# Falls back to the prefix itself if Python/config is unavailable.
 get_product_name() {
-    case "$1" in
-        GITOPS)     echo "OpenShift GitOps" ;;
-        LOG)        echo "OpenShift Logging" ;;
-        NETOBSERV)  echo "Network Observability" ;;
-        NVIDIA-GPU) echo "NVIDIA GPU Operator" ;;
-        OCP-BASE)   echo "OCP - General Platform" ;;
-        OCP-BM)     echo "OCP - Bare Metal Installation" ;;
-        OCP-HCP)    echo "OCP - Hosted Control Planes" ;;
-        OCP-MGT)    echo "OCP - Cluster Management & Day2 Ops" ;;
-        OCP-MON)    echo "OCP - Monitoring (Metrics)" ;;
-        OCP-NET)    echo "OCP - Networking" ;;
-        OCP-OSP)    echo "OCP - OpenStack Installation" ;;
-        OCP-SEC)    echo "OCP - Security & Compliance" ;;
-        OCP-STOR)   echo "OCP - Storage" ;;
-        ODF)        echo "OpenShift Data Foundation" ;;
-        PIPELINES)  echo "OpenShift Pipelines" ;;
-        POWERMON)   echo "OpenShift Power Monitoring (Kepler)" ;;
-        RHOAI-SM)   echo "OpenShift AI Self-Managed" ;;
-        TRACING)    echo "Red Hat Distributed Tracing" ;;
-        VIRT)       echo "OpenShift Virtualization" ;;
-        *)          echo "$1" ;;
-    esac
+    python3 -c "import sys; sys.path.insert(0, 'scripts'); from products import short_name; print(short_name('$1'))" 2>/dev/null \
+        || echo "$1"
 }
 
 # Function to display product list with selection markers

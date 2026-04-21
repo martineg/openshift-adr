@@ -20,12 +20,15 @@ This is an **ADR Template Repository** for OpenShift Container Platform and rela
 
 - **`/dictionaries/`**: Governance and reference files
   - `adr_governance_rules.md`: Strict validation rules for ADR quality
-  - `adr_prefix_dictionary.md`: Maps products/topics to official prefix codes
+  - `adr_prefix_dictionary.md`: Maps products/topics to official prefix codes — **generated from `products.yaml`, do not edit directly**
   - `adr_parties_role_dictionnary.md`: Standardized roles for "Agreeing Parties"
   - `adr_exclusions.md`: Forbidden topics and false positive suppressions
+  - **`products.yaml`**: Single source of truth for product metadata (prefix, names, category, status). Consumed by Python loader `scripts/products.py` and by bash via subprocess. `adr_prefix_dictionary.md` is regenerated from this file — do not edit it directly. Regenerate with: `python scripts/regen_prefix_dictionary.py`
 
 - **`/scripts/`**: Automation utilities
   - `customer_adrs.py`: Customer ADR workflow (generate, check, export)
+  - `products.py`: Python loader module for `dictionaries/products.yaml` — single source of truth for product names/categories
+  - `regen_prefix_dictionary.py`: Regenerates `dictionaries/adr_prefix_dictionary.md` from `products.yaml`
   - `renumber_adrs.py`: Renumber ADRs sequentially after additions/removals
   - `split_pdf.py`: Split large PDF documentation files
   - `update_adrs.py`: Automated ADR updates using Claude API

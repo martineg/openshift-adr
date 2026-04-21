@@ -27,6 +27,12 @@ from pathlib import Path
 from datetime import datetime
 import yaml
 
+# Ensure scripts/ is on the path whether this module is run directly or imported
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+from products import long_name as _product_long_name
+
 # Google API imports (optional - check availability)
 GOOGLE_API_AVAILABLE = False
 try:
@@ -213,29 +219,6 @@ def convert_agreeing_parties_to_table(text):
 def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architect):
     """Generate complete HTML document from ADR data"""
 
-    # Product name mapping
-    PRODUCT_NAMES = {
-        'GITOPS': 'OpenShift GitOps',
-        'LOG': 'OpenShift Logging',
-        'NETOBSERV': 'Network Observability',
-        'NVIDIA-GPU': 'NVIDIA GPU Operator',
-        'OCP-BASE': 'OpenShift Container Platform - General Platform',
-        'OCP-BM': 'OpenShift Container Platform - Bare Metal Installation',
-        'OCP-HCP': 'OpenShift Container Platform - Hosted Control Planes',
-        'OCP-MGT': 'OpenShift Container Platform - Cluster Management & Day2 Ops',
-        'OCP-MON': 'OpenShift Container Platform - Monitoring (Metrics)',
-        'OCP-NET': 'OpenShift Container Platform - Networking',
-        'OCP-OSP': 'OpenShift Container Platform - OpenStack Installation',
-        'OCP-SEC': 'OpenShift Container Platform - Security & Compliance',
-        'OCP-STOR': 'OpenShift Container Platform - Storage',
-        'ODF': 'OpenShift Data Foundation',
-        'PIPELINES': 'OpenShift Pipelines',
-        'POWERMON': 'OpenShift Power Monitoring (Kepler)',
-        'RHOAI-SM': 'Red Hat OpenShift AI Self-Managed',
-        'TRACING': 'Red Hat Distributed Tracing',
-        'VIRT': 'OpenShift Virtualization'
-    }
-
     html_parts = []
 
     # HTML header with styles
@@ -368,7 +351,7 @@ def generate_html_from_adrs(customer, adrs_by_product, engagement_date, architec
         if i > 0:
             html_parts.append('\n    <p style="margin: 0; line-height: 3;">&nbsp;</p>\n')
         # Add product heading
-        product_full_name = PRODUCT_NAMES.get(product, product)
+        product_full_name = _product_long_name(product)
         html_parts.append(f'\n    <h2>{product_full_name}</h2>\n')
 
         # Process each ADR
@@ -613,29 +596,6 @@ def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, arch
             # Footer and page numbers must be added manually via Google Docs UI
             # (Insert > Headers & footers > Page number)
 
-            # Product name mapping (prefix to full name)
-            PRODUCT_NAMES = {
-                'GITOPS': 'OpenShift GitOps',
-                'LOG': 'OpenShift Logging',
-                'NETOBSERV': 'Network Observability',
-                'NVIDIA-GPU': 'NVIDIA GPU Operator',
-                'OCP-BASE': 'OpenShift Container Platform - General Platform',
-                'OCP-BM': 'OpenShift Container Platform - Bare Metal Installation',
-                'OCP-HCP': 'OpenShift Container Platform - Hosted Control Planes',
-                'OCP-MGT': 'OpenShift Container Platform - Cluster Management & Day2 Ops',
-                'OCP-MON': 'OpenShift Container Platform - Monitoring (Metrics)',
-                'OCP-NET': 'OpenShift Container Platform - Networking',
-                'OCP-OSP': 'OpenShift Container Platform - OpenStack Installation',
-                'OCP-SEC': 'OpenShift Container Platform - Security & Compliance',
-                'OCP-STOR': 'OpenShift Container Platform - Storage',
-                'ODF': 'OpenShift Data Foundation',
-                'PIPELINES': 'OpenShift Pipelines',
-                'POWERMON': 'OpenShift Power Monitoring (Kepler)',
-                'RHOAI-SM': 'Red Hat OpenShift AI Self-Managed',
-                'TRACING': 'Red Hat Distributed Tracing',
-                'VIRT': 'OpenShift Virtualization'
-            }
-
             # Helper function to strip **text** and return text with bold/color markers
             def process_bold_markdown(text, add_removal_hint=False):
                 """Convert **text** to plain text with bold markers, #TODO# with yellow, and optional removal hints"""
@@ -700,7 +660,7 @@ def create_google_doc_from_adrs(customer, adrs_by_product, engagement_date, arch
 
                 # Add product heading with full name (heading style adds its own paragraph break)
                 requests = []
-                product_full_name = PRODUCT_NAMES.get(product, product)
+                product_full_name = _product_long_name(product)
                 requests.append({
                     'insertText': {
                         'location': {'index': current_index},

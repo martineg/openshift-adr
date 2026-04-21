@@ -1,0 +1,355 @@
+# dictionaries/products.yaml
+#
+# Single source of truth for product metadata.
+# Consumed by: scripts/customer_adrs.py, scripts/stats.py (planned),
+# scripts/build_presentation.py, run_customer_adrs.sh (via Python helper).
+#
+# To add a product: add an entry here; run scripts/regen_prefix_dictionary.py
+# to refresh dictionaries/adr_prefix_dictionary.md.
+
+schema_version: "1.0"
+
+products:
+  - prefix: AIML
+    short_name: "OpenShift AI Workloads"
+    long_name: "AI Workloads on OpenShift Container Platform"
+    description: "AI workloads on OpenShift Container Platform"
+    category: ai_ml
+    template_file: null
+    status: planned
+
+  - prefix: AMD-GPU
+    short_name: "AMD GPU Operator"
+    long_name: "AMD GPU Operator"
+    description: "AMD GPU"
+    category: ai_ml
+    template_file: null
+    status: planned
+
+  - prefix: BUILDS
+    short_name: "OpenShift Builds"
+    long_name: "Builds for Red Hat OpenShift"
+    description: "Builds for Red Hat OpenShift"
+    category: platform_services
+    template_file: null
+    status: planned
+
+  - prefix: COO
+    short_name: "Cluster Observability Operator"
+    long_name: "Cluster Observability Operator"
+    description: "Cluster Observability"
+    category: platform_services
+    template_file: null
+    status: planned
+
+  - prefix: GITOPS
+    short_name: "OpenShift GitOps"
+    long_name: "OpenShift GitOps"
+    description: "OpenShift GitOps"
+    category: platform_services
+    template_file: adr_templates/GITOPS.md
+    status: active
+
+  - prefix: INTEL-GPU
+    short_name: "Intel GPU Operator"
+    long_name: "Intel GPU Operator"
+    description: "Intel GPU"
+    category: ai_ml
+    template_file: null
+    status: planned
+
+  - prefix: JENKINS
+    short_name: "OpenShift Jenkins"
+    long_name: "Jenkins for OpenShift Container Platform"
+    description: "Jenkins for OpenShift Container Platform"
+    category: platform_services
+    template_file: null
+    status: planned
+
+  - prefix: LIGHTSPEED
+    short_name: "OpenShift Lightspeed"
+    long_name: "OpenShift Lightspeed"
+    description: "OpenShift LightSpeed"
+    category: platform_services
+    template_file: null
+    status: planned
+
+  - prefix: LOG
+    short_name: "OpenShift Logging"
+    long_name: "OpenShift Logging"
+    description: "OpenShift Logging"
+    category: platform_services
+    template_file: adr_templates/LOG.md
+    status: active
+
+  - prefix: MTC
+    short_name: "Migration Toolkit for Containers"
+    long_name: "Migration Toolkit for Containers"
+    description: "Migration Toolkit for Containers"
+    category: platform_services
+    template_file: null
+    status: planned
+
+  - prefix: NETOBSERV
+    short_name: "Network Observability"
+    long_name: "Network Observability"
+    description: "Network Observability"
+    category: platform_services
+    template_file: adr_templates/NETOBSERV.md
+    status: active
+
+  - prefix: NVIDIA-GPU
+    short_name: "NVIDIA GPU Operator"
+    long_name: "NVIDIA GPU Operator"
+    description: "NVIDIA GPU Operator"
+    category: ai_ml
+    template_file: adr_templates/NVIDIA-GPU.md
+    status: active
+
+  - prefix: OCP-ALIBABA
+    short_name: "OCP - Alibaba Installation"
+    long_name: "OpenShift Container Platform - Alibaba Installation"
+    description: "OCP on Alibaba platform and installation specifics"
+    category: openshift
+    template_file: null
+    status: planned
+
+  - prefix: OCP-AWS
+    short_name: "OCP - AWS Installation"
+    long_name: "OpenShift Container Platform - AWS Installation"
+    description: "OCP on AWS platform and installation specifics"
+    category: openshift
+    template_file: null
+    status: planned
+
+  - prefix: OCP-AZURE
+    short_name: "OCP - Azure Installation"
+    long_name: "OpenShift Container Platform - Azure Installation"
+    description: "OCP on Azure platform and installation specifics"
+    category: openshift
+    template_file: null
+    status: planned
+
+  - prefix: OCP-AZURESTACK
+    short_name: "OCP - Azure Stack Hub Installation"
+    long_name: "OpenShift Container Platform - Azure Stack Hub Installation"
+    description: "OCP on Azure Stack Hub platform and installation specifics"
+    category: openshift
+    template_file: null
+    status: planned
+
+  - prefix: OCP-BASE
+    short_name: "OCP - General Platform"
+    long_name: "OpenShift Container Platform - General Platform"
+    description: "OCP General Strategy: Topology, Sizing, Isolation, and Cross-Cutting Concerns"
+    category: openshift
+    template_file: adr_templates/OCP-BASE.md
+    status: active
+
+  - prefix: OCP-BM
+    short_name: "OCP - Bare Metal Installation"
+    long_name: "OpenShift Container Platform - Bare Metal Installation"
+    description: "OCP on Bare Metal: Physical Hardware, BIOS, Firmware, and OS Installation (Day 0)"
+    category: openshift
+    template_file: adr_templates/OCP-BM.md
+    status: active
+
+  - prefix: OCP-GCP
+    short_name: "OCP - GCP Installation"
+    long_name: "OpenShift Container Platform - GCP Installation"
+    description: "OCP on GCP platform and installation specifics"
+    category: openshift
+    template_file: null
+    status: planned
+
+  - prefix: OCP-HCP
+    short_name: "OCP - Hosted Control Planes"
+    long_name: "OpenShift Container Platform - Hosted Control Planes"
+    description: "OCP with Hosted Control Planes general aspects"
+    category: openshift
+    template_file: adr_templates/OCP-HCP.md
+    status: active
+
+  - prefix: OCP-IBMCLOUD
+    short_name: "OCP - IBM Cloud Installation"
+    long_name: "OpenShift Container Platform - IBM Cloud Installation"
+    description: "OCP on IBM Cloud platform and installation specifics"
+    category: openshift
+    template_file: null
+    status: planned
+
+  - prefix: OCP-IBMPOWER
+    short_name: "OCP - IBM Power Installation"
+    long_name: "OpenShift Container Platform - IBM Power Installation"
+    description: "OCP on IBM Power platform and installation specifics"
+    category: openshift
+    template_file: null
+    status: planned
+
+  - prefix: OCP-IBMPOWERVS
+    short_name: "OCP - IBM Power Virtual Server Installation"
+    long_name: "OpenShift Container Platform - IBM Power Virtual Server Installation"
+    description: "OCP on IBM Power Virtual Server platform and installation specifics"
+    category: openshift
+    template_file: null
+    status: planned
+
+  - prefix: OCP-IBMZL1
+    short_name: "OCP - IBM Z/LinuxONE Installation"
+    long_name: "OpenShift Container Platform - IBM Z/LinuxONE Installation"
+    description: "OCP on IBM Z/LINUXONE platform and installation specifics"
+    category: openshift
+    template_file: null
+    status: planned
+
+  - prefix: OCP-MGT
+    short_name: "OCP - Cluster Management & Day2 Ops"
+    long_name: "OpenShift Container Platform - Cluster Management & Day2 Ops"
+    description: "OCP Platform Administration: Upgrades, Machine Configs, and Day 2 Operations"
+    category: openshift
+    template_file: adr_templates/OCP-MGT.md
+    status: active
+
+  - prefix: OCP-MON
+    short_name: "OCP - Monitoring (Metrics)"
+    long_name: "OpenShift Container Platform - Monitoring (Metrics)"
+    description: "OCP Monitoring"
+    category: openshift
+    template_file: adr_templates/OCP-MON.md
+    status: active
+
+  - prefix: OCP-NET
+    short_name: "OCP - Networking"
+    long_name: "OpenShift Container Platform - Networking"
+    description: "OCP Networking: SDN, Ingress, DNS, Network Policy, and Software-Defined Networking"
+    category: openshift
+    template_file: adr_templates/OCP-NET.md
+    status: active
+
+  - prefix: OCP-NUTANIX
+    short_name: "OCP - Nutanix Installation"
+    long_name: "OpenShift Container Platform - Nutanix Installation"
+    description: "OCP on Nutanix platform and installation specifics"
+    category: openshift
+    template_file: null
+    status: planned
+
+  - prefix: OCP-OCI
+    short_name: "OCP - OCI Installation"
+    long_name: "OpenShift Container Platform - Oracle Cloud Infrastructure Installation"
+    description: "OCP on Oracle Cloud Infrastructure platform and installation specifics"
+    category: openshift
+    template_file: null
+    status: planned
+
+  - prefix: OCP-OSP
+    short_name: "OCP - OpenStack Installation"
+    long_name: "OpenShift Container Platform - OpenStack Installation"
+    description: "OCP on OpenStack platform and installation specifics"
+    category: openshift
+    template_file: adr_templates/OCP-OSP.md
+    status: active
+
+  - prefix: OCP-SEC
+    short_name: "OCP - Security & Compliance"
+    long_name: "OpenShift Container Platform - Security & Compliance"
+    description: "OCP Security: Compliance, Identity, RBAC, and Workload Security Policies"
+    category: openshift
+    template_file: adr_templates/OCP-SEC.md
+    status: active
+
+  - prefix: OCP-STOR
+    short_name: "OCP - Storage"
+    long_name: "OpenShift Container Platform - Storage"
+    description: "OCP Storage: CSI Drivers and StorageClass selection (Software)"
+    category: openshift
+    template_file: adr_templates/OCP-STOR.md
+    status: active
+
+  - prefix: OCP-VSPHERE
+    short_name: "OCP - vSphere Installation"
+    long_name: "OpenShift Container Platform - vSphere Installation"
+    description: "OCP on vSphere platform and installation specifics"
+    category: openshift
+    template_file: null
+    status: planned
+
+  - prefix: ODF
+    short_name: "OpenShift Data Foundation"
+    long_name: "OpenShift Data Foundation"
+    description: "OpenShift Data Foundation"
+    category: platform_services
+    template_file: adr_templates/ODF.md
+    status: active
+
+  - prefix: OSSM
+    short_name: "OpenShift Service Mesh"
+    long_name: "OpenShift Service Mesh"
+    description: "OpenShift Service Mesh"
+    category: platform_services
+    template_file: null
+    status: planned
+
+  - prefix: OTEL
+    short_name: "Red Hat OpenTelemetry"
+    long_name: "Red Hat build of OpenTelemetry"
+    description: "Red Hat build of OpenTelemetry"
+    category: platform_services
+    template_file: null
+    status: planned
+
+  - prefix: PIPELINES
+    short_name: "OpenShift Pipelines"
+    long_name: "OpenShift Pipelines"
+    description: "OpenShift Pipelines"
+    category: platform_services
+    template_file: adr_templates/PIPELINES.md
+    status: active
+
+  - prefix: POWERMON
+    short_name: "OpenShift Power Monitoring (Kepler)"
+    long_name: "OpenShift Power Monitoring (Kepler)"
+    description: "Power monitoring"
+    category: platform_services
+    template_file: adr_templates/POWERMON.md
+    status: active
+
+  - prefix: RHOAI-SM
+    short_name: "OpenShift AI Self-Managed"
+    long_name: "Red Hat OpenShift AI Self-Managed"
+    description: "Red Hat OpenShift AI Self Managed"
+    category: ai_ml
+    template_file: adr_templates/RHOAI-SM.md
+    status: active
+
+  - prefix: SERVERLESS
+    short_name: "OpenShift Serverless"
+    long_name: "OpenShift Serverless"
+    description: "OpenShift Serverless"
+    category: platform_services
+    template_file: null
+    status: planned
+
+  - prefix: TRACING
+    short_name: "Red Hat OpenShift Distributed Tracing Platform"
+    long_name: "Red Hat OpenShift Distributed Tracing Platform"
+    description: "Red Hat OpenShift Distributed Tracing Platform"
+    category: platform_services
+    template_file: adr_templates/TRACING.md
+    status: active
+
+  - prefix: VIRT
+    short_name: "OpenShift Virtualization"
+    long_name: "OpenShift Virtualization"
+    description: "OpenShift Virtualization"
+    category: platform_services
+    template_file: adr_templates/VIRT.md
+    status: active
+
+  - prefix: WIN
+    short_name: "Windows Containers"
+    long_name: "Windows Containers"
+    description: "Windows Containers"
+    category: platform_services
+    template_file: null
+    status: planned

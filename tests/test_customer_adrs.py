@@ -7,8 +7,10 @@ Prevents regressions in core functionality
 import sys
 import os
 import re
+import subprocess
 import tempfile
 import shutil
+import yaml
 from pathlib import Path
 
 # Add parent directory to path
@@ -149,34 +151,18 @@ def test_adr_validation_patterns():
 
 
 def test_product_name_mapping():
-    """Test product name mapping completeness"""
-    PRODUCT_NAMES = {
-        'GITOPS': 'OpenShift GitOps',
-        'LOG': 'OpenShift Logging',
-        'NETOBSERV': 'Network Observability',
-        'NVIDIA-GPU': 'NVIDIA GPU Operator',
-        'OCP-BASE': 'OpenShift Container Platform - General Platform',
-        'OCP-BM': 'OpenShift Container Platform - Bare Metal Installation',
-        'OCP-HCP': 'OpenShift Container Platform - Hosted Control Planes',
-        'OCP-MGT': 'OpenShift Container Platform - Cluster Management & Day2 Ops',
-        'OCP-MON': 'OpenShift Container Platform - Monitoring (Metrics)',
-        'OCP-NET': 'OpenShift Container Platform - Networking',
-        'OCP-OSP': 'OpenShift Container Platform - OpenStack Installation',
-        'OCP-SEC': 'OpenShift Container Platform - Security & Compliance',
-        'OCP-STOR': 'OpenShift Container Platform - Storage',
-        'ODF': 'OpenShift Data Foundation',
-        'PIPELINES': 'OpenShift Pipelines',
-        'POWERMON': 'OpenShift Power Monitoring (Kepler)',
-        'RHOAI-SM': 'Red Hat OpenShift AI Self-Managed',
-        'TRACING': 'Red Hat Distributed Tracing',
-        'VIRT': 'OpenShift Virtualization'
-    }
+    """Test product name mapping via products.py loader"""
+    sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
+    from products import long_name, all_products
 
-    # Verify all products have mappings
-    assert len(PRODUCT_NAMES) == 19
-    assert 'GITOPS' in PRODUCT_NAMES
-    assert 'OCP-BASE' in PRODUCT_NAMES
-    assert 'RHOAI-SM' in PRODUCT_NAMES
+    active = all_products()
+    assert len(active) == 19
+    assert long_name('GITOPS') == 'OpenShift GitOps'
+    assert long_name('OCP-BASE') == 'OpenShift Container Platform - General Platform'
+    assert long_name('RHOAI-SM') == 'Red Hat OpenShift AI Self-Managed'
+    assert long_name('TRACING') == 'Red Hat OpenShift Distributed Tracing Platform'
+    assert long_name('POWERMON') == 'OpenShift Power Monitoring (Kepler)'
+    assert long_name('UNKNOWN-PREFIX') == 'UNKNOWN-PREFIX'
 
     print("✅ test_product_name_mapping passed")
 
@@ -205,6 +191,92 @@ def test_field_order():
     print("✅ test_field_order passed")
 
 
+_REPO_ROOT = Path(__file__).parent.parent
+_PRODUCTS_YAML = _REPO_ROOT / "dictionaries" / "products.yaml"
+_REQUIRED_FIELDS = {"prefix", "short_name", "long_name", "description", "category", "template_file", "status"}
+_VALID_CATEGORIES = {"openshift", "ai_ml", "platform_services"}
+_VALID_STATUSES = {"active", "planned"}
+
+
+def test_products_yaml_loadable():
+    """products.yaml parses and every entry has all required fields"""
+    with _PRODUCTS_YAML.open() as f:
+        data = yaml.safe_load(f)
+    assert data.get("schema_version") is not None
+    products = data["products"]
+    assert len(products) > 0
+    for p in products:
+        missing = _REQUIRED_FIELDS - set(p.keys())
+        assert not missing, f"{p.get('prefix')}: missing fields {missing}"
+        assert p["category"] in _VALID_CATEGORIES, f"{p['prefix']}: invalid category {p['category']}"
+        assert p["status"] in _VALID_STATUSES, f"{p['prefix']}: invalid status {p['status']}"
+    print("✅ test_products_yaml_loadable passed")
+
+
+def test_products_yaml_no_duplicate_prefix():
+    """Every prefix in products.yaml is unique"""
+    with _PRODUCTS_YAML.open() as f:
+        data = yaml.safe_load(f)
+    prefixes = [p["prefix"] for p in data["products"]]
+    assert len(prefixes) == len(set(prefixes)), f"Duplicate prefixes: {[p for p in prefixes if prefixes.count(p) > 1]}"
+    print("✅ test_products_yaml_no_duplicate_prefix passed")
+
+
+def test_active_products_have_template_file():
+    """Every active product has a template_file that exists on disk"""
+    with _PRODUCTS_YAML.open() as f:
+        data = yaml.safe_load(f)
+    for p in data["products"]:
+        if p["status"] == "active":
+            tf = p.get("template_file")
+            assert tf is not None, f"{p['prefix']}: active entry has null template_file"
+            assert (_REPO_ROOT / tf).exists(), f"{p['prefix']}: template_file {tf!r} does not exist"
+    print("✅ test_active_products_have_template_file passed")
+
+
+def test_every_template_has_active_entry():
+    """Every adr_templates/*.md has exactly one matching active entry in products.yaml"""
+    with _PRODUCTS_YAML.open() as f:
+        data = yaml.safe_load(f)
+    active_files = {p["template_file"] for p in data["products"] if p["status"] == "active" and p["template_file"]}
+    for md in sorted((_REPO_ROOT / "adr_templates").glob("*.md")):
+        rel = f"adr_templates/{md.name}"
+        assert rel in active_files, f"{rel}: no active entry in products.yaml"
+    print("✅ test_every_template_has_active_entry passed")
+
+
+def test_planned_products_have_null_template():
+    """Every planned product has template_file: null"""
+    with _PRODUCTS_YAML.open() as f:
+        data = yaml.safe_load(f)
+    for p in data["products"]:
+        if p["status"] == "planned":
+            assert p.get("template_file") is None, f"{p['prefix']}: planned entry should have null template_file"
+    print("✅ test_planned_products_have_null_template passed")
+
+
+def test_prefix_dictionary_regenerated():
+    """adr_prefix_dictionary.md matches what regen_prefix_dictionary.py produces"""
+    regen_script = _REPO_ROOT / "scripts" / "regen_prefix_dictionary.py"
+    with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tmp:
+        tmp_path = tmp.name
+    try:
+        result = subprocess.run(
+            [sys.executable, str(regen_script), tmp_path],
+            capture_output=True, text=True
+        )
+        assert result.returncode == 0, f"regen script failed: {result.stderr}"
+        generated = Path(tmp_path).read_text()
+        checked_in = (_REPO_ROOT / "dictionaries" / "adr_prefix_dictionary.md").read_text()
+        assert generated == checked_in, (
+            "adr_prefix_dictionary.md is out of date. "
+            "Run: python scripts/regen_prefix_dictionary.py"
+        )
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+    print("✅ test_prefix_dictionary_regenerated passed")
+
+
 def run_all_tests():
     """Run all test functions"""
     print("\n" + "="*60)
@@ -220,6 +292,12 @@ def run_all_tests():
         test_adr_validation_patterns()
         test_product_name_mapping()
         test_field_order()
+        test_products_yaml_loadable()
+        test_products_yaml_no_duplicate_prefix()
+        test_active_products_have_template_file()
+        test_every_template_has_active_entry()
+        test_planned_products_have_null_template()
+        test_prefix_dictionary_regenerated()
 
         print("\n" + "="*60)
         print("✅ All tests passed!")

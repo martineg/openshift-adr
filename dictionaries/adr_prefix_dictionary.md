@@ -1,3 +1,6 @@
+<!-- GENERATED FILE — do not edit. Source: dictionaries/products.yaml.
+     Regenerate: python scripts/regen_prefix_dictionary.py -->
+
 # Architecture Prefix Dictionary
 
 This file maps workshop topics and products to their official Architecture Decision (AD) prefix.
